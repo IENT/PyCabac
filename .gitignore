@@ -1,0 +1,16 @@
+*~
+*.egg-info
+*.a
+*.so
+*.cmake
+*.json
+
+__pycache__
+.vscode/
+build/
+venv/
+.cache/
+*CMakeCache.txt
+CMakeFiles/
+Makefile
+thirdparty/swig-4.0.2/
