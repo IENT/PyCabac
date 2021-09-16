@@ -1,6 +1,8 @@
-# EABAC
+# PYCABAC
 
 [Easy|Educational|Extensible|Experimental] CABAC
+
+A Python port to the VTM CABAC engine
 
 ---
 
