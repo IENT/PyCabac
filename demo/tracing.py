@@ -11,6 +11,7 @@ shift_idx = 13
 
 # lets encode a unit step function
 bitsToEncode = [0] * 1000 + [1] * 1000
+print(f'Number of input bits: {len(bitsToEncode)}')
 
 # create an encoder and encode the bits
 enc = cabac.cabacEncoder()
@@ -44,7 +45,7 @@ dec.finish()
 assert(bitsToEncode == decodedBits)
 
 # lets check how long our encoded sequence is (in bits)
-print(len(bs)*8)
+print(f'Number encoded bits: {len(bs)*8}')
 
 # let's evaluate the trace and get the cabac-internal estimate for p1
 p1 = np.array([x[0] for x in trace[0]])
