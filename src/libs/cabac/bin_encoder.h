@@ -235,6 +235,7 @@ public:
   TBinEncoder ();
   ~TBinEncoder() {}
   void  encodeBin   ( unsigned bin, unsigned ctxId );
+  void  encodeBins   (std::vector<uint8_t>);
 public:
 #if !RWTH_PYTHON_IF
   void            setBinStorage     ( bool b )          { m_BinStore.setUse(b); }

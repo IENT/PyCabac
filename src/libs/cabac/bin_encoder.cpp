@@ -36,7 +36,8 @@
 #include <utility>
 #include <vector>
 #include <iostream>
-
+#include <span>
+#include <stdio.h>
 #if !RWTH_PYTHON_IF
 BinCounter::BinCounter()
   : m_CtxBinsCodedBuffer( Ctx::NumberOfContexts )
@@ -427,3 +428,19 @@ void TBinEncoder<BinProbModel>::encodeBin( unsigned bin, unsigned ctxId )
 #endif
 }
 
+template <class BinProbModel>
+void TBinEncoder<BinProbModel>::encodeBins(std::vector<uint8_t> array_of_bins)
+{
+  //This will just receive a Numpy array of bins [1,0,1,1,0...] in u_int8 type and loop calling the encodeBin
+
+  size_t const length = array_of_bins.size(); // avoiding repeated calls to length which never changes in this case
+
+
+  for(size_t i = 0; i != length; i++) {
+    if (i==0){
+      encodeBin(array_of_bins[i],0);
+    }else{
+      encodeBin(array_of_bins[i],array_of_bins[i-1]);
+    }
+  }
+}
