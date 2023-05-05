@@ -271,6 +271,13 @@ public:
 #endif
   }
 
+  void initCtx(unsigned numCtx, double pInit, uint8_t shiftInit){
+    m_Ctx.resize(numCtx);
+    for (int i = 0; i < numCtx; ++i) {
+      m_Ctx[i].initFromP1AndShiftIdx(pInit, shiftInit);
+    }
+  }
+
   void writeByteAlignment() { m_Bitstream->writeByteAlignment(); }
 
   std::vector<uint8_t> getBitstream() {

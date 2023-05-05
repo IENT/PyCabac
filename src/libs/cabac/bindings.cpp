@@ -20,7 +20,7 @@ PYBIND11_MODULE(cabac, m) {
         .def("start", &cabacEncoder::start)
         .def("finish", &cabacEncoder::finish)
         .def("encodeBinEP", &cabacEncoder::encodeBinEP)
-        .def("encodeBinsEP", &cabacEncoder::encodeBinEP)
+        .def("encodeBinsEP", &cabacEncoder::encodeBinsEP)
         .def("encodeBin", &cabacEncoder::encodeBin)
         .def("encodeBinTrm", &cabacEncoder::encodeBinTrm)
         .def("getBitstream", &cabacEncoder::getBitstream)
@@ -29,16 +29,19 @@ PYBIND11_MODULE(cabac, m) {
 #endif
         .def("getNumWrittenBits", &cabacEncoder::getNumWrittenBits)
         .def("writeByteAlignment", &cabacEncoder::writeByteAlignment)
-        .def("initCtx", &cabacEncoder::initCtx);
+        .def("initCtx", static_cast<void (cabacEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacEncoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
+        .def("initCtx", static_cast<void (cabacEncoder::*)(unsigned, double, uint8_t)>(&cabacEncoder::initCtx), "Initialize all contexts to same probability and shift idx.");
+        
 
     py::class_<cabacDecoder>(m, "cabacDecoder")
         .def(py::init<std::vector<uint8_t>>())
         .def("start", &cabacDecoder::start)
         .def("finish", &cabacDecoder::finish)
         .def("decodeBinEP", &cabacDecoder::decodeBinEP)
-        .def("decodeBinsEP", &cabacDecoder::decodeBinEP)
+        .def("decodeBinsEP", &cabacDecoder::decodeBinsEP)
         .def("decodeBin", &cabacDecoder::decodeBin)
         .def("decodeBinTrm", &cabacDecoder::decodeBinTrm)
         .def("getNumBitsRead", &cabacDecoder::getNumBitsRead)
-        .def("initCtx", &cabacDecoder::initCtx);
+        .def("initCtx", static_cast<void (cabacDecoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacDecoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
+        .def("initCtx", static_cast<void (cabacDecoder::*)(unsigned, double, uint8_t)>(&cabacDecoder::initCtx), "Initialize all contexts to same probability and shift idx.");
 }
