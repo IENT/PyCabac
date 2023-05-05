@@ -276,6 +276,9 @@ public:
     for (int i = 0; i < numCtx; ++i) {
       m_Ctx[i].initFromP1AndShiftIdx(pInit, shiftInit);
     }
+#if RWTH_ENABLE_TRACING
+    m_pAndMpsTrace.resize(numCtx);
+#endif
   }
 
   void writeByteAlignment() { m_Bitstream->writeByteAlignment(); }
