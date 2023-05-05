@@ -4,6 +4,32 @@ import cabac
 
 
 class MainTest(unittest.TestCase):
+    def test_ep(self):
+        symbol = random.randint(0, 511)
+        Nbits = math.ceil(math.log2(symbol))
+
+        enc = cabac.cabacEncoder()
+        enc.start()
+        enc.encodeBinsEP(symbol, Nbits)
+        enc.encodeBinTrm(1)
+        enc.finish()
+        enc.writeByteAlignment()
+
+        bs = enc.getBitstream()
+
+        decodedBits = []
+        dec = cabac.cabacDecoder(bs)
+
+
+        dec.start()
+        decodedSymbol = dec.decodeBinsEP(Nbits)
+
+        dec.decodeBinTrm()
+        dec.finish()
+
+        self.assertTrue(decodedSymbol == symbol)
+
+
     def test_enc_dec(self):
 
         p1_init = 0.6
