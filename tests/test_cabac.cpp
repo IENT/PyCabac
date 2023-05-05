@@ -56,7 +56,7 @@ TEST_CASE("test_encodeBin")
     std::cout << "--- test_encodeBin" << std::endl;
 
     cabacEncoder binEncoder;
-    std::vector<std::tuple<double, uint8_t>> ctxInit  {(0.5, 8)};
+    std::vector<std::tuple<double, uint8_t>> ctxInit {(0.5, 8)};
     binEncoder.initCtx(ctxInit);
     binEncoder.start();
     binEncoder.encodeBin(0, 0);
@@ -72,6 +72,34 @@ TEST_CASE("test_encodeBin")
     binDecoder.start();
     std::cout << "Decoded bin: " << binDecoder.decodeBin(0) << std::endl;
     std::cout << "Decoded bin: " << binDecoder.decodeBin(0) << std::endl;
+
+    binDecoder.finish();
+}
+
+TEST_CASE("test_encodeSymbols")
+{
+    std::cout << "--- test_encodeSymbols" << std::endl;
+
+    cabacSimpleSequenceEncoder binEncoder;
+    //std::vector<std::tuple<double, uint8_t>> ctxInit{(0.5, 8)};
+    //binEncoder.initCtx(ctxInit);
+    binEncoder.initCtx(1, 0.5, 8);
+    binEncoder.start();
+    std::vector<unsigned> ctx_ids(512, 0);
+    //binEncoder.encodeBinsEG0bypass(5);
+    binEncoder.encodeBinsTU(7, ctx_ids);
+    binEncoder.encodeBinTrm(1);
+    binEncoder.finish();
+    binEncoder.writeByteAlignment();
+
+    std::vector<uint8_t> byteVector = binEncoder.getBitstream();
+
+    cabacSimpleSequenceDecoder binDecoder(byteVector);
+    binDecoder.initCtx(1, 0.5, 8);
+    binDecoder.start();
+    //std::cout << "Decoded symbol: " << binDecoder.decodeBinsEG0bypass() << std::endl;
+    std::cout << "Decoded symbol: " << binDecoder.decodeBinsTU(ctx_ids) << std::endl;
+    binDecoder.decodeBinTrm();
 
     binDecoder.finish();
 }

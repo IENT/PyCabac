@@ -132,5 +132,93 @@ public:
     }
   }
   
-};
-#endif
+}; // class cabacDecoder
+#endif  // RWTH_PYTHON_IF
+
+
+
+#if RWTH_PYTHON_IF
+
+class cabacSimpleSequenceDecoder : public cabacDecoder{
+  public:
+    cabacSimpleSequenceDecoder(std::vector<uint8_t> bs) : cabacDecoder(bs){}
+
+    // GABAC/GENIE stuff from here
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    unsigned decodeBinsBIbypass(const unsigned int num_bins) {
+        return decodeBinsEP(num_bins);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    unsigned decodeBinsBI(const std::vector<unsigned int> & ctx_ids, const unsigned int num_bins) {
+        unsigned int bins = 0;
+        for (size_t i = num_bins; i > 0; i--) {
+            bins = (bins << 1u) | decodeBin(ctx_ids[i]);
+        }
+        return bins;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    unsigned decodeBinsTUbypass(const unsigned int num_max_bins=512) {
+        unsigned int i = 0;
+        while (i < num_max_bins) {
+            if (decodeBinsEP(1) == 0) break;
+            i++;
+        }
+        return i;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    unsigned decodeBinsTU(const std::vector<unsigned int> & ctx_ids, const unsigned int num_max_bins=512) {
+        unsigned int i = 0;
+
+        while (i < num_max_bins) {
+            if (decodeBin(ctx_ids[i]) == 0) break;
+            i++;
+        }
+        return i;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    unsigned decodeBinsEG0bypass() {
+        unsigned int bins = 0;
+        unsigned int i = 0;
+        while (decodeBinsBIbypass(1) == 0) {
+            i++;
+        }
+        if (i != 0) {
+            bins = (1u << i) | decodeBinsEP(i);
+        } else {
+            return 0;
+        }
+        return bins - 1;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    unsigned decodeBinsEG0(const std::vector<unsigned int> & ctx_ids) {
+
+        // Prefix
+        unsigned int i = 0;
+        while (decodeBin(ctx_ids[i]) == 0) {
+            i++;
+        }
+
+        // Suffix
+        unsigned int bins = 0;
+        if (i != 0) {
+            bins = (1u << i) | decodeBinsEP(i);
+        } else {
+            return 0;
+        }
+        return bins - 1;
+    }
+}; // class cabacSimpleSequenceDecoder
+
+#endif  // RWTH_PYTHON_IF

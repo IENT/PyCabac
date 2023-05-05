@@ -40,6 +40,8 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include <cmath>
+#include <cassert>
 
 #if !RWTH_PYTHON_IF
 class BinStore
@@ -299,4 +301,88 @@ public:
   }
 #endif
 #endif
-};
+}; // class cabacEncoder 
+
+
+
+#if RWTH_PYTHON_IF
+
+class cabacSimpleSequenceEncoder : public cabacEncoder{
+public:
+  cabacSimpleSequenceEncoder() : cabacEncoder(){}
+
+  // GABAC/GENIE stuff from here
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsBIbypass(unsigned input, const unsigned int num_bins) {
+    encodeBinsEP(input, num_bins);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsBI(unsigned int input, const std::vector<unsigned int>& ctx_ids, const unsigned int num_bins) {
+    for (int i = num_bins - 1; i >= 0; i--) {  // i must be signed
+      // 0x1u is the same as 0x1. (The u stands for unsigned.). i & 0x1u is the same as i % 2?
+      unsigned int bin = static_cast<unsigned int>(input >> static_cast<unsigned>(i)) & 0x1u;
+      encodeBin(bin, ctx_ids[i]);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsTUbypass(unsigned input, const unsigned int num_max_bins=512) {
+    for (unsigned i = 0; i < input; i++) {
+      encodeBinEP(1);
+    }
+    if (num_max_bins > input) {  // input == num_max_bins is coded as all 1s
+      encodeBinEP(0);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsTU(unsigned input, const std::vector<unsigned int>& ctx_ids, const unsigned int num_max_bins=512) {
+    //assert(ctx_ids.size() <= num_max_bins);
+
+    unsigned int i;
+    for (i = 0; i < input; i++) {
+      encodeBin(1, ctx_ids[i]);
+    }
+    if (input < num_max_bins) {  // input == num_max_bins is coded as all 1s
+      encodeBin(0, ctx_ids[i++]);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEG0bypass(unsigned input) {
+    auto valuePlus1 = (unsigned int)(input + 1);
+    auto numLeadZeros = (unsigned int)floor(log2(valuePlus1));
+
+    /* prefix */
+    encodeBinsBIbypass(1, numLeadZeros + 1);
+    if (numLeadZeros) {
+      /* suffix */
+      encodeBinsBIbypass(valuePlus1 & ((1u << numLeadZeros) - 1), numLeadZeros);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEG0(unsigned input, const std::vector<unsigned int>& ctx_ids) {
+    auto valuePlus1 = (unsigned int)(input + 1);
+    auto numLeadZeros = (unsigned int)floor(log2(valuePlus1));
+
+    assert(ctx_ids.size() >= (numLeadZeros + 1));
+
+    /* prefix */
+    encodeBinsBI(1, ctx_ids, numLeadZeros + 1);
+    if (numLeadZeros) {
+        /* suffix */
+      encodeBinsBIbypass(valuePlus1 & ((1u << numLeadZeros) - 1), numLeadZeros);
+    }
+  }
+}; // class cabacSimpleSequenceEncoder
+
+#endif // RWTH_PYTHON_IF

@@ -1,9 +1,58 @@
 import unittest
 import random
 import cabac
+import math
 
 
 class MainTest(unittest.TestCase):
+
+    def test_tu(self):
+        num_max_val = 255
+        num_values = 1000
+        symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
+        
+
+        enc = cabac.cabacSimpleSequenceEncoder()
+        enc.initCtx(1, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
+        enc.start()
+        for symbol in symbols:
+            enc.encodeBinsTUbypass(symbol)
+
+        ctx_ids = [0] * (num_max_val+2)
+        for symbol in symbols:
+            enc.encodeBinsTU(symbol, ctx_ids, num_max_val)
+            #enc.encodeBinsBI(symbol, ctx_ids, 8)
+            #enc.encodeBinsBIbypass(symbol, 8)
+        
+        enc.encodeBinTrm(1)
+        enc.finish()
+        enc.writeByteAlignment()
+
+        bs = enc.getBitstream()
+
+        dec = cabac.cabacSimpleSequenceDecoder(bs)
+        dec.start()
+
+        decodedSymbols = []
+        for _ in range(0, num_values):
+            decodedSymbol = dec.decodeBinsTUbypass()
+            decodedSymbols.append(decodedSymbol)
+
+        ctx_ids = [0] * (num_max_val+2)
+        for _ in range(0, num_values):
+            decodedSymbol = dec.decodeBinsTU(ctx_ids)
+            #decodedSymbol = dec.decodeBinsBI(ctx_ids, 8)
+            #decodedSymbol = dec.decodeBinsBIbypass(8)
+            decodedSymbols.append(decodedSymbol)
+
+        
+        dec.decodeBinTrm()
+        dec.finish()
+
+        self.assertTrue(decodedSymbols == symbols)
+
+
+
     def test_ep(self):
         symbol = random.randint(0, 511)
         Nbits = math.ceil(math.log2(symbol))
