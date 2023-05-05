@@ -43,6 +43,10 @@
 #include <cmath>
 #include <cassert>
 
+#if RWTH_PYTHON_IF
+#include "context_selector.h"
+#endif
+
 #if !RWTH_PYTHON_IF
 class BinStore
 {
@@ -310,6 +314,22 @@ public:
 class cabacSimpleSequenceEncoder : public cabacEncoder{
 public:
   cabacSimpleSequenceEncoder() : cabacEncoder(){}
+
+
+  void encodeSymbolsTU(std::vector<unsigned> symbols, unsigned int restPos=10, unsigned int num_max_bins=24){
+
+    unsigned int symbolPrev = 0;
+
+    std::vector<unsigned int> ctxIdxs(num_max_bins, 0);
+
+    for (unsigned int n = 0; n < symbols.size(); n++) {
+      if(n > 0){
+        symbolPrev = symbols[n - 1];
+      } 
+      context_selector::getContextIdsOrder1TU(ctxIdxs, symbolPrev, restPos, num_max_bins);
+      encodeBinsTU(symbols[n], ctxIdxs, num_max_bins);
+    }
+  }
 
   // GABAC/GENIE stuff from here
 

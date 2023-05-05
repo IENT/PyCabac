@@ -1,4 +1,5 @@
 set(source_files
+        context_selector.cpp
         bin_decoder.cpp
         bin_encoder.cpp
         bitstream.cpp

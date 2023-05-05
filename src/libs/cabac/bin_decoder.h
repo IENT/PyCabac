@@ -44,6 +44,9 @@
 #include <vector>
 #include <tuple>
 
+#if RWTH_PYTHON_IF
+#include "context_selector.h"
+#endif
 
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 class CodingStatisticsClassType;
@@ -142,6 +145,24 @@ public:
 class cabacSimpleSequenceDecoder : public cabacDecoder{
   public:
     cabacSimpleSequenceDecoder(std::vector<uint8_t> bs) : cabacDecoder(bs){}
+
+    std::vector<unsigned int> decodeSymbolsTU(unsigned int numSymbols, unsigned int restPos=10, unsigned int num_max_bins=24){
+      std::vector<unsigned int> symbols(numSymbols, 0);
+      unsigned int symbolPrev = 0;
+      std::vector<unsigned int> ctxIdxs(num_max_bins, 0);
+
+      for (unsigned int n = 0; n < numSymbols; n++) 
+      {
+        if(n > 0){
+          symbolPrev = symbols[n-1];
+        }
+        context_selector::getContextIdsOrder1TU(ctxIdxs, symbolPrev, restPos, num_max_bins);
+        symbols[n] = decodeBinsTU(ctxIdxs, num_max_bins);
+      }
+
+      return symbols;
+    }
+
 
     // GABAC/GENIE stuff from here
 

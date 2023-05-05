@@ -6,6 +6,47 @@ import math
 
 class MainTest(unittest.TestCase):
 
+    def test_ctx_selection(self):
+
+        def ctx_id_tu(n, prev_symbol=0, n_rst=10):
+            # n is the position of the to-be coded bin in the bin string (of the to be coded symbol)
+            # prev_symbol is the previously coded symbol
+            # bins with n < n_rst are coded with ctx model, all other bins are coded with the same context.
+            # returns the context id
+            #
+            # First ctx_ids correspond to previous bin at position n not available case.
+            # Next ctx_ids correspond to previous bin at position n = 0 case.
+            # Next ctx_ids correspond to previous bin at position n = 1 case.
+            # Last ctx_id is used for all bins n >= n_rst
+
+            import numpy as np  # TODO: move this import somewhere else
+
+            n = np.asarray(n)
+            ctx_id = np.zeros(n.shape, dtype=np.int32)
+
+            # binary masks
+            mask_rst = n < n_rst  # mask for rest case
+            mask_prev_symbol_na = mask_rst & (n > prev_symbol)  # mask for previous bin not available
+            mask_prev_symbol_v0 = mask_rst & (n < prev_symbol)  # mask for previous bin 0
+            mask_prev_symbol_v1 = mask_rst & (n == prev_symbol) # mask for previous bin 1
+
+            # bin position n < n_rst
+            # previously coded bin at same position not available
+            ctx_id[mask_prev_symbol_na] = 0*n_rst + n[mask_prev_symbol_na]
+
+            # previously coded bin 0 at same position n
+            ctx_id[mask_prev_symbol_v0] = 1*n_rst + n[mask_prev_symbol_v0]
+
+            # previously coded bin 1 at same position n
+            ctx_id[mask_prev_symbol_v1] = 2*n_rst + n[mask_prev_symbol_v1]
+
+            # bin position n >= n_rst
+            # rst case, independent of position n
+            ctx_id[~mask_rst] = 3*n_rst
+
+            return ctx_id
+        
+
     def test_tu(self):
         num_max_val = 255
         num_values = 1000
