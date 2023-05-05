@@ -44,7 +44,6 @@
 #include <vector>
 #include <tuple>
 
-
 #if RExt__DECODER_DEBUG_BIT_STATISTICS
 class CodingStatisticsClassType;
 #endif
@@ -71,7 +70,7 @@ public:
 #endif
 
 public:
-  virtual unsigned  decodeBin           ( unsigned ctxId    ) = 0;
+  virtual uint8_t  decodeBin           ( uint8_t ctxId    ) = 0;
 
 public:
   unsigned          decodeBinEP         ();
@@ -98,7 +97,8 @@ class TBinDecoder : public BinDecoderBase
 public:
   TBinDecoder ();
   ~TBinDecoder() {}
-  unsigned decodeBin ( unsigned ctxId );
+  uint8_t decodeBin ( uint8_t ctxId );
+  std::vector<uint8_t> decodeBins (int length);
 private:
 #if RWTH_PYTHON_IF
   friend class cabacDecoder;

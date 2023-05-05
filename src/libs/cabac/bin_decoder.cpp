@@ -312,10 +312,10 @@ TBinDecoder<BinProbModel>::TBinDecoder()
 #endif
 
 template <class BinProbModel>
-unsigned TBinDecoder<BinProbModel>::decodeBin( unsigned ctxId )
+uint8_t TBinDecoder<BinProbModel>::decodeBin( uint8_t ctxId )
 {
   BinProbModel& rcProbModel = m_Ctx[ctxId];
-  unsigned      bin         = rcProbModel.mps();
+  uint8_t      bin         = rcProbModel.mps();
   uint32_t      LPS         = rcProbModel.getLPS( m_Range );
 
   // DTRACE( g_trace_ctx, D_CABAC, "%d" " %d " "%d" "  " "[%d:%d]" "  " "%2d(MPS=%d)"  "  " , DTRACE_GET_COUNTER( g_trace_ctx, D_CABAC ), ctxId, m_Range, m_Range-LPS, LPS, ( unsigned int )( rcProbModel.state() ), m_Value < ( ( m_Range - LPS ) << 7 ) );
@@ -365,5 +365,29 @@ unsigned TBinDecoder<BinProbModel>::decodeBin( unsigned ctxId )
   //DTRACE_WITHOUT_COUNT( g_trace_ctx, D_CABAC, "  -  " "%d" "\n", bin );
   return  bin;
 }
+
+
+template <class BinProbModel>
+std::vector<uint8_t> TBinDecoder<BinProbModel>::decodeBins(int length)
+{
+  std::vector<uint8_t> result;
+
+  result.reserve(length);//reserve memory so no extra allocation is needed 
+  unsigned res=0;
+  for(size_t i = 0; i != length; i++) {
+    if (i==0){
+      res=decodeBin(0);//ctx starts at 0
+   }else{
+      res=decodeBin(res);
+    }
+    result.push_back(res);
+  }
+  //std::cout << "capacity: " << (int) result.capacity() << '\n';
+  //std::cout << "length: " << (int) length<< '\n';
+  
+  return result;
+}
+
+
 
 template class TBinDecoder<BinProbModel_Std>;

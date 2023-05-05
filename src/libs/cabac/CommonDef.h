@@ -7,7 +7,11 @@
 
 // We assume that 1000 contexts are enough for most of the scenarios.
 #define RWTH_PYTHON_IF 1
-#define RWTH_ENABLE_TRACING 1
+// Deactivate tracing and debug statistics--> HUGE RAM OVERHEAD WHEN PROCESSING BIG ARRAYS
+#define RWTH_ENABLE_TRACING 0
+#define ENABLE_TRACING 0
+#define RExt__DECODER_DEBUG_BIT_STATISTICS 0
+
 
 class Exception : public std::exception
 {
