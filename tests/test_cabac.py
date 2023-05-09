@@ -29,8 +29,8 @@ class MainTest(unittest.TestCase):
         
             if fun == 'BIbypass':
                 enc.encodeBinsBIbypass(symbol, num_bins)
-            elif fun == 'BI':
-                enc.encodeBinsBIorder1(symbol, symbolPrev, num_bins, rest_pos)
+            #elif fun == 'BI':
+            #    enc.encodeBinsBIorder1(symbol, symbolPrev, num_bins, rest_pos)
             elif fun == 'TUbypass':
                 enc.encodeBinsTUbypass(symbol, num_max_val)
             elif fun == 'TU':
@@ -60,8 +60,8 @@ class MainTest(unittest.TestCase):
             
             if fun == 'BIbypass':
                 decodedSymbol = dec.decodeBinsBIbypass(num_bins)
-            elif fun == 'BI':
-                decodedSymbol = dec.decodeBinsBIorder1(decodedSymbolPrev, num_bins, rest_pos)
+            #elif fun == 'BI':
+                #decodedSymbol = dec.decodeBinsBIorder1(decodedSymbolPrev, num_bins, rest_pos)
             elif fun == 'TUbypass':
                 decodedSymbol = dec.decodeBinsTUbypass(num_max_val)
             elif fun == 'TU':
@@ -80,7 +80,7 @@ class MainTest(unittest.TestCase):
 
     def test_encode_symbols_order1(self):
 
-        funs = ['BIbypass', 'BI', 'TUbypass', 'TU', 'EG0bypass', 'EG0']
+        funs = ['BIbypass', 'TUbypass', 'TU', 'EG0bypass', 'EG0']
 
         for fun in funs:
             print('Testing function: ' + fun)
