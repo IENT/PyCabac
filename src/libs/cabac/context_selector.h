@@ -10,7 +10,12 @@
 
 
 #if RWTH_PYTHON_IF
-namespace context_selector{
+namespace contextSelector{
+
+    
+    //unsigned int getContextIdOrder1BI(unsigned int, unsigned int, unsigned int);
+
+    //void getContextIdsOrder1BI(std::vector<unsigned int>&, unsigned int, unsigned int, unsigned int);
 
     unsigned int getContextIdOrder1TU(unsigned int, unsigned int, unsigned int);
 

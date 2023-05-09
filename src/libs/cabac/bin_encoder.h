@@ -315,72 +315,142 @@ class cabacSimpleSequenceEncoder : public cabacEncoder{
 public:
   cabacSimpleSequenceEncoder() : cabacEncoder(){}
 
+  void encodeBinsTUorder1(unsigned int symbol, unsigned int symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
 
-  void encodeSymbolsTU(std::vector<unsigned> symbols, unsigned int restPos=10, unsigned int num_max_bins=24){
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
+    contextSelector::getContextIdsOrder1TU(ctxIds, symbolPrev, restPos, numMaxBins);
+    
+    // Encode symbol
+    encodeBinsTU(symbol, ctxIds, numMaxBins);
+  }
+
+
+  void encodeSymbolsTUorder1(std::vector<unsigned> symbols, unsigned int restPos=10, unsigned int numMaxBins=512){
 
     unsigned int symbolPrev = 0;
-
-    std::vector<unsigned int> ctxIdxs(num_max_bins, 0);
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
     for (unsigned int n = 0; n < symbols.size(); n++) {
+      // Get context ids for each bin
       if(n > 0){
         symbolPrev = symbols[n - 1];
-      } 
-      context_selector::getContextIdsOrder1TU(ctxIdxs, symbolPrev, restPos, num_max_bins);
-      encodeBinsTU(symbols[n], ctxIdxs, num_max_bins);
+      }
+      contextSelector::getContextIdsOrder1TU(ctxIds, symbolPrev, restPos, numMaxBins);
+
+      // Encode bins
+      encodeBinsTU(symbols[n], ctxIds, numMaxBins);
     }
   }
+
+  void encodeBinsEG0order1(unsigned int symbol, unsigned int symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    contextSelector::getContextIdsOrder1EG0(ctxIds, symbolPrev, restPos, numMaxPrefixBins);
+
+    // Encode bins
+    encodeBinsEG0(symbol, ctxIds);
+    
+  }
+
+  void encodeSymbolsEG0order1(std::vector<unsigned> symbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+
+    unsigned int symbolPrev = 0;
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+
+    for (unsigned int n = 0; n < symbols.size(); n++) {
+      // Get context ids for each bin
+      if(n > 0) {
+        symbolPrev = symbols[n - 1];
+      } 
+      contextSelector::getContextIdsOrder1EG0(ctxIds, symbolPrev, restPos, numMaxPrefixBins);
+
+      // Encode bins
+      encodeBinsEG0(symbols[n], ctxIds);
+    }
+  }
+
+  /* Not a useful context model for BI binarized symbols
+  void encodeBinsBIorder1(unsigned int symbol, unsigned int symbolPrev, unsigned int numBins, unsigned int restPos=10){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numBins, 0);
+    contextSelector::getContextIdsOrder1BI(ctxIds, symbolPrev, numBins, restPos);
+
+    // Encode bins
+    encodeBinsBI(symbol, ctxIds, numBins);
+    
+  }
+
+  void encodeSymbolsBIorder1(std::vector<unsigned> symbols, unsigned int numBins, unsigned int restPos=10){
+
+    unsigned int symbolPrev = 0;
+    std::vector<unsigned int> ctxIds(numBins, 0);
+
+    for (unsigned int n = 0; n < symbols.size(); n++) {
+      // Get context ids for each bin
+      if(n > 0) {
+        symbolPrev = symbols[n - 1];
+      } 
+      contextSelector::getContextIdsOrder1BI(ctxIds, symbolPrev, numBins, restPos);
+
+      // Encode bins
+      encodeBinsBI(symbols[n], ctxIds, numBins);
+    }
+  }
+  */
 
   // GABAC/GENIE stuff from here
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsBIbypass(unsigned input, const unsigned int num_bins) {
-    encodeBinsEP(input, num_bins);
+  void encodeBinsBIbypass(unsigned symbol, const unsigned int numBins) {
+    encodeBinsEP(symbol, numBins);
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsBI(unsigned int input, const std::vector<unsigned int>& ctx_ids, const unsigned int num_bins) {
+  void encodeBinsBI(unsigned int symbol, const std::vector<unsigned int>& ctxIds, const unsigned int numBins) {
     unsigned int bin = 0;  // bin to encode
     unsigned int i = 0;  // counter for context selection
-    for (int exponent = num_bins - 1; exponent >= 0; exponent--) {  // i must be signed
+    for (int exponent = numBins - 1; exponent >= 0; exponent--) {  // i must be signed
       // 0x1u is the same as 0x1. (The u stands for unsigned.). i & 0x1u is the same as i % 2?
-      bin = static_cast<unsigned int>(input >> static_cast<unsigned>(exponent)) & 0x1u;
-      encodeBin(bin, ctx_ids[i]);
+      bin = static_cast<unsigned int>(symbol >> static_cast<unsigned>(exponent)) & 0x1u;
+      encodeBin(bin, ctxIds[i]);
       i++;
     }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsTUbypass(unsigned input, const unsigned int num_max_bins=512) {
-    for (unsigned i = 0; i < input; i++) {
+  void encodeBinsTUbypass(unsigned symbol, const unsigned int numMaxBins=512) {
+    for (unsigned i = 0; i < symbol; i++) {
       encodeBinEP(1);
     }
-    if (num_max_bins > input) {  // input == num_max_bins is coded as all 1s
+    if (numMaxBins > symbol) {  // symbol == numMaxBins is coded as all 1s
       encodeBinEP(0);
     }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsTU(unsigned input, const std::vector<unsigned int>& ctx_ids, const unsigned int num_max_bins=512) {
-    //assert(ctx_ids.size() <= num_max_bins);
+  void encodeBinsTU(unsigned symbol, const std::vector<unsigned int>& ctxIds, const unsigned int numMaxBins=512) {
+    //assert(ctxIds.size() <= numMaxBins);
 
     unsigned int i;
-    for (i = 0; i < input; i++) {
-      encodeBin(1, ctx_ids[i]);
+    for (i = 0; i < symbol; i++) {
+      encodeBin(1, ctxIds[i]);
     }
-    if (input < num_max_bins) {  // input == num_max_bins is coded as all 1s
-      encodeBin(0, ctx_ids[i++]);
+    if (symbol < numMaxBins) {  // symbol == numMaxBins is coded as all 1s
+      encodeBin(0, ctxIds[i++]);
     }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEG0bypass(unsigned input) {
-    auto valuePlus1 = (unsigned int)(input + 1);
+  void encodeBinsEG0bypass(unsigned symbol) {
+    auto valuePlus1 = (unsigned int)(symbol + 1);
     auto numLeadZeros = (unsigned int)floor(log2(valuePlus1));
 
     /* prefix */
@@ -393,14 +463,14 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEG0(unsigned input, const std::vector<unsigned int>& ctx_ids) {
-    auto valuePlus1 = (unsigned int)(input + 1);
+  void encodeBinsEG0(unsigned symbol, const std::vector<unsigned int>& ctxIds) {
+    auto valuePlus1 = (unsigned int)(symbol + 1);
     auto numLeadZeros = (unsigned int)floor(log2(valuePlus1));
 
-    assert(ctx_ids.size() >= (numLeadZeros + 1));
+    assert(ctxIds.size() >= (numLeadZeros + 1));
 
     /* prefix */
-    encodeBinsBI(1, ctx_ids, numLeadZeros + 1);
+    encodeBinsBI(1, ctxIds, numLeadZeros + 1);
     if (numLeadZeros) {
         /* suffix */
       encodeBinsBIbypass(valuePlus1 & ((1u << numLeadZeros) - 1), numLeadZeros);

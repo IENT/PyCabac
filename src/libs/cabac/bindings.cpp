@@ -64,16 +64,30 @@ PYBIND11_MODULE(cabac, m) {
         .def("initCtx", static_cast<void (cabacSimpleSequenceEncoder::*)(unsigned, double, uint8_t)>(&cabacSimpleSequenceEncoder::initCtx), "Initialize all contexts to same probability and shift idx.")
         .def("encodeBinsBIbypass", &cabacSimpleSequenceEncoder::encodeBinsBIbypass)
         .def("encodeBinsBI", &cabacSimpleSequenceEncoder::encodeBinsBI)
+        /*
+        .def("encodeBinsBIorder1", &cabacSimpleSequenceEncoder::encodeBinsBIorder1,
+            "BI-binarize and encode symbol with simple order1-context model",
+            py::arg("symbol"), py::arg("symbolPrev"), py::arg("numBins"), py::arg("restPos") = 10
+        )
+        */
         .def("encodeBinsTUbypass", &cabacSimpleSequenceEncoder::encodeBinsTUbypass, 
             "TU-binarize and and bypass-encode symbol",
-            py::arg("input"), py::arg("num_max_bins") = 512
+            py::arg("symbol"), py::arg("numMaxBins") = 512
         )
         .def("encodeBinsTU", &cabacSimpleSequenceEncoder::encodeBinsTU,
             "TU-binarize and encode symbol",
-            py::arg("input"), py::arg("ctx_ids"), py::arg("num_max_bins") = 512
+            py::arg("symbol"), py::arg("ctxIds"), py::arg("numMaxBins") = 512
+        )
+        .def("encodeBinsTUorder1", &cabacSimpleSequenceEncoder::encodeBinsTUorder1,
+            "TU-binarize and encode symbol with simple order1-context model",
+            py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos") = 10, py::arg("numMaxBins") = 512
         )
         .def("encodeBinsEG0bypass", &cabacSimpleSequenceEncoder::encodeBinsEG0bypass)
-        .def("encodeBinsEG0", &cabacSimpleSequenceEncoder::encodeBinsEG0);
+        .def("encodeBinsEG0", &cabacSimpleSequenceEncoder::encodeBinsEG0)
+        .def("encodeBinsEG0order1", &cabacSimpleSequenceEncoder::encodeBinsEG0order1,
+            "EG0-binarize and encode symbol with simple order1-context model",
+            py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos") = 10, py::arg("numMaxPrefixBins") = 24
+        );
 
 
     py::class_<cabacSimpleSequenceDecoder>(m, "cabacSimpleSequenceDecoder")
@@ -89,11 +103,40 @@ PYBIND11_MODULE(cabac, m) {
         .def("initCtx", static_cast<void (cabacSimpleSequenceDecoder::*)(unsigned, double, uint8_t)>(&cabacSimpleSequenceDecoder::initCtx), "Initialize all contexts to same probability and shift idx.")
         .def("decodeBinsBIbypass", &cabacSimpleSequenceDecoder::decodeBinsBIbypass)
         .def("decodeBinsBI", &cabacSimpleSequenceDecoder::decodeBinsBI)
+        /*
+        .def("decodeBinsBIorder1", &cabacSimpleSequenceDecoder::decodeBinsBIorder1,
+            "decode BI-binarized symbol with simple order1-context model",
+            py::arg("symbolPrev"), py::arg("numBins"), py::arg("restPos") = 10
+        )
+        */
         .def("decodeBinsTUbypass", &cabacSimpleSequenceDecoder::decodeBinsTUbypass,
-            "bypass-decode TU-encoded symbol", py::arg("num_max_bins") = 512)
+            "bypass-decode TU-encoded symbol", py::arg("numMaxBins") = 512)
         .def("decodeBinsTU", &cabacSimpleSequenceDecoder::decodeBinsTU,
-            "decode TU-encoded symbol", py::arg("ctx_ids"), py::arg("num_max_bins") = 512
+            "decode TU-encoded symbol", py::arg("ctxIds"), py::arg("numMaxBins") = 512
+        )
+        .def("decodeBinsTUorder1", &cabacSimpleSequenceDecoder::decodeBinsTUorder1,
+            "decode TU-binarized symbol with simple order1-context model",
+            py::arg("symbolPrev"), py::arg("restPos") = 10, py::arg("numMaxBins") = 512
         )
         .def("decodeBinsEG0bypass", &cabacSimpleSequenceDecoder::decodeBinsEG0bypass)
-        .def("decodeBinsEG0", &cabacSimpleSequenceDecoder::decodeBinsEG0);
+        .def("decodeBinsEG0", &cabacSimpleSequenceDecoder::decodeBinsEG0)
+        .def("decodeBinsEG0order1", &cabacSimpleSequenceDecoder::decodeBinsEG0order1,
+            "decode EG0-binarized symbol with simple order1-context model",
+            py::arg("symbolPrev"), py::arg("restPos") = 10, py::arg("numMaxPrefixBins") = 24
+        );
+
+    m.def("getContextIdOrder1TU", &contextSelector::getContextIdOrder1TU, 
+        py::arg("n"), py::arg("symbolPrev"), py::arg("restPos") = 10);
+    m.def("getContextIdsOrder1TU", [](unsigned int symbolPrev, unsigned int restPos = 10, unsigned int numMaxBins = 512) {
+        std::vector<unsigned int> ctxIDs(numMaxBins, 0);
+        contextSelector::getContextIdsOrder1TU(ctxIDs, symbolPrev, restPos, numMaxBins);
+        return ctxIDs;
+    });
+    m.def("getContextIdOrder1EG0", &contextSelector::getContextIdOrder1EG0, 
+        py::arg("n"), py::arg("symbolPrev"), py::arg("restPos") = 10);
+    m.def("getContextIdsOrder1EG0", [](unsigned int symbolPrev, unsigned int restPos = 10, unsigned int numMaxPrefixBins = 24) {
+        std::vector<unsigned int> ctxIDs(numMaxPrefixBins, 0);
+        contextSelector::getContextIdsOrder1EG0(ctxIDs, symbolPrev, restPos, numMaxPrefixBins);
+        return ctxIDs;
+    });
 }
