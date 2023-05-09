@@ -342,10 +342,13 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
 
   void encodeBinsBI(unsigned int input, const std::vector<unsigned int>& ctx_ids, const unsigned int num_bins) {
-    for (int i = num_bins - 1; i >= 0; i--) {  // i must be signed
+    unsigned int bin = 0;  // bin to encode
+    unsigned int i = 0;  // counter for context selection
+    for (int exponent = num_bins - 1; exponent >= 0; exponent--) {  // i must be signed
       // 0x1u is the same as 0x1. (The u stands for unsigned.). i & 0x1u is the same as i % 2?
-      unsigned int bin = static_cast<unsigned int>(input >> static_cast<unsigned>(i)) & 0x1u;
+      bin = static_cast<unsigned int>(input >> static_cast<unsigned>(exponent)) & 0x1u;
       encodeBin(bin, ctx_ids[i]);
+      i++;
     }
   }
 

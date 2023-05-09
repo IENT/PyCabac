@@ -175,9 +175,11 @@ class cabacSimpleSequenceDecoder : public cabacDecoder{
     // ---------------------------------------------------------------------------------------------------------------------
 
     unsigned decodeBinsBI(const std::vector<unsigned int> & ctx_ids, const unsigned int num_bins) {
-        unsigned int bins = 0;
-        for (size_t i = num_bins; i > 0; i--) {
+        unsigned int bins = 0; // bins to decode
+        unsigned int i = 0; // counter for context selection
+        for (size_t exponent = num_bins; exponent > 0; exponent--) {
             bins = (bins << 1u) | decodeBin(ctx_ids[i]);
+            i++;
         }
         return bins;
     }
