@@ -18,7 +18,7 @@ namespace context_selector{
 
     unsigned int getContextIdOrder1EG0(unsigned int, unsigned int, unsigned int);
 
-    void getContextIDsOrder1EG0(std::vector<unsigned int>&, unsigned int, unsigned int, unsigned int);
+    void getContextIdsOrder1EG0(std::vector<unsigned int>&, unsigned int, unsigned int, unsigned int);
 };
 
 #endif  // RWTH_PYTHON_IF
