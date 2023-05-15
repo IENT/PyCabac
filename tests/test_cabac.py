@@ -8,8 +8,8 @@ class MainTest(unittest.TestCase):
 
     def _call_cabac_order1(self, fun='EG0'):
         rest_pos = 10
-        num_max_prefix_val = 8
         num_max_val = 255
+        num_max_prefix_val = int(math.floor(math.log2(num_max_val/(2**0) + 1)) + 1)
         num_bins = 8
         num_values = 1000
         num_ctxs = 3*rest_pos + 1
