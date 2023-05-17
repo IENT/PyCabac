@@ -13,6 +13,7 @@ class MainTest(unittest.TestCase):
         num_bins = 8
         num_values = 1000
         num_ctxs = 3*rest_pos + 1
+        k = 1
         symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
         #symbols = [0,1,2,3,4,5,6,7]
         #num_values = len(symbols)
@@ -39,6 +40,10 @@ class MainTest(unittest.TestCase):
                 enc.encodeBinsEG0bypass(symbol)
             elif fun == 'EG0':
                 enc.encodeBinsEG0order1(symbol, symbolPrev, rest_pos, num_max_prefix_val)
+            elif fun == 'EGkbypass':
+                enc.encodeBinsEGkbypass(symbol, k)
+            elif fun == 'EGk':
+                enc.encodeBinsEGkorder1(symbol, symbolPrev, k, rest_pos, num_max_prefix_val)
 
         
         enc.encodeBinTrm(1)
@@ -70,6 +75,11 @@ class MainTest(unittest.TestCase):
                 decodedSymbol = dec.decodeBinsEG0bypass()
             elif fun == 'EG0':
                 decodedSymbol = dec.decodeBinsEG0order1(decodedSymbolPrev, rest_pos, num_max_prefix_val)
+            elif fun == 'EGkbypass':
+                decodedSymbol = dec.decodeBinsEGkbypass(k)
+            elif fun == 'EGk':
+                decodedSymbol = dec.decodeBinsEGkorder1(decodedSymbolPrev, k, rest_pos, num_max_prefix_val)
+
             decodedSymbols.append(decodedSymbol)
         
         dec.decodeBinTrm()
@@ -80,7 +90,7 @@ class MainTest(unittest.TestCase):
 
     def test_encode_symbols_order1(self):
 
-        funs = ['BIbypass', 'TUbypass', 'TU', 'EG0bypass', 'EG0']
+        funs = ['BIbypass', 'TUbypass', 'TU', 'EG0bypass', 'EG0', 'EGkbypass', 'EGk']
 
         for fun in funs:
             print('Testing function: ' + fun)

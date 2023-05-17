@@ -121,6 +121,32 @@ namespace contextSelector{
         getContextIdsOrder1TU(ctxIds, prevNumLeadZeros, restPos, numMaxPrefixBins);
 
     }
+
+    unsigned int getContextIdOrder1EGk(unsigned int n, unsigned int symbolPrev, unsigned int k, unsigned int restPos=10){
+        /*
+        EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
+        The prefix is modelled as a TU code with a context for each bin.
+        */
+
+        // Get number of leading zeros to encode previous symbol with EGk code
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + (1 << k))) - k);
+
+        // Return context ID for the prefix TU code
+        return getContextIdOrder1TU(n, prevNumLeadZeros, restPos);
+    }
+
+    void getContextIdsOrder1EGk(std::vector<unsigned int>& ctxIds, unsigned int symbolPrev, unsigned int k, unsigned int restPos, unsigned int numMaxPrefixBins=48){
+        /*
+        Get context IDs for all bins of a EGk-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
+        */
+        
+        // Get number of leading zeros to encode previous symbol with EGk code
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + (1 << k))) - k);
+
+        // Get Context IDs for the prefix TU code
+        getContextIdsOrder1TU(ctxIds, prevNumLeadZeros, restPos, numMaxPrefixBins);
+
+    }
 };
 
 #endif  // RWTH_PYTHON_IF

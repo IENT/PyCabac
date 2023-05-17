@@ -166,9 +166,60 @@ TEST_CASE("test_encodeSymbolsOrder1")
     }
     binDecoder.decodeBinTrm();
     binDecoder.finish();
+    
+    REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
+}
 
-    //EXPECT_EQ(symbols, symbolsDecoded);
+TEST_CASE("test_encodeSymbolsEGk")
+{
+    const int maxVal = 255;
+    const int numSymbols = 1000;
+    const int restPos = 10;
+    const int num_ctx = restPos * 3 + 1;
+    const int numMaxPrefixBins = 12;
+    const int numBins = 8;
+    const int k = 0;
+    std::cout << "--- test_encodeSymbols" << std::endl;
 
+    std::vector<unsigned int> symbols(numSymbols);
+    fillVectorRandomGeometric(&symbols);
+    
+    //std::vector<unsigned> symbols = {255, 0, 1, 2, 3, 4, 5, 6, 7};
+
+    cabacSimpleSequenceEncoder binEncoder;
+    binEncoder.initCtx(num_ctx, 0.5, 8);
+    binEncoder.start();
+
+    unsigned int symbolPrev = 0;
+    for (unsigned int i = 0; i < symbols.size(); i++) {
+        if(i > 0){
+            symbolPrev = symbols[i-1];
+        }
+        //binEncoder.encodeBinsEG0order1(symbols[i], symbolPrev, restPos, numMaxPrefixBins);
+        binEncoder.encodeBinsEGkbypass(symbols[i], k);
+    }
+
+    binEncoder.encodeBinTrm(1);
+    binEncoder.finish();
+    binEncoder.writeByteAlignment();
+
+    std::vector<uint8_t> byteVector = binEncoder.getBitstream();
+
+    cabacSimpleSequenceDecoder binDecoder(byteVector);
+    binDecoder.initCtx(num_ctx, 0.5, 8);
+    binDecoder.start();
+    std::vector<unsigned int> symbolsDecoded = std::vector<unsigned int>(symbols.size(), 0);
+    unsigned symbolDecodedPrev = 0;
+    for (unsigned int i = 0; i < symbolsDecoded.size(); i++) {
+        if(i > 0){
+            symbolDecodedPrev = symbolsDecoded[i-1];
+        }
+        //symbolsDecoded[i] = binDecoder.decodeBinsEG0order1(symbolDecodedPrev, restPos, numMaxPrefixBins);
+        symbolsDecoded[i] = binDecoder.decodeBinsEGkbypass(k);
+        //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
+    }
+    binDecoder.decodeBinTrm();
+    binDecoder.finish();
     
     REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
 }
