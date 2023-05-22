@@ -51,7 +51,7 @@ namespace contextSelector{
     */
 
 
-    unsigned int getContextIdOrder1TU(unsigned int n, unsigned int symbolPrev, unsigned int restPos=10){
+    unsigned int getContextIdOrder1TU(unsigned int n, uint64_t symbolPrev, unsigned int restPos=10){
         /* 
         ContextID dependent on bin at position n in TU-binarized bin-string corresponding to previous symbol
 
@@ -84,7 +84,7 @@ namespace contextSelector{
         return ctxId;
     }
 
-    void getContextIdsOrder1TU(std::vector<unsigned int>& ctxIds, unsigned int symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
+    void getContextIdsOrder1TU(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
         /* 
         Get context IDs for all bins of a TU-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the TU code.
         */
@@ -94,7 +94,7 @@ namespace contextSelector{
         }
     }
 
-    unsigned int getContextIdOrder1EG0(unsigned int n, unsigned int symbolPrev, unsigned int restPos=10){
+    unsigned int getContextIdOrder1EG0(unsigned int n, uint64_t symbolPrev, unsigned int restPos=10){
         /*
         EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
         The prefix is modelled as a TU code with a context for each bin.
@@ -107,7 +107,7 @@ namespace contextSelector{
         return getContextIdOrder1TU(n, prevNumLeadZeros, restPos);
     }
 
-    void getContextIdsOrder1EG0( std::vector<unsigned int>& ctxIds, unsigned int symbolPrev, unsigned int restPos, unsigned int numMaxPrefixBins=48){
+    void getContextIdsOrder1EG0( std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int restPos, unsigned int numMaxPrefixBins=48){
         /*
         Get context IDs for all bins of a EG0-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
         */
@@ -122,7 +122,7 @@ namespace contextSelector{
 
     }
 
-    unsigned int getContextIdOrder1EGk(unsigned int n, unsigned int symbolPrev, unsigned int k, unsigned int restPos=10){
+    unsigned int getContextIdOrder1EGk(unsigned int n, uint64_t symbolPrev, unsigned int k, unsigned int restPos=10){
         /*
         EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
         The prefix is modelled as a TU code with a context for each bin.
@@ -135,7 +135,7 @@ namespace contextSelector{
         return getContextIdOrder1TU(n, prevNumLeadZeros, restPos);
     }
 
-    void getContextIdsOrder1EGk(std::vector<unsigned int>& ctxIds, unsigned int symbolPrev, unsigned int k, unsigned int restPos, unsigned int numMaxPrefixBins=48){
+    void getContextIdsOrder1EGk(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int k, unsigned int restPos, unsigned int numMaxPrefixBins=48){
         /*
         Get context IDs for all bins of a EGk-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
         */

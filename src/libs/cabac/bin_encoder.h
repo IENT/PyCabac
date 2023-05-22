@@ -318,18 +318,18 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Taken from GABAC/GENIE
-  void encodeBinsBIbypass(unsigned symbol, const unsigned int numBins) {
+  void encodeBinsBIbypass(uint64_t symbol, const unsigned int numBins) {
     encodeBinsEP(symbol, numBins);
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Taken from GABAC/GENIE
-  void encodeBinsBI(unsigned int symbol, const std::vector<unsigned int>& ctxIds, const unsigned int numBins) {
+  void encodeBinsBI(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const unsigned int numBins) {
     unsigned int bin = 0;  // bin to encode
     unsigned int i = 0;  // counter for context selection
     for (int exponent = numBins - 1; exponent >= 0; exponent--) {  // i must be signed
       // 0x1u is the same as 0x1. (The u stands for unsigned.). i & 0x1u is the same as i % 2?
-      bin = static_cast<unsigned int>(symbol >> static_cast<unsigned>(exponent)) & 0x1u;
+      bin = static_cast<unsigned int>(static_cast<uint64_t>(symbol) >> static_cast<uint8_t>(exponent)) & 0x1u;
       encodeBin(bin, ctxIds[i]);
       i++;
     }
@@ -337,8 +337,8 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Taken from GABAC/GENIE
-  void encodeBinsTUbypass(unsigned symbol, const unsigned int numMaxBins=512) {
-    for (unsigned i = 0; i < symbol; i++) {
+  void encodeBinsTUbypass(uint64_t symbol, const unsigned int numMaxBins=512) {
+    for (uint64_t i = 0; i < symbol; i++) {
       encodeBinEP(1);
     }
     if (numMaxBins > symbol) {  // symbol == numMaxBins is coded as all 1s
@@ -348,10 +348,10 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Taken from GABAC/GENIE
-  void encodeBinsTU(unsigned symbol, const std::vector<unsigned int>& ctxIds, const unsigned int numMaxBins=512) {
+  void encodeBinsTU(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const unsigned int numMaxBins=512) {
     //assert(ctxIds.size() <= numMaxBins);
 
-    unsigned int i;
+    uint64_t i;
     for (i = 0; i < symbol; i++) {
       encodeBin(1, ctxIds[i]);
     }
@@ -362,7 +362,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Taken from GABAC/GENIE
-  void encodeBinsEG0bypass(unsigned symbol) {
+  void encodeBinsEG0bypass(uint64_t symbol) {
     auto valuePlus1 = (unsigned int)(symbol + 1);
     auto numLeadZeros = (unsigned int)floor(log2(valuePlus1));
 
@@ -376,7 +376,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Taken from GABAC/GENIE
-  void encodeBinsEG0(unsigned symbol, const std::vector<unsigned int>& ctxIds) {
+  void encodeBinsEG0(uint64_t symbol, const std::vector<unsigned int>& ctxIds) {
     auto valuePlus1 = (unsigned int)(symbol + 1);
     auto numLeadZeros = (unsigned int)floor(log2(valuePlus1));
 
@@ -392,7 +392,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEGkbypass(unsigned symbol, unsigned k) {
+  void encodeBinsEGkbypass(uint64_t symbol, unsigned k) {
     //assert(k > 0); // For k=0, use more efficient GABAC method
     
     if(symbol == 0 && k == 0) {
@@ -412,7 +412,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEGk(unsigned symbol, unsigned k, const std::vector<unsigned int>& ctxIds) {
+  void encodeBinsEGk(uint64_t symbol, unsigned k, const std::vector<unsigned int>& ctxIds) {
     //assert(k > 0); // For k=0, use more efficient GABAC method
 
     if(symbol == 0 && k == 0) {
@@ -442,7 +442,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsTUorder1(unsigned int symbol, unsigned int symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
+  void encodeBinsTUorder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
 
     // Get context ids
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
@@ -454,9 +454,9 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsTUorder1(std::vector<unsigned> symbols, unsigned int restPos=10, unsigned int numMaxBins=512){
+  void encodeSymbolsTUorder1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxBins=512){
 
-    unsigned int symbolPrev = 0;
+    uint64_t symbolPrev = 0;
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
     for (unsigned int n = 0; n < symbols.size(); n++) {
@@ -473,7 +473,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEG0order1(unsigned int symbol, unsigned int symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeBinsEG0order1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
     // Get context ids for each bin
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -486,9 +486,9 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsEG0order1(std::vector<unsigned> symbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeSymbolsEG0order1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
-    unsigned int symbolPrev = 0;
+    uint64_t symbolPrev = 0;
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
 
     for (unsigned int n = 0; n < symbols.size(); n++) {
@@ -505,7 +505,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEGkorder1(unsigned int symbol, unsigned int symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeBinsEGkorder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
     // Get context ids for each bin
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -518,9 +518,9 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsEGkorder1(std::vector<unsigned> symbols, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeSymbolsEGkorder1(std::vector<uint64_t> symbols, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
-    unsigned int symbolPrev = 0;
+    uint64_t symbolPrev = 0;
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
 
     for (unsigned int n = 0; n < symbols.size(); n++) {
