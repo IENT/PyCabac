@@ -342,7 +342,7 @@ public:
       encodeBinEP(1);
     }
     if (numMaxBins > symbol) {  // symbol == numMaxBins is coded as all 1s
-      encodeBinEP(0);
+      encodeBinEP(0); // terminating '0'
     }
   }
 
@@ -356,7 +356,7 @@ public:
       encodeBin(1, ctxIds[i]);
     }
     if (symbol < numMaxBins) {  // symbol == numMaxBins is coded as all 1s
-      encodeBin(0, ctxIds[i++]);
+      encodeBin(0, ctxIds[i++]); // terminating '0'
     }
   }
 
@@ -367,7 +367,7 @@ public:
     auto numLeadZeros = (unsigned int)floor(log2(valuePlus1));
 
     /* prefix */
-    encodeBinsBIbypass(1, numLeadZeros + 1);
+    encodeBinsBIbypass(1, numLeadZeros + 1); // TU encoding (numLeadZeros '0' and terminating '1')
     if (numLeadZeros) {
       /* suffix */
       encodeBinsBIbypass(valuePlus1 & ((1u << numLeadZeros) - 1), numLeadZeros);
@@ -383,7 +383,7 @@ public:
     assert(ctxIds.size() >= (numLeadZeros + 1));
 
     /* prefix */
-    encodeBinsBI(1, ctxIds, numLeadZeros + 1);
+    encodeBinsBI(1, ctxIds, numLeadZeros + 1); // TU encoding (numLeadZeros '0' and terminating '1')
     if (numLeadZeros) {
         /* suffix */
       encodeBinsBIbypass(valuePlus1 & ((1u << numLeadZeros) - 1), numLeadZeros);
@@ -404,7 +404,7 @@ public:
     auto m = (unsigned int)((1 << (numLeadZeros + k)) - (1 << k));
 
     /* prefix */
-    encodeBinsBIbypass(1, numLeadZeros + 1); // TU encoding
+    encodeBinsBIbypass(1, numLeadZeros + 1); // TU encoding (numLeadZeros '0' and terminating '1')
     /* suffix */
     encodeBinsBIbypass(symbol - m, numLeadZeros + k); // TU encoding of (symbol - m)
 
@@ -426,7 +426,7 @@ public:
 
     /* prefix */
     assert(ctxIds.size() >= (numLeadZeros + 1));
-    encodeBinsBI(1, ctxIds, numLeadZeros + 1); // TU encoding
+    encodeBinsBI(1, ctxIds, numLeadZeros + 1); // TU encoding (numLeadZeros '0' and terminating '1')
 
     /* suffix */
     encodeBinsBIbypass(symbol - m, numLeadZeros + k); // TU encoding of (symbol - m)
@@ -446,8 +446,8 @@ public:
 
     // Get context ids
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
-    contextSelector::getContextIdsOrder1TU(ctxIds, symbolPrev, restPos, numMaxBins);
-    
+    contextSelector::getContextIdsBinsOrder1TU(ctxIds, symbolPrev, restPos);
+
     // Encode symbol
     encodeBinsTU(symbol, ctxIds, numMaxBins);
   }
@@ -464,7 +464,7 @@ public:
       if(n > 0){
         symbolPrev = symbols[n - 1];
       }
-      contextSelector::getContextIdsOrder1TU(ctxIds, symbolPrev, restPos, numMaxBins);
+      contextSelector::getContextIdsBinsOrder1TU(ctxIds, symbolPrev, restPos);
 
       // Encode bins
       encodeBinsTU(symbols[n], ctxIds, numMaxBins);
@@ -477,7 +477,7 @@ public:
 
     // Get context ids for each bin
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-    contextSelector::getContextIdsOrder1EG0(ctxIds, symbolPrev, restPos, numMaxPrefixBins);
+    contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
 
     // Encode bins
     encodeBinsEG0(symbol, ctxIds);
@@ -496,7 +496,7 @@ public:
       if(n > 0) {
         symbolPrev = symbols[n - 1];
       } 
-      contextSelector::getContextIdsOrder1EG0(ctxIds, symbolPrev, restPos, numMaxPrefixBins);
+      contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
 
       // Encode bins
       encodeBinsEG0(symbols[n], ctxIds);
@@ -509,7 +509,7 @@ public:
 
     // Get context ids for each bin
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-    contextSelector::getContextIdsOrder1EGk(ctxIds, symbolPrev, k, restPos, numMaxPrefixBins);
+    contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
 
     // Encode bins
     encodeBinsEGk(symbol, k, ctxIds);
@@ -528,12 +528,13 @@ public:
       if(n > 0) {
         symbolPrev = symbols[n - 1];
       } 
-      contextSelector::getContextIdsOrder1EGk(ctxIds, symbolPrev, k, restPos, numMaxPrefixBins);
+      contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
 
       // Encode bins
       encodeBinsEGk(symbols[n], k, ctxIds);
     }
   }
+
 }; // class cabacSimpleSequenceEncoder
 
 #endif // RWTH_PYTHON_IF

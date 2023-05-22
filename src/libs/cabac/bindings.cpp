@@ -15,6 +15,8 @@ PYBIND11_MODULE(cabac, m) {
 #if RWTH_ENABLE_TRACING
     py::bind_vector<std::vector<std::list<std::pair<uint16_t, uint8_t>>>>(m, "trace");
 #endif
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Encoder
     py::class_<cabacEncoder>(m, "cabacEncoder")
         .def(py::init<>())
         .def("start", &cabacEncoder::start)
@@ -31,8 +33,9 @@ PYBIND11_MODULE(cabac, m) {
         .def("writeByteAlignment", &cabacEncoder::writeByteAlignment)
         .def("initCtx", static_cast<void (cabacEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacEncoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
         .def("initCtx", static_cast<void (cabacEncoder::*)(unsigned, double, uint8_t)>(&cabacEncoder::initCtx), "Initialize all contexts to same probability and shift idx.");
-        
-
+    
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Decoder
     py::class_<cabacDecoder>(m, "cabacDecoder")
         .def(py::init<std::vector<uint8_t>>())
         .def("start", &cabacDecoder::start)
@@ -44,8 +47,9 @@ PYBIND11_MODULE(cabac, m) {
         .def("getNumBitsRead", &cabacDecoder::getNumBitsRead)
         .def("initCtx", static_cast<void (cabacDecoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacDecoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
         .def("initCtx", static_cast<void (cabacDecoder::*)(unsigned, double, uint8_t)>(&cabacDecoder::initCtx), "Initialize all contexts to same probability and shift idx.");
-    
-    
+
+    // ---------------------------------------------------------------------------------------------------------------------    
+    // SymbolEncoder
     py::class_<cabacSymbolEncoder, cabacEncoder>(m, "cabacSymbolEncoder")
         .def(py::init<>())
         .def("encodeBinsBIbypass", &cabacSymbolEncoder::encodeBinsBIbypass)
@@ -63,7 +67,8 @@ PYBIND11_MODULE(cabac, m) {
         .def("encodeBinsEGkbypass", &cabacSymbolEncoder::encodeBinsEGkbypass)
         .def("encodeBinsEGk", &cabacSymbolEncoder::encodeBinsEGk);
 
-
+    // ---------------------------------------------------------------------------------------------------------------------
+    // SymbolDecoder
     py::class_<cabacSymbolDecoder, cabacDecoder>(m, "cabacSymbolDecoder")
         .def(py::init<std::vector<uint8_t>>())
         .def("decodeBinsBIbypass", &cabacSymbolDecoder::decodeBinsBIbypass)
@@ -78,6 +83,8 @@ PYBIND11_MODULE(cabac, m) {
         .def("decodeBinsEGkbypass", &cabacSymbolDecoder::decodeBinsEGkbypass)
         .def("decodeBinsEGk", &cabacSymbolDecoder::decodeBinsEGk);
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // SequenceEncoder
     py::class_<cabacSimpleSequenceEncoder, cabacSymbolEncoder>(m, "cabacSimpleSequenceEncoder")
         .def(py::init<>())
         .def("encodeBinsTUorder1", &cabacSimpleSequenceEncoder::encodeBinsTUorder1,
@@ -93,7 +100,8 @@ PYBIND11_MODULE(cabac, m) {
             py::arg("symbol"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos") = 10, py::arg("numMaxPrefixBins") = 24
         );
 
-
+    // ---------------------------------------------------------------------------------------------------------------------
+    // SequenceDecoder
     py::class_<cabacSimpleSequenceDecoder, cabacSymbolDecoder>(m, "cabacSimpleSequenceDecoder")
         .def(py::init<std::vector<uint8_t>>())
         .def("decodeBinsTUorder1", &cabacSimpleSequenceDecoder::decodeBinsTUorder1,
@@ -109,18 +117,32 @@ PYBIND11_MODULE(cabac, m) {
             py::arg("symbolPrev"), py::arg("k"), py::arg("restPos") = 10, py::arg("numMaxPrefixBins") = 24
         );
 
-    m.def("getContextIdOrder1TU", &contextSelector::getContextIdOrder1TU, 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Context IDs
+    m.def("getContextIdBinsOrder1TU", &contextSelector::getContextIdBinsOrder1TU, 
         py::arg("n"), py::arg("symbolPrev"), py::arg("restPos") = 10);
-    m.def("getContextIdsOrder1TU", [](unsigned int symbolPrev, unsigned int restPos = 10, unsigned int numMaxBins = 512) {
+    m.def("getContextIdsBinsOrder1TU", [](unsigned int symbolPrev, unsigned int restPos = 10, unsigned int numMaxBins = 512) {
         std::vector<unsigned int> ctxIDs(numMaxBins, 0);
-        contextSelector::getContextIdsOrder1TU(ctxIDs, symbolPrev, restPos, numMaxBins);
+        contextSelector::getContextIdsBinsOrder1TU(ctxIDs, symbolPrev, restPos);
         return ctxIDs;
     });
-    m.def("getContextIdOrder1EG0", &contextSelector::getContextIdOrder1EG0, 
+    m.def("getContextIdBinsOrder1EG0", &contextSelector::getContextIdBinsOrder1EG0, 
         py::arg("n"), py::arg("symbolPrev"), py::arg("restPos") = 10);
-    m.def("getContextIdsOrder1EG0", [](unsigned int symbolPrev, unsigned int restPos = 10, unsigned int numMaxPrefixBins = 24) {
+    m.def("getContextIdsBinsOrder1EG0", [](unsigned int symbolPrev, unsigned int restPos = 10, unsigned int numMaxPrefixBins = 24) {
         std::vector<unsigned int> ctxIDs(numMaxPrefixBins, 0);
-        contextSelector::getContextIdsOrder1EG0(ctxIDs, symbolPrev, restPos, numMaxPrefixBins);
+        contextSelector::getContextIdsBinsOrder1EG0(ctxIDs, symbolPrev, restPos);
         return ctxIDs;
     });
-}
+    m.def("getContextIdBinsOrder1EGk", &contextSelector::getContextIdBinsOrder1EGk, 
+        py::arg("n"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos") = 10);
+    m.def("getContextIdsBinsOrder1EGk", [](unsigned int symbolPrev, unsigned int k, unsigned int restPos = 10, unsigned int numMaxPrefixBins = 24) {
+        std::vector<unsigned int> ctxIDs(numMaxPrefixBins, 0);
+        contextSelector::getContextIdsBinsOrder1EGk(ctxIDs, symbolPrev, k, restPos);
+        return ctxIDs;
+    });
+
+    py::enum_<contextSelector::ContextModelId>(m, "ContextModelId")
+        .value("BINSORDER1", contextSelector::ContextModelId::BINSORDER1)
+        .value("SYMBOLORDER1", contextSelector::ContextModelId::SYMBOLORDER1);
+
+}  // PYBIND11_MODULE(cabac, m)

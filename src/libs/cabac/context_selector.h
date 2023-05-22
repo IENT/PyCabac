@@ -11,23 +11,30 @@
 
 #if RWTH_PYTHON_IF
 namespace contextSelector{
-
     
-    //unsigned int getContextIdOrder1BI(unsigned int, unsigned int, unsigned int);
+    enum class ContextModelId : uint8_t {
+        BINSORDER1 = 0,
+        SYMBOLORDER1 = 1
+    };
 
-    //void getContextIdsOrder1BI(std::vector<unsigned int>&, unsigned int, unsigned int, unsigned int);
+    /* context model on bin-to-symbol level */
+    // TU binarization
+    unsigned int getContextIdBinsOrder1TU(unsigned int, uint64_t, unsigned int);
+    void getContextIdsBinsOrder1TU(std::vector<unsigned int>&, uint64_t, unsigned int);
 
-    unsigned int getContextIdOrder1TU(unsigned int, uint64_t, unsigned int);
+    // EG0 binarization
+    unsigned int getContextIdBinsOrder1EG0(unsigned int, uint64_t, unsigned int);
+    void getContextIdsBinsOrder1EG0(std::vector<unsigned int>&, uint64_t, unsigned int);
 
-    void getContextIdsOrder1TU(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int);
+    // EGk binarization
+    unsigned int getContextIdBinsOrder1EGk(unsigned int, uint64_t, unsigned int, unsigned int);
+    void getContextIdsBinsOrder1EGk(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int);
 
-    unsigned int getContextIdOrder1EG0(unsigned int, uint64_t, unsigned int);
+    /* context model on symbol-to-symbol level */
+    // TU binarization
+    unsigned int getContextIdSymbolOrder1TU(unsigned int, uint64_t, unsigned int, unsigned int);
+    void getContextIdsSymbolOrder1TU(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int);
 
-    void getContextIdsOrder1EG0(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int);
-
-    unsigned int getContextIdOrder1EGk(unsigned int, uint64_t, unsigned int, unsigned int);
-
-    void getContextIdsOrder1EGk(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int, unsigned int);
 };
 
 #endif  // RWTH_PYTHON_IF

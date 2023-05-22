@@ -148,7 +148,7 @@ class MainTest(unittest.TestCase):
             
             n = list(range(0, symbol+1))
             ctx_ids = ctx_ids_tu(n, symbolPrev, num_rest)
-            ctx_ids2 = cabac.getContextIdsOrder1TU(symbolPrev, num_rest, symbol+1)
+            ctx_ids2 = cabac.getContextIdsBinsOrder1TU(symbolPrev, num_rest, symbol+1)
             self.assertTrue((ctx_ids == ctx_ids2).all())
 
 
