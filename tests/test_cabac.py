@@ -4,18 +4,33 @@ import cabac
 import math
 
 
+def create_random_symbols_geometric_distribution(num_values, p):
+    import numpy as np
+    #symbols = []
+    #for i in range(0, num_values):
+    #    u = random.random()
+    #    symbol = math.floor(math.log(u)/math.log(1-p))  #⌊ln(u)/ln(1−p)⌋
+    #    symbols.append(symbol)
+    #return symbols
+
+    return (np.random.default_rng(seed=0).geometric(p, num_values) - 1).tolist()
+
 class MainTest(unittest.TestCase):
+    
 
     def _call_cabac_order1(self, fun='EG0'):
         
-        rest_pos = 10
+        rest_pos = 8
+        symbol_max = 16
         num_max_val = 255
         num_max_prefix_val = int(math.floor(math.log2(num_max_val/(2**0) + 1)) + 1)
         num_bins = 8
         num_values = 1000
-        num_ctxs = 3*rest_pos + 1
+        #num_ctxs = 3*rest_pos + 1 # binsOrder1
+        num_ctxs = (symbol_max+2)*rest_pos + 1  # symbolOrder1
         k = 1
         symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
+        symbols = create_random_symbols_geometric_distribution(num_values, 0.05)
         #symbols = [0,1,2,3,4,5,6,7]
         #num_values = len(symbols)
         
@@ -31,22 +46,25 @@ class MainTest(unittest.TestCase):
         
             if fun == 'BIbypass':
                 enc.encodeBinsBIbypass(symbol, num_bins)
-            #elif fun == 'BI':
-            #    enc.encodeBinsBIorder1(symbol, symbolPrev, num_bins, rest_pos)
             elif fun == 'TUbypass':
                 enc.encodeBinsTUbypass(symbol, num_max_val)
-            elif fun == 'TU':
-                enc.encodeBinsTUorder1(symbol, symbolPrev, rest_pos, num_max_val)
+            elif fun == 'TUbinsOrder1':
+                enc.encodeBinsTUbinsOrder1(symbol, symbolPrev, rest_pos, num_max_val)
+            elif fun == 'TUsymbolOrder1':
+                enc.encodeBinsTUsymbolOrder1(symbol, symbolPrev, rest_pos, symbol_max, num_max_val)
             elif fun == 'EG0bypass':
                 enc.encodeBinsEG0bypass(symbol)
-            elif fun == 'EG0':
-                enc.encodeBinsEG0order1(symbol, symbolPrev, rest_pos, num_max_prefix_val)
+            elif fun == 'EG0binsOrder1':
+                enc.encodeBinsEG0binsOrder1(symbol, symbolPrev, rest_pos, num_max_prefix_val)
+            elif fun == 'EG0symbolOrder1':
+                enc.encodeBinsEG0symbolOrder1(symbol, symbolPrev, rest_pos, symbol_max, num_max_prefix_val)
             elif fun == 'EGkbypass':
                 enc.encodeBinsEGkbypass(symbol, k)
-            elif fun == 'EGk':
-                enc.encodeBinsEGkorder1(symbol, symbolPrev, k, rest_pos, num_max_prefix_val)
-
-        
+            elif fun == 'EGkbinsOrder1':
+                enc.encodeBinsEGkbinsOrder1(symbol, symbolPrev, k, rest_pos, num_max_prefix_val)
+            elif fun == 'EGksymbolOrder1':
+                enc.encodeBinsEGksymbolOrder1(symbol, symbolPrev, k, rest_pos, symbol_max, num_max_prefix_val)
+                    
         enc.encodeBinTrm(1)
         enc.finish()
         enc.writeByteAlignment()
@@ -66,20 +84,24 @@ class MainTest(unittest.TestCase):
             
             if fun == 'BIbypass':
                 decodedSymbol = dec.decodeBinsBIbypass(num_bins)
-            #elif fun == 'BI':
-                #decodedSymbol = dec.decodeBinsBIorder1(decodedSymbolPrev, num_bins, rest_pos)
             elif fun == 'TUbypass':
                 decodedSymbol = dec.decodeBinsTUbypass(num_max_val)
-            elif fun == 'TU':
-                decodedSymbol = dec.decodeBinsTUorder1(decodedSymbolPrev, rest_pos, num_max_val)
+            elif fun == 'TUbinsOrder1':
+                decodedSymbol = dec.decodeBinsTUbinsOrder1(decodedSymbolPrev, rest_pos, num_max_val)
+            elif fun == 'TUsymbolOrder1':
+                decodedSymbol = dec.decodeBinsTUsymbolOrder1(decodedSymbolPrev, rest_pos, symbol_max, num_max_val)
             elif fun == 'EG0bypass':
                 decodedSymbol = dec.decodeBinsEG0bypass()
-            elif fun == 'EG0':
-                decodedSymbol = dec.decodeBinsEG0order1(decodedSymbolPrev, rest_pos, num_max_prefix_val)
+            elif fun == 'EG0binsOrder1':
+                decodedSymbol = dec.decodeBinsEG0binsOrder1(decodedSymbolPrev, rest_pos, num_max_prefix_val)
+            elif fun == 'EG0symbolOrder1':
+                decodedSymbol = dec.decodeBinsEG0symbolOrder1(decodedSymbolPrev, rest_pos, symbol_max, num_max_prefix_val)
             elif fun == 'EGkbypass':
                 decodedSymbol = dec.decodeBinsEGkbypass(k)
-            elif fun == 'EGk':
-                decodedSymbol = dec.decodeBinsEGkorder1(decodedSymbolPrev, k, rest_pos, num_max_prefix_val)
+            elif fun == 'EGkbinsOrder1':
+                decodedSymbol = dec.decodeBinsEGkbinsOrder1(decodedSymbolPrev, k, rest_pos, num_max_prefix_val)
+            elif fun == 'EGksymbolOrder1':
+                decodedSymbol = dec.decodeBinsEGksymbolOrder1(decodedSymbolPrev, k, rest_pos, symbol_max, num_max_prefix_val)
 
             decodedSymbols.append(decodedSymbol)
         
@@ -91,8 +113,8 @@ class MainTest(unittest.TestCase):
 
     def test_encode_symbols_order1(self):
         random.seed(0)
-        print('test_encode_symbols_order1')
-        funs = ['BIbypass', 'TUbypass', 'TU', 'EG0bypass', 'EG0', 'EGkbypass', 'EGk']
+        print('test_encode_symbols_symbol_order1')
+        funs = ['BIbypass', 'TUbypass', 'TUbinsOrder1', 'TUsymbolOrder1', 'EG0bypass', 'EG0binsOrder1', 'EG0symbolOrder1', 'EGkbypass', 'EGkbinsOrder1', 'EGksymbolOrder1']
 
         for fun in funs:
             print('Testing function: ' + fun)

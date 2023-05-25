@@ -275,8 +275,10 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
     cabacSimpleSequenceDecoder(std::vector<uint8_t> bs) : cabacSymbolDecoder(bs){}
 
     // ---------------------------------------------------------------------------------------------------------------------
+    // Context model dependent on bins of previous symbol value (bin at same position)
+    // ---------------------------------------------------------------------------------------------------------------------
 
-    uint64_t decodeBinsTUorder1(uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512) {
+    uint64_t decodeBinsTUbinsOrder1(uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512) {
       // Get context ids
       std::vector<unsigned int> ctxIds(numMaxBins, 0);
       contextSelector::getContextIdsBinsOrder1TU(ctxIds, symbolPrev, restPos);
@@ -285,7 +287,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       return decodeBinsTU(ctxIds, numMaxBins);
     }
 
-    std::vector<uint64_t> decodeSymbolsTUorder1(unsigned int numSymbols, unsigned int restPos=10, unsigned int numMaxBins=512) {
+    std::vector<uint64_t> decodeSymbolsTUbinsOrder1(unsigned int numSymbols, unsigned int restPos=10, unsigned int numMaxBins=512) {
       std::vector<uint64_t> symbols(numSymbols, 0);
       uint64_t symbolPrev = 0;
       std::vector<unsigned int> ctxIds(numMaxBins, 0);
@@ -306,7 +308,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    uint64_t decodeBinsEG0order1(uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
+    uint64_t decodeBinsEG0binsOrder1(uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
       // Get context ids
       std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
       contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
@@ -317,7 +319,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    std::vector<uint64_t> decodeSymbolsEG0order1(unsigned int numSymbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=512) {
+    std::vector<uint64_t> decodeSymbolsEG0binsOrder1(unsigned int numSymbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=512) {
       std::vector<uint64_t> symbols(numSymbols, 0);
       uint64_t symbolPrev = 0;
       std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -338,7 +340,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
         // ---------------------------------------------------------------------------------------------------------------------
 
-    uint64_t decodeBinsEGkorder1(uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
+    uint64_t decodeBinsEGkbinsOrder1(uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
       // Get context ids
       std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
       contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
@@ -349,7 +351,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    std::vector<uint64_t> decodeSymbolsEGkorder1(unsigned int numSymbols, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=512) {
+    std::vector<uint64_t> decodeSymbolsEGkbinsOrder1(unsigned int numSymbols, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=512) {
       std::vector<uint64_t> symbols(numSymbols, 0);
       uint64_t symbolPrev = 0;
       std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -360,6 +362,103 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
           symbolPrev = symbols[n-1];
         }
         contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
+
+        // Decode bins
+        symbols[n] = decodeBinsEGk(k, ctxIds);
+      }
+
+      return symbols;
+    }
+
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Context model dependent on previous symbol value (integer)
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    uint64_t decodeBinsTUsymbolOrder1(uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512) {
+      // Get context ids
+      std::vector<unsigned int> ctxIds(numMaxBins, 0);
+      contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
+
+      // Decode symbol
+      return decodeBinsTU(ctxIds, numMaxBins);
+    }
+
+    std::vector<uint64_t> decodeSymbolsTUsymbolOrder1(unsigned int numSymbols, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512) {
+      std::vector<uint64_t> symbols(numSymbols, 0);
+      uint64_t symbolPrev = 0;
+      std::vector<unsigned int> ctxIds(numMaxBins, 0);
+
+      for (unsigned int n = 0; n < numSymbols; n++) {
+        // Get context ids for each bin
+        if(n > 0) {
+          symbolPrev = symbols[n-1];
+        }
+        contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
+
+        // Decode bins
+        symbols[n] = decodeBinsTU(ctxIds, numMaxBins);
+      }
+
+      return symbols;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    uint64_t decodeBinsEG0symbolOrder1(uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24) {
+      // Get context ids
+      std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+      contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
+
+      // Decode bins
+      return decodeBinsEG0(ctxIds);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    std::vector<uint64_t> decodeSymbolsEG0symbolOrder1(unsigned int numSymbols, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=512) {
+      std::vector<uint64_t> symbols(numSymbols, 0);
+      uint64_t symbolPrev = 0;
+      std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+
+      for (unsigned int n = 0; n < numSymbols; n++) {
+        // Get context ids for each bin
+        if(n > 0) {
+          symbolPrev = symbols[n-1];
+        }
+        contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
+
+        // Decode bins
+        symbols[n] = decodeBinsEG0(ctxIds);
+      }
+
+      return symbols;
+    }
+
+        // ---------------------------------------------------------------------------------------------------------------------
+
+    uint64_t decodeBinsEGksymbolOrder1(uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24) {
+      // Get context ids
+      std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+      contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
+
+      // Decode bins
+      return decodeBinsEGk(k, ctxIds);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    std::vector<uint64_t> decodeSymbolsEGksymbolOrder1(unsigned int numSymbols, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=512) {
+      std::vector<uint64_t> symbols(numSymbols, 0);
+      uint64_t symbolPrev = 0;
+      std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+
+      for (unsigned int n = 0; n < numSymbols; n++) {
+        // Get context ids for each bin
+        if(n > 0) {
+          symbolPrev = symbols[n-1];
+        }
+        contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
 
         // Decode bins
         symbols[n] = decodeBinsEGk(k, ctxIds);

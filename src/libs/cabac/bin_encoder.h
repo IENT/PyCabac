@@ -441,8 +441,9 @@ public:
   cabacSimpleSequenceEncoder() : cabacSymbolEncoder(){}
 
   // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeBinsTUorder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
+  // Context model dependent on bins of previous symbol value (bin at same position)
+  // ---------------------------------------------------------------------------------------------------------------------
+  void encodeBinsTUbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
 
     // Get context ids
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
@@ -454,7 +455,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsTUorder1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxBins=512){
+  void encodeSymbolsTUbinsOrder1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxBins=512){
 
     uint64_t symbolPrev = 0;
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
@@ -473,7 +474,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEG0order1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeBinsEG0binsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
     // Get context ids for each bin
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -486,7 +487,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsEG0order1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeSymbolsEG0binsOrder1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
     uint64_t symbolPrev = 0;
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -505,7 +506,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEGkorder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeBinsEGkbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
     // Get context ids for each bin
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -518,7 +519,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsEGkorder1(std::vector<uint64_t> symbols, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+  void encodeSymbolsEGkbinsOrder1(std::vector<uint64_t> symbols, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
     uint64_t symbolPrev = 0;
     std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -529,6 +530,103 @@ public:
         symbolPrev = symbols[n - 1];
       } 
       contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
+
+      // Encode bins
+      encodeBinsEGk(symbols[n], k, ctxIds);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // Context model dependent on previous symbol value (integer)
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsTUsymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512){
+
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
+    contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
+
+    // Encode symbol
+    encodeBinsTU(symbol, ctxIds, numMaxBins);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeSymbolsTUsymbolOrder1(std::vector<uint64_t> symbols, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512){
+
+    uint64_t symbolPrev = 0;
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
+
+    for (unsigned int n = 0; n < symbols.size(); n++) {
+      // Get context ids for each bin
+      if(n > 0){
+        symbolPrev = symbols[n - 1];
+      }
+      contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
+
+      // Encode bins
+      encodeBinsTU(symbols[n], ctxIds, numMaxBins);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEG0symbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
+
+    // Encode bins
+    encodeBinsEG0(symbol, ctxIds);
+    
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeSymbolsEG0symbolOrder1(std::vector<uint64_t> symbols, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
+
+    uint64_t symbolPrev = 0;
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+
+    for (unsigned int n = 0; n < symbols.size(); n++) {
+      // Get context ids for each bin
+      if(n > 0) {
+        symbolPrev = symbols[n - 1];
+      } 
+      contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
+
+      // Encode bins
+      encodeBinsEG0(symbols[n], ctxIds);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEGksymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
+
+    // Encode bins
+    encodeBinsEGk(symbol, k, ctxIds);
+    
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeSymbolsEGksymbolOrder1(std::vector<uint64_t> symbols, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
+
+    uint64_t symbolPrev = 0;
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+
+    for (unsigned int n = 0; n < symbols.size(); n++) {
+      // Get context ids for each bin
+      if(n > 0) {
+        symbolPrev = symbols[n - 1];
+      } 
+      contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
 
       // Encode bins
       encodeBinsEGk(symbols[n], k, ctxIds);

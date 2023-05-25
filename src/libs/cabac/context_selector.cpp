@@ -242,7 +242,7 @@ namespace contextSelector{
         return getContextIdSymbolOrder1TU(n, prevNumLeadZeros, restPos, symbolMax);
     }
 
-    void getContextIdsBSymbolOrder1EGk(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32){
+    void getContextIdsSymbolOrder1EGk(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32){
         /*
         Get context IDs for all bins of a EGk-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
         */

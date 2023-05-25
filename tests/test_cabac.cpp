@@ -186,8 +186,8 @@ TEST_CASE("test_encodeSymbolsOrder1")
         if(i > 0){
             symbolPrev = symbols[i-1];
         }
-        binEncoder.encodeBinsEG0order1(symbols[i], symbolPrev, restPos, numMaxPrefixBins);
-        //binEncoder.encodeBinsTUorder1(symbols[i], symbolPrev, restPos, maxVal);
+        binEncoder.encodeBinsEG0binsOrder1(symbols[i], symbolPrev, restPos, numMaxPrefixBins);
+        //binEncoder.encodeBinsTUbinsOrder1(symbols[i], symbolPrev, restPos, maxVal);
     }
 
     binEncoder.encodeBinTrm(1);
@@ -205,8 +205,8 @@ TEST_CASE("test_encodeSymbolsOrder1")
         if(i > 0){
             symbolDecodedPrev = symbolsDecoded[i-1];
         }
-        symbolsDecoded[i] = binDecoder.decodeBinsEG0order1(symbolDecodedPrev, restPos, numMaxPrefixBins);
-        //symbolsDecoded[i] = binDecoder.decodeBinsTUorder1(symbolDecodedPrev, restPos, maxVal);
+        symbolsDecoded[i] = binDecoder.decodeBinsEG0binsOrder1(symbolDecodedPrev, restPos, numMaxPrefixBins);
+        //symbolsDecoded[i] = binDecoder.decodeBinsTUbinsOrder1(symbolDecodedPrev, restPos, maxVal);
         //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
     }
     binDecoder.decodeBinTrm();
