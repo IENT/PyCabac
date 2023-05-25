@@ -58,7 +58,7 @@ TEST_CASE("test_encodeBin")
     std::cout << "--- test_encodeBin" << std::endl;
 
     cabacEncoder binEncoder;
-    std::vector<std::tuple<double, uint8_t>> ctxInit {(0.5, 8)};
+    std::vector<std::tuple<double, uint8_t>> ctxInit {{0.5, 8}};
     binEncoder.initCtx(ctxInit);
     binEncoder.start();
     binEncoder.encodeBin(0, 0);
@@ -76,6 +76,47 @@ TEST_CASE("test_encodeBin")
     std::cout << "Decoded bin: " << binDecoder.decodeBin(0) << std::endl;
 
     binDecoder.finish();
+}
+
+
+TEST_CASE("test_encodeStepFunction")
+{
+    std::cout << "--- test_encodeBin" << std::endl;
+
+    cabacEncoder binEncoder;
+    std::vector<std::tuple<double, uint8_t>> ctxInit {{0.5, 8}};
+    binEncoder.initCtx(ctxInit);
+
+    binEncoder.start();
+    // Encode unit step function
+    std::vector<unsigned int> symbols = std::vector<unsigned int>(2000, 0);
+    for (unsigned int i = 1000; i < 2000; i++){
+        symbols[i] = 1;
+    }
+
+    for (unsigned int i = 0; i < symbols.size(); i++) {
+        binEncoder.encodeBin(symbols[i], 0); // 1027
+    }
+    binEncoder.encodeBinTrm(1);
+    binEncoder.finish();
+    binEncoder.writeByteAlignment();
+
+    std::vector<uint8_t> byteVector = binEncoder.getBitstream();
+
+    cabacDecoder binDecoder(byteVector);
+    binDecoder.initCtx(ctxInit);
+    binDecoder.start();
+
+    std::vector<unsigned int> symbolsDecoded = std::vector<unsigned int>(symbols.size(), 0);
+
+    for(unsigned int i=0; i<2000; i++){
+        symbolsDecoded[i] = binDecoder.decodeBin(0);
+    }
+
+    binDecoder.decodeBinTrm();
+    binDecoder.finish();
+
+    REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
 }
 
 TEST_CASE("test_encodeSymbols")
@@ -117,6 +158,8 @@ TEST_CASE("test_encodeSymbols")
     }
     binDecoder.decodeBinTrm();
     binDecoder.finish();
+
+    //REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
 }
 
 TEST_CASE("test_encodeSymbolsOrder1")
@@ -144,6 +187,7 @@ TEST_CASE("test_encodeSymbolsOrder1")
             symbolPrev = symbols[i-1];
         }
         binEncoder.encodeBinsEG0order1(symbols[i], symbolPrev, restPos, numMaxPrefixBins);
+        //binEncoder.encodeBinsTUorder1(symbols[i], symbolPrev, restPos, maxVal);
     }
 
     binEncoder.encodeBinTrm(1);
@@ -162,6 +206,7 @@ TEST_CASE("test_encodeSymbolsOrder1")
             symbolDecodedPrev = symbolsDecoded[i-1];
         }
         symbolsDecoded[i] = binDecoder.decodeBinsEG0order1(symbolDecodedPrev, restPos, numMaxPrefixBins);
+        //symbolsDecoded[i] = binDecoder.decodeBinsTUorder1(symbolDecodedPrev, restPos, maxVal);
         //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
     }
     binDecoder.decodeBinTrm();

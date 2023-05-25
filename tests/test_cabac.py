@@ -7,6 +7,7 @@ import math
 class MainTest(unittest.TestCase):
 
     def _call_cabac_order1(self, fun='EG0'):
+        
         rest_pos = 10
         num_max_val = 255
         num_max_prefix_val = int(math.floor(math.log2(num_max_val/(2**0) + 1)) + 1)
@@ -84,12 +85,13 @@ class MainTest(unittest.TestCase):
         
         dec.decodeBinTrm()
         dec.finish()
-        print('bitstream length: ' + str(len(bs)))
+        print('Bitstream length: ' + str(len(bs)))
 
         self.assertTrue((decodedSymbols == symbols))
 
     def test_encode_symbols_order1(self):
-
+        random.seed(0)
+        print('test_encode_symbols_order1')
         funs = ['BIbypass', 'TUbypass', 'TU', 'EG0bypass', 'EG0', 'EGkbypass', 'EGk']
 
         for fun in funs:
@@ -215,6 +217,8 @@ class MainTest(unittest.TestCase):
         self.assertTrue((decodedSymbols == symbols))
 
     def test_encode_symbols(self):
+        random.seed(0)
+        print('test_encode_symbols')
         funs = ['BIbypass', 'BI', 'TUbypass', 'TU', 'EG0bypass', 'EG0']
 
         for fun in funs:
