@@ -100,9 +100,9 @@ namespace contextSelector{
         // get context ID for rest case as mini speedup
         unsigned int ctxIdRest = getContextIdBinsOrder1TU(restPos, symbolPrev, restPos);
         for(unsigned int n=0; n<ctxIds.size(); n++){
-            if(n<restPos){
+            if(n<restPos){ // actual context modelling for bins at position n<restPos 
                 ctxIds[n] = getContextIdBinsOrder1TU(n, symbolPrev, restPos);
-            } else {
+            } else { // bins at position n>=restPos are modeled with the same rest context
                 ctxIds[n] = ctxIdRest;
             }
         }
@@ -154,7 +154,6 @@ namespace contextSelector{
 
         // Get Context IDs for the prefix TU code
         getContextIdsBinsOrder1TU(ctxIds, prevNumLeadZeros, restPos);
-
     }
 
     unsigned int getContextIdSymbolOrder1TU(unsigned int n, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32){
@@ -193,7 +192,7 @@ namespace contextSelector{
 
     void getContextIdsSymbolOrder1TU(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32){
         /* 
-        Get context IDs for all bins of a TU-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the TU code.
+        Get context IDs for all bins of a TU-binarized symbol given the previous symbol, the number of rest bins and the maximum symbol value.
         */
         
         // get context ID for rest case as mini speedup
@@ -205,6 +204,54 @@ namespace contextSelector{
                 ctxIds[n] = ctxIdRest;
             }
         }
+    }
+
+    unsigned int getContextIdSymbolOrder1EG0(unsigned int n, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32){
+        /*
+        EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
+        The prefix is modelled as a TU code with a context for each bin.
+        */
+
+        auto prevValuePlus1 = (unsigned int)(symbolPrev + 1);
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(prevValuePlus1)));
+
+        return getContextIdSymbolOrder1TU(n, prevNumLeadZeros, restPos, symbolMax);
+    }
+
+    void getContextIdsSymbolOrder1EG0(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32){
+        /*
+        Get context IDs for all bins of a EG0-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
+        */
+        
+        auto prevValuePlus1 = (unsigned int)(symbolPrev + 1);
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(prevValuePlus1)));
+
+        getContextIdsSymbolOrder1TU(ctxIds, prevNumLeadZeros, restPos, symbolMax);
+    }
+
+    unsigned int getContextIdSymbolOrder1EGk(unsigned int n, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32){
+        /*
+        EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
+        The prefix is modelled as a TU code with a context for each bin.
+        */
+
+        // Get number of leading zeros to encode previous symbol with EGk code
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + (1 << k))) - k);
+
+        // Return context ID for the prefix TU code
+        return getContextIdSymbolOrder1TU(n, prevNumLeadZeros, restPos, symbolMax);
+    }
+
+    void getContextIdsBSymbolOrder1EGk(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32){
+        /*
+        Get context IDs for all bins of a EGk-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
+        */
+        
+        // Get number of leading zeros to encode previous symbol with EGk code
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + (1 << k))) - k);
+
+        // Get Context IDs for the prefix TU code
+        getContextIdsSymbolOrder1TU(ctxIds, prevNumLeadZeros, restPos, symbolMax);
     }
 };
 
