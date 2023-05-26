@@ -7,7 +7,7 @@
 
 // We assume that 1000 contexts are enough for most of the scenarios.
 #define RWTH_PYTHON_IF 1
-#define RWTH_ENABLE_TRACING 1
+#define RWTH_ENABLE_TRACING 0
 
 class Exception : public std::exception
 {

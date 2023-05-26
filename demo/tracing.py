@@ -1,3 +1,6 @@
+# ATTENTION: This only works if you have compiled PyCabac with RWTH_ENABLE_TRACING (defined in CommonDef.h)
+
+
 import cabac
 import numpy as np
 import matplotlib.pyplot as plt
