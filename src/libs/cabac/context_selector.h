@@ -2,6 +2,7 @@
 #define __RWTH_CONTEXT_SELECTOR_H__
 
 #include "contexts.h"
+#include "binarization.h"
 #include <cstdint>
 #include <vector>
 #include <tuple>
@@ -43,6 +44,9 @@ namespace contextSelector{
     unsigned int getContextIdSymbolOrder1EGk(unsigned int, uint64_t, unsigned int, unsigned int, unsigned int);
     void getContextIdsSymbolOrder1EGk(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int, unsigned int);
 
+    // General stuff
+    void getContextIds(std::vector<unsigned int>&, uint64_t, binarization::BinarizationId, contextSelector::ContextModelId, const std::vector<unsigned int>, const std::vector<unsigned int>);
+    
 };
 
 #endif  // RWTH_PYTHON_IF

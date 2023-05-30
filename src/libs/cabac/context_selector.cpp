@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 #include <cmath>
+#include "binarization.h"
 
 
 
@@ -252,6 +253,42 @@ namespace contextSelector{
 
         // Get Context IDs for the prefix TU code
         getContextIdsSymbolOrder1TU(ctxIds, prevNumLeadZeros, restPos, symbolMax);
+    }
+
+
+    void getContextIds(std::vector<unsigned int>& ctxIds, uint64_t symbolPrev, binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+    {
+        uint64_t symbolPrevForTU = 0;
+        switch(binId){
+            case binarization::BinarizationId::TU: {
+                symbolPrevForTU = symbolPrev;
+            } break;
+            case binarization::BinarizationId::EG0: {
+                auto prevValuePlus1 = (unsigned int)(symbolPrev + 1);
+                symbolPrevForTU = (unsigned int)(floor(log2(prevValuePlus1))); // number of leading zeros
+            } break;
+            case binarization::BinarizationId::EGk: {
+                auto k = binParams[1];
+                symbolPrevForTU = (unsigned int)(floor(log2(symbolPrev + (1 << k))) - k); // number of leading zeros
+            } break;
+            default:
+                throw std::runtime_error("getContextIds: Unknown binarization ID");
+        }
+
+        switch(ctxModelId){
+            case contextSelector::ContextModelId::BINSORDER1: {
+                auto restPos = ctxParams[0];
+                getContextIdsBinsOrder1TU(ctxIds, symbolPrevForTU, restPos);
+            } break;
+            case contextSelector::ContextModelId::SYMBOLORDER1: {
+                auto restPos = ctxParams[0];
+                auto symbolMax = ctxParams[1];
+                getContextIdsSymbolOrder1TU(ctxIds, symbolPrevForTU, restPos, symbolMax);
+            } break;
+            default:
+                throw std::runtime_error("getContextIds: Unknown context modell ID");
+        }
+
     }
 };
 

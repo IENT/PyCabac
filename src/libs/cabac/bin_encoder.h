@@ -45,6 +45,7 @@
 
 #if RWTH_PYTHON_IF
 #include "context_selector.h"
+#include "binarization.h"
 #endif
 
 #if !RWTH_PYTHON_IF
@@ -388,7 +389,7 @@ public:
       encodeBin(1, ctxIds[i]);
     }
     if (symbol < numMaxBins) {  // symbol == numMaxBins is coded as all 1s
-      encodeBin(0, ctxIds[i++]); // terminating '0'
+      encodeBin(0, ctxIds[i]); // terminating '0'
     }
   }
 
@@ -465,12 +466,36 @@ public:
   }
 
 
+  // ---------------------------------------------------------------------------------------------------------------------
+  // Overloaded functions for latter use in cabacSimpleSequenceEncoder
+  // ---------------------------------------------------------------------------------------------------------------------
+  void encodeBinsTU(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
+  {
+    const unsigned int numMaxBins = binParams[0];
+    encodeBinsTU(symbol, ctxIds, numMaxBins);
+  }
+
+  void encodeBinsEG0(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
+  {
+    encodeBinsEG0(symbol, ctxIds);
+  }
+
+  void encodeBinsEGk(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
+  {
+    const unsigned int k = binParams[1];
+    encodeBinsEGk(symbol, k, ctxIds);
+  }
+
+
 };  // class cabacSymbolEncoder
+
+typedef void (cabacSymbolEncoder::*binWriter)(uint64_t, const std::vector<unsigned int>&, std::vector<unsigned int>);
 
 
 class cabacSimpleSequenceEncoder : public cabacSymbolEncoder{
 public:
   cabacSimpleSequenceEncoder() : cabacSymbolEncoder(){}
+
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Context model dependent on bins of previous symbol value (bin at same position)
@@ -483,25 +508,6 @@ public:
 
     // Encode symbol
     encodeBinsTU(symbol, ctxIds, numMaxBins);
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeSymbolsTUbinsOrder1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxBins=512){
-
-    uint64_t symbolPrev = 0;
-    std::vector<unsigned int> ctxIds(numMaxBins, 0);
-
-    for (unsigned int n = 0; n < symbols.size(); n++) {
-      // Get context ids for each bin
-      if(n > 0){
-        symbolPrev = symbols[n - 1];
-      }
-      contextSelector::getContextIdsBinsOrder1TU(ctxIds, symbolPrev, restPos);
-
-      // Encode bins
-      encodeBinsTU(symbols[n], ctxIds, numMaxBins);
-    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
@@ -519,25 +525,6 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsEG0binsOrder1(std::vector<uint64_t> symbols, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
-
-    uint64_t symbolPrev = 0;
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-
-    for (unsigned int n = 0; n < symbols.size(); n++) {
-      // Get context ids for each bin
-      if(n > 0) {
-        symbolPrev = symbols[n - 1];
-      } 
-      contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
-
-      // Encode bins
-      encodeBinsEG0(symbols[n], ctxIds);
-    }
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
   void encodeBinsEGkbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
 
     // Get context ids for each bin
@@ -547,25 +534,6 @@ public:
     // Encode bins
     encodeBinsEGk(symbol, k, ctxIds);
     
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeSymbolsEGkbinsOrder1(std::vector<uint64_t> symbols, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
-
-    uint64_t symbolPrev = 0;
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-
-    for (unsigned int n = 0; n < symbols.size(); n++) {
-      // Get context ids for each bin
-      if(n > 0) {
-        symbolPrev = symbols[n - 1];
-      } 
-      contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
-
-      // Encode bins
-      encodeBinsEGk(symbols[n], k, ctxIds);
-    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
@@ -584,25 +552,6 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeSymbolsTUsymbolOrder1(std::vector<uint64_t> symbols, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512){
-
-    uint64_t symbolPrev = 0;
-    std::vector<unsigned int> ctxIds(numMaxBins, 0);
-
-    for (unsigned int n = 0; n < symbols.size(); n++) {
-      // Get context ids for each bin
-      if(n > 0){
-        symbolPrev = symbols[n - 1];
-      }
-      contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
-
-      // Encode bins
-      encodeBinsTU(symbols[n], ctxIds, numMaxBins);
-    }
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
   void encodeBinsEG0symbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
 
     // Get context ids for each bin
@@ -612,25 +561,6 @@ public:
     // Encode bins
     encodeBinsEG0(symbol, ctxIds);
     
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeSymbolsEG0symbolOrder1(std::vector<uint64_t> symbols, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
-
-    uint64_t symbolPrev = 0;
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-
-    for (unsigned int n = 0; n < symbols.size(); n++) {
-      // Get context ids for each bin
-      if(n > 0) {
-        symbolPrev = symbols[n - 1];
-      } 
-      contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
-
-      // Encode bins
-      encodeBinsEG0(symbols[n], ctxIds);
-    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
@@ -647,21 +577,41 @@ public:
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeSymbolsEGksymbolOrder1(std::vector<uint64_t> symbols, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
-
+  // This is a general method for encoding a sequence of symbols for given binarization and context model
+  // binParams = {numMaxBins, k}
+  // ctxParams = {restPos, symbolMax}
+  void encodeSymbols(std::vector<uint64_t> & symbols, binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+  {
     uint64_t symbolPrev = 0;
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    const unsigned int numMaxBins = binParams[0];
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
-    for (unsigned int n = 0; n < symbols.size(); n++) {
+    binWriter func = nullptr;
+
+    // Get writer
+    switch(binId){
+      case binarization::BinarizationId::TU: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsTU;
+      } break;
+      case binarization::BinarizationId::EG0: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsEG0;
+      } break;
+      case binarization::BinarizationId::EGk: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsEGk;
+      } break;
+      default:
+        throw std::runtime_error("encodeSymbols: Unknown binarization ID");
+    }
+
+    for (unsigned int i = 0; i < symbols.size(); i++) {
       // Get context ids for each bin
-      if(n > 0) {
-        symbolPrev = symbols[n - 1];
+      if(i > 0) {
+        symbolPrev = symbols[i - 1];
       } 
-      contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
+      contextSelector::getContextIds(ctxIds, symbolPrev, binId, ctxModelId, binParams, ctxParams);
 
-      // Encode bins
-      encodeBinsEGk(symbols[n], k, ctxIds);
+      // Encode symbol
+      (*this.*func)(symbols[i], ctxIds, binParams);
     }
   }
 

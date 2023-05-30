@@ -6,12 +6,24 @@
 #include "bin_encoder.h"
 #include "bin_decoder.h"
 #include "CommonDef.h"
+#include "binarization.h"
+#include "context_selector.h"
+
+// This would make a simple call of encodeBins*() much faster
+// However, ctx_idx = VectorUnsignedInt(ctxIds) would be needed which is slow again.
+// cabac.encodeBins*(bin, VectorUnsignedInt(ctxIDs), numMaxBins) would be needed
+// 
+//PYBIND11_MAKE_OPAQUE(std::vector<unsigned int>);
+//
+// uncommend line below as well ... py::bind_vector ...
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(cabac, m) {
     m.doc() = "pybind11 eabac";
 
+    // See comment above
+    // py::bind_vector<std::vector<unsigned int>>(m, "VectorUnsignedInt", py::buffer_protocol());
     // ---------------------------------------------------------------------------------------------------------------------
     // Encoder
     py::class_<cabacEncoder>(m, "cabacEncoder")
@@ -61,14 +73,11 @@ PYBIND11_MODULE(cabac, m) {
             "TU-binarize and and bypass-encode symbol",
             py::arg("symbol"), py::arg("numMaxBins") = 512
         )
-        .def("encodeBinsTU", &cabacSymbolEncoder::encodeBinsTU,
-            "TU-binarize and encode symbol",
-            py::arg("symbol"), py::arg("ctxIds"), py::arg("numMaxBins") = 512
-        )
+        .def("encodeBinsTU", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const std::vector<unsigned int>&, const unsigned int)>(&cabacSymbolEncoder::encodeBinsTU))
         .def("encodeBinsEG0bypass", &cabacSymbolEncoder::encodeBinsEG0bypass)
-        .def("encodeBinsEG0", &cabacSymbolEncoder::encodeBinsEG0)
+        .def("encodeBinsEG0", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const std::vector<unsigned int>&)>(&cabacSymbolEncoder::encodeBinsEG0))
         .def("encodeBinsEGkbypass", &cabacSymbolEncoder::encodeBinsEGkbypass)
-        .def("encodeBinsEGk", &cabacSymbolEncoder::encodeBinsEGk);
+        .def("encodeBinsEGk", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const unsigned int, const std::vector<unsigned int>&)>(&cabacSymbolEncoder::encodeBinsEGk));
 
     // ---------------------------------------------------------------------------------------------------------------------
     // SymbolDecoder
@@ -78,13 +87,11 @@ PYBIND11_MODULE(cabac, m) {
         .def("decodeBinsBI", &cabacSymbolDecoder::decodeBinsBI)
         .def("decodeBinsTUbypass", &cabacSymbolDecoder::decodeBinsTUbypass,
             "bypass-decode TU-encoded symbol", py::arg("numMaxBins") = 512)
-        .def("decodeBinsTU", &cabacSymbolDecoder::decodeBinsTU,
-            "decode TU-encoded symbol", py::arg("ctxIds"), py::arg("numMaxBins") = 512
-        )
+        .def("decodeBinsTU", static_cast<uint64_t (cabacSymbolDecoder::*)(const std::vector<unsigned int>&, const unsigned int)>(&cabacSymbolDecoder::decodeBinsTU))
         .def("decodeBinsEG0bypass", &cabacSymbolDecoder::decodeBinsEG0bypass)
-        .def("decodeBinsEG0", &cabacSymbolDecoder::decodeBinsEG0)
+        .def("decodeBinsEG0", static_cast<uint64_t (cabacSymbolDecoder::*)(const std::vector<unsigned int>&)>(&cabacSymbolDecoder::decodeBinsEG0))
         .def("decodeBinsEGkbypass", &cabacSymbolDecoder::decodeBinsEGkbypass)
-        .def("decodeBinsEGk", &cabacSymbolDecoder::decodeBinsEGk);
+        .def("decodeBinsEGk", static_cast<uint64_t (cabacSymbolDecoder::*)(const unsigned int, const std::vector<unsigned int>&)>(&cabacSymbolDecoder::decodeBinsEGk));
 
     // ---------------------------------------------------------------------------------------------------------------------
     // SequenceEncoder
@@ -113,7 +120,8 @@ PYBIND11_MODULE(cabac, m) {
         .def("encodeBinsEGksymbolOrder1", &cabacSimpleSequenceEncoder::encodeBinsEGksymbolOrder1,
             "EGk-binarize and encode symbol with simple order1-context model",
             py::arg("symbol"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos") = 8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins") = 24
-        );
+        )
+        .def("encodeSymbols", &cabacSimpleSequenceEncoder::encodeSymbols);
 
     // ---------------------------------------------------------------------------------------------------------------------
     // SequenceDecoder
@@ -142,7 +150,8 @@ PYBIND11_MODULE(cabac, m) {
         .def("decodeBinsEGksymbolOrder1", &cabacSimpleSequenceDecoder::decodeBinsEGksymbolOrder1,
             "decode EGk-binarized symbol with simple order1-context model",
             py::arg("symbolPrev"), py::arg("k"), py::arg("restPos") = 8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins") = 24
-        );
+        )
+        .def("decodeSymbols", &cabacSimpleSequenceDecoder::decodeSymbols);
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Context IDs
@@ -188,6 +197,17 @@ PYBIND11_MODULE(cabac, m) {
         contextSelector::getContextIdsSymbolOrder1EGk(ctxIDs, symbolPrev, k, restPos, symbolMax);
         return ctxIDs;
     });
+    m.def("getContextIds", [](uint64_t symbolPrev, binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, unsigned int numMaxCtxs = 24) {
+        std::vector<unsigned int> ctxIDs(numMaxCtxs, 0);
+        contextSelector::getContextIds(ctxIDs, symbolPrev, binId, ctxModelId, binParams, ctxParams);
+        return ctxIDs;
+    });
+
+    py::enum_<binarization::BinarizationId>(m, "BinarizationId")
+        .value("BI", binarization::BinarizationId::BI)
+        .value("TU", binarization::BinarizationId::TU)
+        .value("EG0", binarization::BinarizationId::EG0)
+        .value("EGk", binarization::BinarizationId::EGk);
 
     py::enum_<contextSelector::ContextModelId>(m, "ContextModelId")
         .value("BINSORDER1", contextSelector::ContextModelId::BINSORDER1)
