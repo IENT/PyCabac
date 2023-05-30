@@ -1,6 +1,3 @@
-# ATTENTION: This only works if you have compiled PyCabac with RWTH_ENABLE_TRACING (defined in CommonDef.h)
-
-
 import cabac
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +13,7 @@ shift_idx = 13
 bitsToEncode = [0] * 1000 + [1] * 1000
 
 # create an encoder and encode the bits
-enc = cabac.cabacEncoder()
+enc = cabac.cabacTraceEncoder()
 enc.initCtx([(p1_init, shift_idx)])
 enc.start()
 for i, bit in enumerate(bitsToEncode):

@@ -12,9 +12,6 @@ namespace py = pybind11;
 PYBIND11_MODULE(cabac, m) {
     m.doc() = "pybind11 eabac";
 
-#if RWTH_ENABLE_TRACING
-    py::bind_vector<std::vector<std::list<std::pair<uint16_t, uint8_t>>>>(m, "trace");
-#endif
     // ---------------------------------------------------------------------------------------------------------------------
     // Encoder
     py::class_<cabacEncoder>(m, "cabacEncoder")
@@ -26,9 +23,6 @@ PYBIND11_MODULE(cabac, m) {
         .def("encodeBin", &cabacEncoder::encodeBin)
         .def("encodeBinTrm", &cabacEncoder::encodeBinTrm)
         .def("getBitstream", &cabacEncoder::getBitstream)
-#if RWTH_ENABLE_TRACING
-        .def("getTrace", &cabacEncoder::getTrace)
-#endif
         .def("getNumWrittenBits", &cabacEncoder::getNumWrittenBits)
         .def("writeByteAlignment", &cabacEncoder::writeByteAlignment)
         .def("initCtx", static_cast<void (cabacEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacEncoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
@@ -47,6 +41,15 @@ PYBIND11_MODULE(cabac, m) {
         .def("getNumBitsRead", &cabacDecoder::getNumBitsRead)
         .def("initCtx", static_cast<void (cabacDecoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacDecoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
         .def("initCtx", static_cast<void (cabacDecoder::*)(unsigned, double, uint8_t)>(&cabacDecoder::initCtx), "Initialize all contexts to same probability and shift idx.");
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Encoder with trace enabled
+    py::class_<cabacTraceEncoder, cabacEncoder>(m, "cabacTraceEncoder")
+        .def(py::init<>())
+        .def("encodeBin", &cabacTraceEncoder::encodeBin)
+        .def("getTrace", &cabacTraceEncoder::getTrace)
+        .def("initCtx", static_cast<void (cabacTraceEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacTraceEncoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
+        .def("initCtx", static_cast<void (cabacTraceEncoder::*)(unsigned, double, uint8_t)>(&cabacTraceEncoder::initCtx), "Initialize all contexts to same probability and shift idx.");
 
     // ---------------------------------------------------------------------------------------------------------------------    
     // SymbolEncoder
