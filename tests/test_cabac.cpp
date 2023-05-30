@@ -123,14 +123,18 @@ TEST_CASE("test_encodeSymbols")
 {
     const int maxVal = 255;
     const int numSymbols = 1000;
+    const int k = 1;
     std::cout << "--- test_encodeSymbols" << std::endl;
 
+    
     std::srand(unsigned(std::time(nullptr)));
     std::vector<int> symbols(numSymbols);
     std::generate(symbols.begin(), symbols.end(), []() {
         return rand() % maxVal;
     });
+    
     //std::vector<unsigned> symbols = {0, 1, 2, 3, 4, 5, 6, 7};
+    
 
     cabacSimpleSequenceEncoder binEncoder;
 
@@ -139,7 +143,7 @@ TEST_CASE("test_encodeSymbols")
     std::vector<unsigned> ctx_ids(512, 0);
     //binEncoder.encodeBinsEG0bypass(5);
     for (unsigned int i = 0; i < symbols.size(); i++){
-        binEncoder.encodeBinsTU(symbols[i], ctx_ids);
+        binEncoder.encodeBinsEGk(symbols[i], k, ctx_ids);
     }
     
     binEncoder.encodeBinTrm(1);
@@ -162,7 +166,7 @@ TEST_CASE("test_encodeSymbols")
     //REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
 }
 
-TEST_CASE("test_encodeSymbolsOrder1")
+TEST_CASE("test_encodeSymbolsBinsOrder1")
 {
     const int maxVal = 255;
     const int numSymbols = 1000;
@@ -172,7 +176,7 @@ TEST_CASE("test_encodeSymbolsOrder1")
     const int numBins = 8;
     std::cout << "--- test_encodeSymbols" << std::endl;
 
-    std::vector<unsigned int> symbols(numSymbols);
+    std::vector<uint64_t> symbols(numSymbols);
     fillVectorRandomGeometric(&symbols);
     
     //std::vector<unsigned> symbols = {0, 1, 2, 3, 4, 5, 6, 7};
@@ -181,7 +185,7 @@ TEST_CASE("test_encodeSymbolsOrder1")
     binEncoder.initCtx(num_ctx, 0.5, 8);
     binEncoder.start();
 
-    unsigned int symbolPrev = 0;
+    uint64_t symbolPrev = 0;
     for (unsigned int i = 0; i < symbols.size(); i++) {
         if(i > 0){
             symbolPrev = symbols[i-1];
@@ -199,8 +203,8 @@ TEST_CASE("test_encodeSymbolsOrder1")
     cabacSimpleSequenceDecoder binDecoder(byteVector);
     binDecoder.initCtx(num_ctx, 0.5, 8);
     binDecoder.start();
-    std::vector<unsigned int> symbolsDecoded = std::vector<unsigned int>(symbols.size(), 0);
-    unsigned symbolDecodedPrev = 0;
+    std::vector<uint64_t> symbolsDecoded = std::vector<uint64_t>(symbols.size(), 0);
+    uint64_t symbolDecodedPrev = 0;
     for (unsigned int i = 0; i < symbolsDecoded.size(); i++) {
         if(i > 0){
             symbolDecodedPrev = symbolsDecoded[i-1];
@@ -215,19 +219,26 @@ TEST_CASE("test_encodeSymbolsOrder1")
     REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
 }
 
-TEST_CASE("test_encodeSymbolsEGk")
+TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
 {
-    const int maxVal = 255;
-    const int numSymbols = 1000;
+    const int maxVal = 5000;
+    const int numSymbols = 1000000;
     const int restPos = 10;
-    const int num_ctx = restPos * 3 + 1;
+    const int ctxSymbolMax = 16;
+    //const int num_ctx = restPos * 3 + 1;
+    const int num_ctx = (ctxSymbolMax+2)*restPos  + 1;
     const int numMaxPrefixBins = 12;
     const int numBins = 8;
     const int k = 0;
     std::cout << "--- test_encodeSymbols" << std::endl;
 
-    std::vector<unsigned int> symbols(numSymbols);
-    fillVectorRandomGeometric(&symbols);
+    //std::vector<uint64_t> symbols(numSymbols);
+    //fillVectorRandomGeometric(&symbols);
+    std::srand(unsigned(std::time(nullptr)));
+    std::vector<uint64_t> symbols(numSymbols);
+    std::generate(symbols.begin(), symbols.end(), []() {
+        return rand() % maxVal;
+    });
     
     //std::vector<unsigned> symbols = {255, 0, 1, 2, 3, 4, 5, 6, 7};
 
@@ -235,13 +246,14 @@ TEST_CASE("test_encodeSymbolsEGk")
     binEncoder.initCtx(num_ctx, 0.5, 8);
     binEncoder.start();
 
-    unsigned int symbolPrev = 0;
+    uint64_t symbolPrev = 0;
     for (unsigned int i = 0; i < symbols.size(); i++) {
         if(i > 0){
             symbolPrev = symbols[i-1];
         }
         //binEncoder.encodeBinsEG0order1(symbols[i], symbolPrev, restPos, numMaxPrefixBins);
-        binEncoder.encodeBinsEGkbypass(symbols[i], k);
+        //binEncoder.encodeBinsEGkbypass(symbols[i], k);
+        binEncoder.encodeBinsTUsymbolOrder1(symbols[i], symbolPrev, restPos, ctxSymbolMax, maxVal);
     }
 
     binEncoder.encodeBinTrm(1);
@@ -253,15 +265,16 @@ TEST_CASE("test_encodeSymbolsEGk")
     cabacSimpleSequenceDecoder binDecoder(byteVector);
     binDecoder.initCtx(num_ctx, 0.5, 8);
     binDecoder.start();
-    std::vector<unsigned int> symbolsDecoded = std::vector<unsigned int>(symbols.size(), 0);
-    unsigned symbolDecodedPrev = 0;
+    std::vector<uint64_t> symbolsDecoded = std::vector<uint64_t>(symbols.size(), 0);
+    uint64_t symbolDecodedPrev = 0;
     for (unsigned int i = 0; i < symbolsDecoded.size(); i++) {
         if(i > 0){
             symbolDecodedPrev = symbolsDecoded[i-1];
         }
         //symbolsDecoded[i] = binDecoder.decodeBinsEG0order1(symbolDecodedPrev, restPos, numMaxPrefixBins);
-        symbolsDecoded[i] = binDecoder.decodeBinsEGkbypass(k);
+        //symbolsDecoded[i] = binDecoder.decodeBinsEGkbypass(k);
         //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
+        symbolsDecoded[i] = binDecoder.decodeBinsTUsymbolOrder1(symbolDecodedPrev, restPos, ctxSymbolMax, maxVal);
     }
     binDecoder.decodeBinTrm();
     binDecoder.finish();
