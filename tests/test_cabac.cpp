@@ -179,7 +179,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
     std::vector<uint64_t> symbols(numSymbols);
     fillVectorRandomGeometric(&symbols);
     
-    //std::vector<unsigned> symbols = {0, 1, 2, 3, 4, 5, 6, 7};
+    //std::vector<uint64_t> symbols = {0, 1, 2, 3, 4, 5, 6, 7};
 
     cabacSimpleSequenceEncoder binEncoder;
     binEncoder.initCtx(num_ctx, 0.5, 8);
