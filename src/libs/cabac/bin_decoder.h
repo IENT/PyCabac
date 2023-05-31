@@ -272,6 +272,12 @@ class cabacSymbolDecoder : public cabacDecoder{
     // Overloaded functions for latter use in cabacSimpleSequenceDecoder
     // ---------------------------------------------------------------------------------------------------------------------
 
+    uint64_t decodeBinsBI(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
+    {
+        const unsigned int numBins = binParams[0];
+        return decodeBinsBI(ctxIds.data(), numBins);
+    }
+
     uint64_t decodeBinsTU(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
     {
         const unsigned int numMaxBins = binParams[0];
@@ -300,6 +306,17 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Context model dependent on bins of previous symbol value (bin at same position)
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    uint64_t decodeBinsBIbinsOrder1(uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=10) {
+      // Get context ids
+      std::vector<unsigned int> ctxIds(numBins, 0);
+      contextSelector::getContextIdsBinsOrder1BI(ctxIds, symbolPrev, numBins, restPos);
+
+      // Decode symbol
+      return decodeBinsBI(ctxIds.data(), numBins);
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------
 
     uint64_t decodeBinsTUbinsOrder1(uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512) {
@@ -335,6 +352,17 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Context model dependent on previous symbol value (integer)
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    uint64_t decodeBinsBIsymbolOrder1(uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=8, unsigned int symbolMax=32) {
+      // Get context ids
+      std::vector<unsigned int> ctxIds(numBins, 0);
+      contextSelector::getContextIdsSymbolOrder1BI(ctxIds, symbolPrev, restPos, symbolMax);
+
+      // Decode symbol
+      return decodeBinsBI(ctxIds.data(), numBins);
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------
 
     uint64_t decodeBinsTUsymbolOrder1(uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512) {
@@ -385,6 +413,9 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
       // Get writer
       switch(binId){
+        case binarization::BinarizationId::BI:{
+          func = &cabacSimpleSequenceDecoder::decodeBinsBI;
+        } break;
         case binarization::BinarizationId::TU: {
           func = &cabacSimpleSequenceDecoder::decodeBinsTU;
         } break;

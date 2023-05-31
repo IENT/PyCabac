@@ -1,9 +1,11 @@
 #include <cstdint>
+#include <vector>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include <vector>
+
 #include "bin_encoder.h"
 #include "bin_decoder.h"
 #include "CommonDef.h"
@@ -232,6 +234,13 @@ PYBIND11_MODULE(cabac, m) {
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Context IDs
+    m.def("getContextIdBinsOrder1BI", &contextSelector::getContextIdBinsOrder1BI, 
+        py::arg("n"), py::arg("symbolPrev"), py::arg("numBins"), py::arg("restPos") = 10);
+    m.def("getContextIdsBinsOrder1BI", [](uint64_t symbolPrev, unsigned int numBins, unsigned int restPos = 10, unsigned int numMaxBins = 512) {
+        std::vector<unsigned int> ctxIDs(numMaxBins, 0);
+        contextSelector::getContextIdsBinsOrder1BI(ctxIDs, symbolPrev, numBins, restPos);
+        return ctxIDs;
+    });
     m.def("getContextIdBinsOrder1TU", &contextSelector::getContextIdBinsOrder1TU, 
         py::arg("n"), py::arg("symbolPrev"), py::arg("restPos") = 10);
     m.def("getContextIdsBinsOrder1TU", [](uint64_t symbolPrev, unsigned int restPos = 10, unsigned int numMaxBins = 512) {
@@ -251,6 +260,13 @@ PYBIND11_MODULE(cabac, m) {
     m.def("getContextIdsBinsOrder1EGk", [](uint64_t symbolPrev, unsigned int k, unsigned int restPos = 10, unsigned int numMaxPrefixBins = 24) {
         std::vector<unsigned int> ctxIDs(numMaxPrefixBins, 0);
         contextSelector::getContextIdsBinsOrder1EGk(ctxIDs, symbolPrev, k, restPos);
+        return ctxIDs;
+    });
+    m.def("getContextIdSymbolOrder1BI", &contextSelector::getContextIdSymbolOrder1BI, 
+        py::arg("n"), py::arg("symbolPrev"), py::arg("restPos") = 8, py::arg("symbolMax")=32);
+    m.def("getContextIdsSymbolOrder1BI", [](uint64_t symbolPrev, unsigned int restPos = 8, unsigned int symbolMax=32, unsigned int numMaxBins = 512) {
+        std::vector<unsigned int> ctxIDs(numMaxBins, 0);
+        contextSelector::getContextIdsSymbolOrder1BI(ctxIDs, symbolPrev, restPos, symbolMax);
         return ctxIDs;
     });
     m.def("getContextIdSymbolOrder1TU", &contextSelector::getContextIdSymbolOrder1TU, 

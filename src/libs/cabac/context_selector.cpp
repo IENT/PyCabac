@@ -60,6 +60,67 @@ namespace contextSelector{
     // --------------------------------------------------------------------------------
     // Bin-to-bin level
     // --------------------------------------------------------------------------------
+    unsigned int getContextIdBinsOrder1BI(const unsigned int n, const uint64_t symbolPrev, const unsigned int numBins, const unsigned int restPos=10){
+        /* 
+        ContextID dependent on bin at position n in BI-binarized bin-string corresponding to bin in previous symbol.
+        In fact, it should model the probability p(b_t,n | b_t-1,n) with bin b_n at position n in BI-binarized bin-string.
+        b_t-1,n is the bin at position n in BI-binarized bin-string corresponding to previous symbol.
+        b_t,n is the bin at position n in BI-binarized bin-string corresponding to current symbol.
+
+        In total we have num_ctx_total = 2*restPos + 1 contexts
+
+        The ctx_id is computed as follows:
+        ctx_id:                     meaning:
+        0*restPos ... 1*restPos-1:  previously coded bin at position n<restPos is 0
+        1*restPos ... 2*restPos-1:  previously coded bin at position n<restPos is 1
+        2*restPos:                  position n>=restPos: rest case with single context
+
+        Let the ctx_ids be numbered from 0 to num_ctx_total-1
+        For TU, the numbering is the same (from left to right), e.g.
+        n:   0 1 2 3 ...       0 1 2 3 ...
+        DEC -> TU           -> BI
+        0   -> 0            -> 0 0 0 0
+        1   -> 1 0          -> 0 0 0 1
+        2   -> 1 1 0        -> 0 0 1 0
+        3   -> 1 1 1 0      -> 0 0 1 1
+        BI exponent:       ... 3 2 1 0
+        */
+
+        // Get bin at position n in BI-binarized bin-string corresponding to previous symbol
+        unsigned int symbolPrevBin = static_cast<unsigned int>(symbolPrev >> static_cast<uint8_t>(numBins-n-1)) & 0x1u;
+        unsigned int ctxId = 0;
+        if(n < restPos) { // we are in the first n<restPos bins
+            // actual context modelling
+            if(symbolPrevBin){ // previously coded bin 0 at position n available
+                ctxId = 1*restPos + n; // 0 case
+            } else { // n == prvSymbol // previously coded bin 1 at position n available
+                ctxId = 0*restPos + n; // 1 case
+            }
+        }
+        else {
+            // no context modelling: rest case with single context
+            ctxId = 2 * restPos;
+        }
+
+        return ctxId;
+    }
+
+    void getContextIdsBinsOrder1BI(std::vector<unsigned int>& ctxIds, const uint64_t symbolPrev, const unsigned int numBins, const unsigned int restPos=10){
+        /* 
+        Get context IDs for all bins of a BI-binarized symbol given the previous symbol and the number of rest bins.
+        */
+        
+        // get context ID for rest case as mini speedup
+        unsigned int ctxIdRest = getContextIdBinsOrder1BI(restPos, symbolPrev, numBins, restPos);
+        for(unsigned int n=0; n<ctxIds.size(); n++){
+            if(n<restPos){ // actual context modelling for bins at position n<restPos 
+                ctxIds[n] = getContextIdBinsOrder1BI(n, symbolPrev, numBins, restPos);
+            } else { // bins at position n>=restPos are modeled with the same rest context
+                ctxIds[n] = ctxIdRest;
+            }
+        }
+    }
+
     unsigned int getContextIdBinsOrder1TU(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=10){
         /* 
         ContextID dependent on bin at position n in TU-binarized bin-string corresponding to bin in previous symbol.
@@ -164,10 +225,10 @@ namespace contextSelector{
     // --------------------------------------------------------------------------------
     // Symbol-to-symbol level
     // --------------------------------------------------------------------------------
-    unsigned int getContextIdSymbolOrder1TU(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
+    unsigned int getContextIdSymbolOrder1BI(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
         /* 
         ContextID dependent on bin position n of to-be-decoded symbol as well as previous integer symbol value, in fact
-        modeling the probability p(b_n | symbolPrev) with bin b_n at position n in TU-binarized bin-string.
+        modeling the probability p(b_n | symbolPrev) with bin b_n at position n in BI-binarized bin-string.
 
         In total we have num_ctx_total = (symbolMax+2)*restPos + 1 contexts
 
@@ -196,6 +257,27 @@ namespace contextSelector{
         }
 
         return ctxId;
+    }
+
+    void getContextIdsSymbolOrder1BI(std::vector<unsigned int>& ctxIds, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
+        /* 
+        Get context IDs for all bins of a BI-binarized symbol given the previous symbol, the number of rest bins and the maximum symbol value.
+        */
+        
+        // get context ID for rest case as mini speedup
+        unsigned int ctxIdRest = getContextIdSymbolOrder1BI(restPos, symbolPrev, restPos, symbolMax);
+        for(unsigned int n=0; n<ctxIds.size(); n++){
+            if(n<restPos){
+                ctxIds[n] = getContextIdSymbolOrder1BI(n, symbolPrev, restPos, symbolMax);
+            } else {
+                ctxIds[n] = ctxIdRest;
+            }
+        }
+    }
+
+    unsigned int getContextIdSymbolOrder1TU(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
+        // For TU, the symbol-wise order1 context model is the same as for BI
+        return getContextIdSymbolOrder1BI(n, symbolPrev, restPos, symbolMax);
     }
 
     void getContextIdsSymbolOrder1TU(std::vector<unsigned int>& ctxIds, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
@@ -269,6 +351,9 @@ namespace contextSelector{
     {
         uint64_t symbolPrevForTU = 0;
         switch(binId){
+            case binarization::BinarizationId::BI: {
+                symbolPrevForTU = symbolPrev;
+            } break;
             case binarization::BinarizationId::TU: {
                 symbolPrevForTU = symbolPrev;
             } break;
@@ -287,7 +372,15 @@ namespace contextSelector{
         switch(ctxModelId){
             case contextSelector::ContextModelId::BINSORDER1: {
                 auto restPos = ctxParams[0];
-                getContextIdsBinsOrder1TU(ctxIds, symbolPrevForTU, restPos);
+                switch(binId){
+                    case binarization::BinarizationId::BI: {
+                        auto numBins = binParams[0];
+                        getContextIdsBinsOrder1BI(ctxIds, symbolPrevForTU, numBins, restPos);
+                    } break;
+                    default: {
+                        getContextIdsBinsOrder1TU(ctxIds, symbolPrevForTU, restPos);
+                    } break;
+                }
             } break;
             case contextSelector::ContextModelId::SYMBOLORDER1: {
                 auto restPos = ctxParams[0];

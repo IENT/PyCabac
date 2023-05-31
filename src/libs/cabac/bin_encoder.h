@@ -469,6 +469,12 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
   // Overloaded functions for latter use in cabacSimpleSequenceEncoder
   // ---------------------------------------------------------------------------------------------------------------------
+  void encodeBinsBI(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
+  {
+    const unsigned int numBins = binParams[0];
+    encodeBinsBI(symbol, ctxIds.data(), numBins);
+  }
+
   void encodeBinsTU(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
   {
     const unsigned int numMaxBins = binParams[0];
@@ -499,6 +505,17 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // Context model dependent on bins of previous symbol value (bin at same position)
+  // ---------------------------------------------------------------------------------------------------------------------
+  void encodeBinsBIbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=10){
+
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numBins, 0);
+    contextSelector::getContextIdsBinsOrder1BI(ctxIds, symbolPrev, numBins, restPos);
+
+    // Encode symbol
+    encodeBinsBI(symbol, ctxIds.data(), numBins);
+  }
+
   // ---------------------------------------------------------------------------------------------------------------------
   void encodeBinsTUbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
 
@@ -540,6 +557,18 @@ public:
   // Context model dependent on previous symbol value (integer)
   // ---------------------------------------------------------------------------------------------------------------------
 
+  void encodeBinsBIsymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=8, unsigned int symbolMax=32){
+
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numBins, 0);
+    contextSelector::getContextIdsSymbolOrder1BI(ctxIds, symbolPrev, restPos, symbolMax);
+
+    // Encode symbol
+    encodeBinsBI(symbol, ctxIds.data(), numBins);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
   void encodeBinsTUsymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512){
 
     // Get context ids
@@ -578,7 +607,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // This is a general method for encoding a sequence of symbols for given binarization and context model
-  // binParams = {numMaxBins, k}
+  // binParams = {numMaxBins or numBins, k}
   // ctxParams = {restPos, symbolMax}
   void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
@@ -592,6 +621,9 @@ public:
 
     // Get writer
     switch(binId){
+      case binarization::BinarizationId::BI: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsBI;
+      } break;
       case binarization::BinarizationId::TU: {
         func = &cabacSimpleSequenceEncoder::encodeBinsTU;
       } break;
