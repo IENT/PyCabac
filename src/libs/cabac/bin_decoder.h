@@ -154,7 +154,7 @@ class cabacSymbolDecoder : public cabacDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Taken from GABAC/GENIE
-    uint64_t decodeBinsBI(const std::vector<unsigned int> & ctxIds, const unsigned int numBins) {
+    uint64_t decodeBinsBI(const unsigned int * ctxIds, const unsigned int numBins) {
         unsigned int bins = 0; // bins to decode
         unsigned int i = 0; // counter for context selection
         for (int exponent = numBins; exponent > 0; exponent--) {
@@ -177,7 +177,7 @@ class cabacSymbolDecoder : public cabacDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Taken from GABAC/GENIE
-    uint64_t decodeBinsTU(const std::vector<unsigned int> & ctxIds, const unsigned int numMaxBins=512) {
+    uint64_t decodeBinsTU(const unsigned int * ctxIds, const unsigned int numMaxBins=512) {
         unsigned int i = 0;
 
         while (i < numMaxBins) {
@@ -205,7 +205,7 @@ class cabacSymbolDecoder : public cabacDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Taken from GABAC/GENIE
-    uint64_t decodeBinsEG0(const std::vector<unsigned int> & ctxIds) {
+    uint64_t decodeBinsEG0(const unsigned int * ctxIds) {
 
         // Prefix
         unsigned int i = 0;
@@ -247,7 +247,7 @@ class cabacSymbolDecoder : public cabacDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    uint64_t decodeBinsEGk(unsigned k, const std::vector<unsigned int> & ctxIds) {
+    uint64_t decodeBinsEGk(unsigned k, const unsigned int * ctxIds) {
 
         unsigned int symbol = 0;
 
@@ -275,18 +275,18 @@ class cabacSymbolDecoder : public cabacDecoder{
     uint64_t decodeBinsTU(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
     {
         const unsigned int numMaxBins = binParams[0];
-        return decodeBinsTU(ctxIds, numMaxBins);
+        return decodeBinsTU(ctxIds.data(), numMaxBins);
     }
 
     uint64_t decodeBinsEG0(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
     {
-        return decodeBinsEG0(ctxIds);
+        return decodeBinsEG0(ctxIds.data());
     }
 
     uint64_t decodeBinsEGk(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
     {
         const unsigned int k = binParams[1];
-        return decodeBinsEGk(k, ctxIds);
+        return decodeBinsEGk(k, ctxIds.data());
     }
 
 }; // class cabacSymbolDecoder
@@ -308,7 +308,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       contextSelector::getContextIdsBinsOrder1TU(ctxIds, symbolPrev, restPos);
 
       // Decode symbol
-      return decodeBinsTU(ctxIds, numMaxBins);
+      return decodeBinsTU(ctxIds.data(), numMaxBins);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -319,7 +319,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
 
       // Decode bins
-      return decodeBinsEG0(ctxIds);
+      return decodeBinsEG0(ctxIds.data());
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -330,7 +330,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
 
       // Decode bins
-      return decodeBinsEGk(k, ctxIds);
+      return decodeBinsEGk(k, ctxIds.data());
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -343,7 +343,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
 
       // Decode symbol
-      return decodeBinsTU(ctxIds, numMaxBins);
+      return decodeBinsTU(ctxIds.data(), numMaxBins);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -354,7 +354,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
 
       // Decode bins
-      return decodeBinsEG0(ctxIds);
+      return decodeBinsEG0(ctxIds.data());
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -365,15 +365,17 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
 
       // Decode bins
-      return decodeBinsEGk(k, ctxIds);
+      return decodeBinsEGk(k, ctxIds.data());
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
     // This is a general method for decoding a sequence of symbols for given binarization and context model
     // parameter definition see encodeSymbols
-    std::vector<uint64_t> decodeSymbols(const unsigned int numSymbols, binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId, const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+    void decodeSymbols(uint64_t * symbols, const unsigned int numSymbols,
+      binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
+      const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
     {
-      std::vector<uint64_t> symbols(numSymbols, 0);
+      
       uint64_t symbolPrev = 0;
       
       const unsigned int numMaxBins = binParams[0];
@@ -396,7 +398,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
           throw std::runtime_error("encodeSymbols: Unknown binarization ID");
       }
 
-      for (unsigned int i = 0; i < symbols.size(); i++) {
+      for (unsigned int i = 0; i < numSymbols; i++) {
         // Get context ids for each bin
         if(i > 0) {
           symbolPrev = symbols[i - 1];
@@ -406,7 +408,19 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
         // Decode bins
         symbols[i] = (*this.*func)(ctxIds, binParams);
       }
+    }
 
+    std::vector<uint64_t> decodeSymbols(const unsigned int numSymbols, 
+      binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
+      const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+    {
+      // Allocate memory
+      std::vector<uint64_t> symbols(numSymbols, 0);
+
+      // Fill symbols
+      decodeSymbols(symbols.data(), numSymbols, binId, ctxModelId, binParams, ctxParams);
+
+      // Return symbols
       return symbols;
     }
 

@@ -20,32 +20,34 @@ namespace contextSelector{
 
     /* Context model on bin-to-symbol level */
     // TU binarization
-    unsigned int getContextIdBinsOrder1TU(unsigned int, uint64_t, unsigned int);
-    void getContextIdsBinsOrder1TU(std::vector<unsigned int>&, uint64_t, unsigned int);
+    unsigned int getContextIdBinsOrder1TU(const unsigned int, const uint64_t, const unsigned int);
+    void getContextIdsBinsOrder1TU(std::vector<unsigned int>&, const uint64_t, const unsigned int);
 
     // EG0 binarization
-    unsigned int getContextIdBinsOrder1EG0(unsigned int, uint64_t, unsigned int);
-    void getContextIdsBinsOrder1EG0(std::vector<unsigned int>&, uint64_t, unsigned int);
+    unsigned int getContextIdBinsOrder1EG0(const unsigned int, const uint64_t, const unsigned int);
+    void getContextIdsBinsOrder1EG0(std::vector<unsigned int>&, const uint64_t, const unsigned int);
 
     // EGk binarization
-    unsigned int getContextIdBinsOrder1EGk(unsigned int, uint64_t, unsigned int, unsigned int);
-    void getContextIdsBinsOrder1EGk(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int);
+    unsigned int getContextIdBinsOrder1EGk(const unsigned int, const uint64_t, const unsigned int, const unsigned int);
+    void getContextIdsBinsOrder1EGk(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int);
 
     /* Context model on symbol-to-symbol level */
     // TU binarization
-    unsigned int getContextIdSymbolOrder1TU(unsigned int, uint64_t, unsigned int, unsigned int);
-    void getContextIdsSymbolOrder1TU(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int);
+    unsigned int getContextIdSymbolOrder1TU(const unsigned int, const uint64_t, const unsigned int, const unsigned int);
+    void getContextIdsSymbolOrder1TU(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int);
 
     // EG0 binarization
-    unsigned int getContextIdSymbolOrder1EG0(unsigned int, uint64_t, unsigned int, unsigned int);
-    void getContextIdsSymbolOrder1EG0(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int);
+    unsigned int getContextIdSymbolOrder1EG0(const unsigned int, const uint64_t, const unsigned int, const unsigned int);
+    void getContextIdsSymbolOrder1EG0(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int);
 
     // EGk binarization
-    unsigned int getContextIdSymbolOrder1EGk(unsigned int, uint64_t, unsigned int, unsigned int, unsigned int);
-    void getContextIdsSymbolOrder1EGk(std::vector<unsigned int>&, uint64_t, unsigned int, unsigned int, unsigned int);
+    unsigned int getContextIdSymbolOrder1EGk(const unsigned int, const uint64_t, const unsigned int, const unsigned int, const unsigned int);
+    void getContextIdsSymbolOrder1EGk(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int, const unsigned int);
 
     // General stuff
-    void getContextIds(std::vector<unsigned int>&, uint64_t, binarization::BinarizationId, contextSelector::ContextModelId, const std::vector<unsigned int>, const std::vector<unsigned int>);
+    void getContextIds(std::vector<unsigned int>&, const uint64_t, 
+        const binarization::BinarizationId, const contextSelector::ContextModelId, 
+        const std::vector<unsigned int>, const std::vector<unsigned int>);
     
 };
 

@@ -144,7 +144,7 @@ TEST_CASE("test_encodeSymbols")
     //binEncoder.encodeBinsEG0bypass(5);
     for (unsigned int i = 0; i < symbols.size(); i++){
         //binEncoder.encodeBinsEGk(symbols[i], k, ctx_ids);
-        binEncoder.encodeBinsTU(symbols[i], ctx_ids);
+        binEncoder.encodeBinsTU(symbols[i], ctx_ids.data());
     }
     
     binEncoder.encodeBinTrm(1);
@@ -158,7 +158,7 @@ TEST_CASE("test_encodeSymbols")
     binDecoder.start();
     std::vector<unsigned int> symbolsDecoded = std::vector<unsigned int>(symbols.size(), 0);
     for (unsigned int i = 0; i < symbolsDecoded.size(); i++){
-        symbolsDecoded[i] = binDecoder.decodeBinsTU(ctx_ids);
+        symbolsDecoded[i] = binDecoder.decodeBinsTU(ctx_ids.data());
         // std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
     }
     binDecoder.decodeBinTrm();
@@ -314,7 +314,7 @@ TEST_CASE("test_encodeSymbols_function_TU")
     binEncoder.initCtx(num_ctx, 0.5, 8);
     binEncoder.start();
 
-    binEncoder.encodeSymbols(symbols, binId, ctxModelId, binParams, ctxParams);
+    binEncoder.encodeSymbols(symbols.data(), symbols.size(), binId, ctxModelId, binParams, ctxParams);
 
     binEncoder.encodeBinTrm(1);
     binEncoder.finish();

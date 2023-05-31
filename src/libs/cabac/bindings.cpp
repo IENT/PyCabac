@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 #include <vector>
 #include "bin_encoder.h"
 #include "bin_decoder.h"
@@ -37,8 +38,12 @@ PYBIND11_MODULE(cabac, m) {
         .def("getBitstream", &cabacEncoder::getBitstream)
         .def("getNumWrittenBits", &cabacEncoder::getNumWrittenBits)
         .def("writeByteAlignment", &cabacEncoder::writeByteAlignment)
-        .def("initCtx", static_cast<void (cabacEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacEncoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
-        .def("initCtx", static_cast<void (cabacEncoder::*)(unsigned, double, uint8_t)>(&cabacEncoder::initCtx), "Initialize all contexts to same probability and shift idx.");
+        .def("initCtx", static_cast<void (cabacEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacEncoder::initCtx), 
+            "Initialize contexts with probabilities and shift idxs."
+        )
+        .def("initCtx", static_cast<void (cabacEncoder::*)(unsigned, double, uint8_t)>(&cabacEncoder::initCtx),
+            "Initialize all contexts to same probability and shift idx."
+        );
     
     // ---------------------------------------------------------------------------------------------------------------------
     // Decoder
@@ -51,8 +56,12 @@ PYBIND11_MODULE(cabac, m) {
         .def("decodeBin", &cabacDecoder::decodeBin)
         .def("decodeBinTrm", &cabacDecoder::decodeBinTrm)
         .def("getNumBitsRead", &cabacDecoder::getNumBitsRead)
-        .def("initCtx", static_cast<void (cabacDecoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacDecoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
-        .def("initCtx", static_cast<void (cabacDecoder::*)(unsigned, double, uint8_t)>(&cabacDecoder::initCtx), "Initialize all contexts to same probability and shift idx.");
+        .def("initCtx", static_cast<void (cabacDecoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacDecoder::initCtx),
+            "Initialize contexts with probabilities and shift idxs."
+        )
+        .def("initCtx", static_cast<void (cabacDecoder::*)(unsigned, double, uint8_t)>(&cabacDecoder::initCtx),
+            "Initialize all contexts to same probability and shift idx."
+        );
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Encoder with trace enabled
@@ -60,38 +69,84 @@ PYBIND11_MODULE(cabac, m) {
         .def(py::init<>())
         .def("encodeBin", &cabacTraceEncoder::encodeBin)
         .def("getTrace", &cabacTraceEncoder::getTrace)
-        .def("initCtx", static_cast<void (cabacTraceEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacTraceEncoder::initCtx), "Initialize contexts with probabilities and shift idxs.")
-        .def("initCtx", static_cast<void (cabacTraceEncoder::*)(unsigned, double, uint8_t)>(&cabacTraceEncoder::initCtx), "Initialize all contexts to same probability and shift idx.");
+        .def("initCtx", static_cast<void (cabacTraceEncoder::*)(std::vector<std::tuple<double, uint8_t>>)>(&cabacTraceEncoder::initCtx),
+            "Initialize contexts with probabilities and shift idxs."
+        )
+        .def("initCtx", static_cast<void (cabacTraceEncoder::*)(unsigned, double, uint8_t)>(&cabacTraceEncoder::initCtx),
+            "Initialize all contexts to same probability and shift idx."
+        );
 
     // ---------------------------------------------------------------------------------------------------------------------    
     // SymbolEncoder
     py::class_<cabacSymbolEncoder, cabacEncoder>(m, "cabacSymbolEncoder")
         .def(py::init<>())
         .def("encodeBinsBIbypass", &cabacSymbolEncoder::encodeBinsBIbypass)
-        .def("encodeBinsBI", &cabacSymbolEncoder::encodeBinsBI)
+        .def("encodeBinsBI", [](cabacSymbolEncoder &self, uint64_t symbol, const py::array_t<unsigned int>& ctxIdsNumpy, const unsigned int numBins) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            // std::vector<unsigned int> ctxIds(ptr, ptr + buf.size); // this is slow
+            self.encodeBinsBI(symbol, ptr, numBins);
+        })
         .def("encodeBinsTUbypass", &cabacSymbolEncoder::encodeBinsTUbypass, 
             "TU-binarize and and bypass-encode symbol",
             py::arg("symbol"), py::arg("numMaxBins") = 512
         )
-        .def("encodeBinsTU", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const std::vector<unsigned int>&, const unsigned int)>(&cabacSymbolEncoder::encodeBinsTU))
+        .def("encodeBinsTU", [](cabacSymbolEncoder &self, uint64_t symbol, const py::array_t<unsigned int>& ctxIdsNumpy, const unsigned int numMaxVal) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            self.encodeBinsTU(symbol, ptr, numMaxVal);
+        })
         .def("encodeBinsEG0bypass", &cabacSymbolEncoder::encodeBinsEG0bypass)
-        .def("encodeBinsEG0", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const std::vector<unsigned int>&)>(&cabacSymbolEncoder::encodeBinsEG0))
+        .def("encodeBinsEG0", [](cabacSymbolEncoder &self, uint64_t symbol, const py::array_t<unsigned int>& ctxIdsNumpy) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            self.encodeBinsEG0(symbol, ptr);
+        })
         .def("encodeBinsEGkbypass", &cabacSymbolEncoder::encodeBinsEGkbypass)
-        .def("encodeBinsEGk", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const unsigned int, const std::vector<unsigned int>&)>(&cabacSymbolEncoder::encodeBinsEGk));
+        .def("encodeBinsEGk", [](cabacSymbolEncoder &self, uint64_t symbol, const unsigned int k,  const py::array_t<unsigned int>& ctxIdsNumpy) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            self.encodeBinsEGk(symbol, k, ptr);
+        });
 
     // ---------------------------------------------------------------------------------------------------------------------
     // SymbolDecoder
     py::class_<cabacSymbolDecoder, cabacDecoder>(m, "cabacSymbolDecoder")
         .def(py::init<std::vector<uint8_t>>())
         .def("decodeBinsBIbypass", &cabacSymbolDecoder::decodeBinsBIbypass)
-        .def("decodeBinsBI", &cabacSymbolDecoder::decodeBinsBI)
+        .def("decodeBinsBI", [](cabacSymbolDecoder &self, const py::array_t<unsigned int>& ctxIdsNumpy, const unsigned int numBins) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            // std::vector<unsigned int> ctxIds(ptr, ptr + buf.size); // this is slow
+            return self.decodeBinsBI(ptr, numBins);
+        })
         .def("decodeBinsTUbypass", &cabacSymbolDecoder::decodeBinsTUbypass,
             "bypass-decode TU-encoded symbol", py::arg("numMaxBins") = 512)
-        .def("decodeBinsTU", static_cast<uint64_t (cabacSymbolDecoder::*)(const std::vector<unsigned int>&, const unsigned int)>(&cabacSymbolDecoder::decodeBinsTU))
+        .def("decodeBinsTU", [](cabacSymbolDecoder &self, const py::array_t<unsigned int>& ctxIdsNumpy, const unsigned int numMaxVal) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            return self.decodeBinsTU(ptr, numMaxVal);
+        })
         .def("decodeBinsEG0bypass", &cabacSymbolDecoder::decodeBinsEG0bypass)
-        .def("decodeBinsEG0", static_cast<uint64_t (cabacSymbolDecoder::*)(const std::vector<unsigned int>&)>(&cabacSymbolDecoder::decodeBinsEG0))
+        .def("decodeBinsEG0", [](cabacSymbolDecoder &self, const py::array_t<unsigned int>& ctxIdsNumpy) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            return self.decodeBinsEG0(ptr);
+        })
         .def("decodeBinsEGkbypass", &cabacSymbolDecoder::decodeBinsEGkbypass)
-        .def("decodeBinsEGk", static_cast<uint64_t (cabacSymbolDecoder::*)(const unsigned int, const std::vector<unsigned int>&)>(&cabacSymbolDecoder::decodeBinsEGk));
+        .def("decodeBinsEGk", [](cabacSymbolDecoder &self, const unsigned int k, const py::array_t<unsigned int>& ctxIdsNumpy) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+            return self.decodeBinsEGk(k, ptr);
+        });
 
     // ---------------------------------------------------------------------------------------------------------------------
     // SequenceEncoder
@@ -121,7 +176,16 @@ PYBIND11_MODULE(cabac, m) {
             "EGk-binarize and encode symbol with simple order1-context model",
             py::arg("symbol"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos") = 8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins") = 24
         )
-        .def("encodeSymbols", &cabacSimpleSequenceEncoder::encodeSymbols);
+        .def("encodeSymbols", &cabacSimpleSequenceEncoder::encodeSymbols)
+        .def("encodeSymbols", [](cabacSimpleSequenceEncoder &self, const py::array_t<uint64_t> &symbols,
+            binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+        ) {
+            
+            auto buf = symbols.request();
+            uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
+            self.encodeSymbols(ptr, buf.size, binId, ctxModelId, binParams, ctxParams);
+        });
 
     // ---------------------------------------------------------------------------------------------------------------------
     // SequenceDecoder
@@ -151,7 +215,20 @@ PYBIND11_MODULE(cabac, m) {
             "decode EGk-binarized symbol with simple order1-context model",
             py::arg("symbolPrev"), py::arg("k"), py::arg("restPos") = 8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins") = 24
         )
-        .def("decodeSymbols", &cabacSimpleSequenceDecoder::decodeSymbols);
+        .def("decodeSymbols", [](cabacSimpleSequenceDecoder &self, unsigned int numSymbols,
+            binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+        ) {
+            
+            auto symbols = py::array_t<uint64_t>(numSymbols);
+
+            py::buffer_info buf = symbols.request();
+            uint64_t *symbols_ptr = static_cast<uint64_t *>(buf.ptr);
+
+            self.decodeSymbols(symbols_ptr, numSymbols, binId, ctxModelId, binParams, ctxParams);
+
+            return symbols;
+        });
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Context IDs
@@ -197,7 +274,10 @@ PYBIND11_MODULE(cabac, m) {
         contextSelector::getContextIdsSymbolOrder1EGk(ctxIDs, symbolPrev, k, restPos, symbolMax);
         return ctxIDs;
     });
-    m.def("getContextIds", [](uint64_t symbolPrev, binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, unsigned int numMaxCtxs = 24) {
+    m.def("getContextIds", [](uint64_t symbolPrev,
+        binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+        const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, unsigned int numMaxCtxs = 24
+    ) {
         std::vector<unsigned int> ctxIDs(numMaxCtxs, 0);
         contextSelector::getContextIds(ctxIDs, symbolPrev, binId, ctxModelId, binParams, ctxParams);
         return ctxIDs;
