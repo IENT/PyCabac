@@ -6,8 +6,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include "bin_encoder.h"
-#include "bin_decoder.h"
+#include "symbol_encoder.h"
+#include "symbol_decoder.h"
 #include "CommonDef.h"
 #include "binarization.h"
 #include "context_selector.h"

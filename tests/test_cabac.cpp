@@ -7,8 +7,9 @@
 
 #include "catch/catch.hpp"
 
-#include "cabac/bin_decoder.h"
-#include "cabac/bin_encoder.h"
+
+#include "cabac/sequence_encoder.h"
+#include "cabac/sequence_decoder.h"
 #include "cabac/bitstream.h"
 #include "common.h"
 

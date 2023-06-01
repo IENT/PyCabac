@@ -1,0 +1,169 @@
+#pragma once
+
+#include "CommonDef.h"
+#include <cstdint>
+#include <vector>
+
+#if RWTH_PYTHON_IF
+#include "context_selector.h"
+#include "binarization.h"
+#include "symbol_encoder.h"
+
+
+typedef void (cabacSymbolEncoder::*binWriter)(uint64_t, const std::vector<unsigned int>&, std::vector<unsigned int>);
+
+
+class cabacSimpleSequenceEncoder : public cabacSymbolEncoder{
+public:
+  cabacSimpleSequenceEncoder() : cabacSymbolEncoder(){}
+
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // Context model dependent on bins of previous symbol value (bin at same position)
+  // ---------------------------------------------------------------------------------------------------------------------
+  void encodeBinsBIbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=10){
+
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numBins, 0);
+    contextSelector::getContextIdsBinsOrder1BI(ctxIds, symbolPrev, numBins, restPos);
+
+    // Encode symbol
+    encodeBinsBI(symbol, ctxIds.data(), numBins);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  void encodeBinsTUbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
+
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
+    contextSelector::getContextIdsBinsOrder1TU(ctxIds, symbolPrev, restPos);
+
+    // Encode symbol
+    encodeBinsTU(symbol, ctxIds.data(), numMaxBins);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEG0binsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
+
+    // Encode bins
+    encodeBinsEG0(symbol, ctxIds.data());
+    
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEGkbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
+
+    // Encode bins
+    encodeBinsEGk(symbol, k, ctxIds.data());
+    
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // Context model dependent on previous symbol value (integer)
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsBIsymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=8, unsigned int symbolMax=32){
+
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numBins, 0);
+    contextSelector::getContextIdsSymbolOrder1BI(ctxIds, symbolPrev, restPos, symbolMax);
+
+    // Encode symbol
+    encodeBinsBI(symbol, ctxIds.data(), numBins);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsTUsymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512){
+
+    // Get context ids
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
+    contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
+
+    // Encode symbol
+    encodeBinsTU(symbol, ctxIds.data(), numMaxBins);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEG0symbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
+
+    // Encode bins
+    encodeBinsEG0(symbol, ctxIds.data());
+    
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+
+  void encodeBinsEGksymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
+
+    // Get context ids for each bin
+    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
+    contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
+
+    // Encode bins
+    encodeBinsEGk(symbol, k, ctxIds.data());
+    
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // This is a general method for encoding a sequence of symbols for given binarization and context model
+  // binParams = {numMaxBins or numBins, k}
+  // ctxParams = {restPos, symbolMax}
+  void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
+    binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
+    const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+  {
+    uint64_t symbolPrev = 0;
+    const unsigned int numMaxBins = binParams[0];
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
+
+    binWriter func = nullptr;
+
+    // Get writer
+    switch(binId){
+      case binarization::BinarizationId::BI: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsBI;
+      } break;
+      case binarization::BinarizationId::TU: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsTU;
+      } break;
+      case binarization::BinarizationId::EG0: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsEG0;
+      } break;
+      case binarization::BinarizationId::EGk: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsEGk;
+      } break;
+      default:
+        throw std::runtime_error("encodeSymbols: Unknown binarization ID");
+    }
+
+    for (unsigned int i = 0; i < numSymbols; i++) {
+      // Get context ids for each bin
+      if(i > 0) {
+        symbolPrev = symbols[i - 1];
+      } 
+      contextSelector::getContextIds(ctxIds, symbolPrev, binId, ctxModelId, binParams, ctxParams);
+
+      // Encode symbol
+      (*this.*func)(symbols[i], ctxIds, binParams);
+    }
+  }
+
+}; // class cabacSimpleSequenceEncoder
+
+#endif // RWTH_PYTHON_IF
