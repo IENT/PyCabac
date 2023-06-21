@@ -43,16 +43,22 @@ void init_pybind_sequence_coding(py::module &m) {
             "EGk-binarize and encode symbol with simple order1-context model",
             py::arg("symbol"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins")=24
         )
-        .def("encodeSymbols", &cabacSimpleSequenceEncoder::encodeSymbols)
+        .def("encodeSymbolsBypass", [](cabacSimpleSequenceEncoder &self, const py::array_t<uint64_t> &symbols,
+            binarization::BinarizationId binId, const std::vector<unsigned int> binParams
+        ) {
+            auto buf = symbols.request();
+            uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
+            self.encodeSymbolsBypass(ptr, buf.size, binId, binParams);
+        })
         .def("encodeSymbols", [](cabacSimpleSequenceEncoder &self, const py::array_t<uint64_t> &symbols,
             binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
             const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
         ) {
-            
             auto buf = symbols.request();
             uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
             self.encodeSymbols(ptr, buf.size, binId, ctxModelId, binParams, ctxParams);
         });
+
 
     // ---------------------------------------------------------------------------------------------------------------------
     // SequenceDecoder
@@ -82,6 +88,18 @@ void init_pybind_sequence_coding(py::module &m) {
             "decode EGk-binarized symbol with simple order1-context model",
             py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins")=24
         )
+        .def("decodeSymbolsBypass", [](cabacSimpleSequenceDecoder &self, unsigned int numSymbols,
+            binarization::BinarizationId binId, const std::vector<unsigned int> binParams
+        ) {
+            auto symbols = py::array_t<uint64_t>(numSymbols);
+
+            py::buffer_info buf = symbols.request();
+            uint64_t *symbols_ptr = static_cast<uint64_t *>(buf.ptr);
+
+            self.decodeSymbolsBypass(symbols_ptr, numSymbols, binId, binParams);
+
+            return symbols;
+        })
         .def("decodeSymbols", [](cabacSimpleSequenceDecoder &self, unsigned int numSymbols,
             binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
             const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams

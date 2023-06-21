@@ -56,16 +56,17 @@ class cabacSymbolDecoder : public cabacDecoder{
     // Taken from GABAC/GENIE
     uint64_t decodeBinsEG0bypass() {
         unsigned int bins = 0;
-        unsigned int i = 0;
+        unsigned int numBinsSuffix = 0;
         while (decodeBinsBIbypass(1) == 0) {
-            i++;
+            numBinsSuffix++;
         }
-        if (i != 0) {
-            bins = (1u << i) | decodeBinsEP(i);
+        if (numBinsSuffix != 0) {
+            bins = (1u << numBinsSuffix) | decodeBinsEP(numBinsSuffix);
+            return static_cast<uint64_t>(bins - 1);
         } else {
             return 0;
         }
-        return static_cast<uint64_t>(bins - 1);
+        
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -73,19 +74,19 @@ class cabacSymbolDecoder : public cabacDecoder{
     uint64_t decodeBinsEG0(const unsigned int * ctxIds) {
 
         // Prefix
-        unsigned int i = 0;
-        while (decodeBin(ctxIds[i]) == 0) {
-            i++;
+        unsigned int numBinsSuffix = 0;
+        while (decodeBin(ctxIds[numBinsSuffix]) == 0) {
+            numBinsSuffix++;
         }
 
         // Suffix
         unsigned int bins = 0;
-        if (i != 0) {
-            bins = (1u << i) | decodeBinsEP(i);
+        if (numBinsSuffix != 0) {
+            bins = (1u << numBinsSuffix) | decodeBinsEP(numBinsSuffix);
+            return static_cast<uint64_t>(bins - 1);
         } else {
             return 0;
         }
-        return static_cast<uint64_t>(bins - 1);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -137,10 +138,22 @@ class cabacSymbolDecoder : public cabacDecoder{
     // Overloaded functions for latter use in cabacSimpleSequenceDecoder
     // ---------------------------------------------------------------------------------------------------------------------
 
+    uint64_t decodeBinsBIbypass(const std::vector<unsigned int> binParams)
+    {
+        const unsigned int numBins = binParams[0];
+        return decodeBinsBIbypass(numBins);
+    }
+
     uint64_t decodeBinsBI(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
     {
         const unsigned int numBins = binParams[0];
         return decodeBinsBI(ctxIds.data(), numBins);
+    }
+
+    uint64_t decodeBinsTUbypass(const std::vector<unsigned int> binParams)
+    {
+        const unsigned int numMaxBins = binParams[0];
+        return decodeBinsTUbypass(numMaxBins);
     }
 
     uint64_t decodeBinsTU(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
@@ -149,16 +162,27 @@ class cabacSymbolDecoder : public cabacDecoder{
         return decodeBinsTU(ctxIds.data(), numMaxBins);
     }
 
+    uint64_t decodeBinsEG0bypass(const std::vector<unsigned int> binParams)
+    {
+        return decodeBinsEG0bypass();
+    }
+
     uint64_t decodeBinsEG0(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
     {
         return decodeBinsEG0(ctxIds.data());
+    }
+
+    uint64_t decodeBinsEGkbypass(const std::vector<unsigned int> binParams)
+    {
+        const unsigned int k = binParams[1];
+        return decodeBinsEGkbypass(k);
     }
 
     uint64_t decodeBinsEGk(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
     {
         const unsigned int k = binParams[1];
         return decodeBinsEGk(k, ctxIds.data());
-    }
+    }    
 
 }; // class cabacSymbolDecoder
 

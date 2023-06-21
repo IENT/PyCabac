@@ -11,6 +11,7 @@
 
 
 typedef void (cabacSymbolEncoder::*binWriter)(uint64_t, const std::vector<unsigned int>&, std::vector<unsigned int>);
+typedef void (cabacSymbolEncoder::*binBypassWriter)(uint64_t, std::vector<unsigned int>);
 
 
 class cabacSimpleSequenceEncoder : public cabacSymbolEncoder{
@@ -128,13 +129,12 @@ public:
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
   {
-    uint64_t symbolPrev = 0;
+
     const unsigned int numMaxBins = binParams[0];
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
-    binWriter func = nullptr;
-
     // Get writer
+    binWriter func = nullptr;
     switch(binId){
       case binarization::BinarizationId::BI: {
         func = &cabacSimpleSequenceEncoder::encodeBinsBI;
@@ -152,6 +152,7 @@ public:
         throw std::runtime_error("encodeSymbols: Unknown binarization ID");
     }
 
+    uint64_t symbolPrev = 0;
     for (unsigned int i = 0; i < numSymbols; i++) {
       // Get context ids for each bin
       if(i > 0) {
@@ -161,6 +162,37 @@ public:
 
       // Encode symbol
       (*this.*func)(symbols[i], ctxIds, binParams);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // This is a general method for bypass-encoding a sequence of symbols for given binarization
+  // parameter definition see encodeSymbols
+  void encodeSymbolsBypass(const uint64_t * symbols, unsigned int numSymbols, 
+    binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
+  {
+    // Get writer
+    binBypassWriter func = nullptr;
+    switch(binId){
+      case binarization::BinarizationId::BI: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsBIbypass;
+      } break;
+      case binarization::BinarizationId::TU: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsTUbypass;
+      } break;
+      case binarization::BinarizationId::EG0: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsEG0bypass;
+      } break;
+      case binarization::BinarizationId::EGk: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsEGkbypass;
+      } break;
+      default:
+        throw std::runtime_error("encodeSymbolsBypass: Unknown binarization ID");
+    }
+
+    for (unsigned int i = 0; i < numSymbols; i++) {
+      // Encode symbol
+      (*this.*func)(symbols[i], binParams);
     }
   }
 

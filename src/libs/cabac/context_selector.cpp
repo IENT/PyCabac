@@ -38,7 +38,7 @@ namespace contextSelector{
 
         Parameter-overview:
         - TU: (all bins (up to n<restPos) are context modelled)
-            - getContextIdSymbolOrder1TU: restPos and symbolMax (to yield at max (symbolMax+2)*restPos+1 contexts)
+            - getContextIdSymbolOrder1TU: restPos and symbolMax (to yield at max (symbolMax+1)*restPos+1 contexts)
             - getContextIdsSymbolOrder1TU: restPos, symbolMax and lengths of ctxIds vector
 
     Generally, each symbol is binarized to a bin-string of a certain length.
@@ -67,13 +67,13 @@ namespace contextSelector{
         b_t-1,n is the bin at position n in BI-binarized bin-string corresponding to previous symbol.
         b_t,n is the bin at position n in BI-binarized bin-string corresponding to current symbol.
 
-        In total we have num_ctx_total = 2*restPos + 1 contexts
+        In total we have num_ctx_total = 2*R + 1 contexts with R = restPos
 
         The ctx_id is computed as follows:
-        ctx_id:                     meaning:
-        0*restPos ... 1*restPos-1:  previously coded bin at position n<restPos is 0
-        1*restPos ... 2*restPos-1:  previously coded bin at position n<restPos is 1
-        2*restPos:                  position n>=restPos: rest case with single context
+        ctx_id:         meaning:
+        0*R ... 1*R-1:  previously coded bin at position n<R is 0
+        1*R ... 2*R-1:  previously coded bin at position n<R is 1
+        2*R:            position n>=R: rest case with single context
 
         Let the ctx_ids be numbered from 0 to num_ctx_total-1
         For TU, the numbering is the same (from left to right), e.g.
@@ -91,10 +91,10 @@ namespace contextSelector{
         unsigned int ctxId = 0;
         if(n < restPos) { // we are in the first n<restPos bins
             // actual context modelling
-            if(symbolPrevBin){ // previously coded bin 0 at position n available
-                ctxId = 1*restPos + n; // 0 case
-            } else { // n == prvSymbol // previously coded bin 1 at position n available
-                ctxId = 0*restPos + n; // 1 case
+            if(symbolPrevBin){
+                ctxId = 1*restPos + n; // 1 case
+            } else {
+                ctxId = 0*restPos + n; // 0 case
             }
         }
         else {
@@ -110,10 +110,10 @@ namespace contextSelector{
         Get context IDs for all bins of a BI-binarized symbol given the previous symbol and the number of rest bins.
         */
         
-        // get context ID for rest case as mini speedup
+        // get context ID for rest case (n=>restPos) as mini speedup
         unsigned int ctxIdRest = getContextIdBinsOrder1BI(restPos, symbolPrev, numBins, restPos);
-        for(unsigned int n=0; n<ctxIds.size(); n++){
-            if(n<restPos){ // actual context modelling for bins at position n<restPos 
+        for(unsigned int n=0; n<ctxIds.size(); n++) {
+            if(n < restPos) { // actual context modelling for bins at position n<restPos 
                 ctxIds[n] = getContextIdBinsOrder1BI(n, symbolPrev, numBins, restPos);
             } else { // bins at position n>=restPos are modeled with the same rest context
                 ctxIds[n] = ctxIdRest;
@@ -128,22 +128,22 @@ namespace contextSelector{
         b_t-1,n is the bin at position n in TU-binarized bin-string corresponding to previous symbol.
         b_t,n is the bin at position n in TU-binarized bin-string corresponding to current symbol.
 
-        In total we have num_ctx_total = 3*restPos + 1 contexts
+        In total we have num_ctx_total = 3*R + 1 contexts with R = restPos
 
         The ctx_id is computed as follows:
-        ctx_id:                     meaning:
-        0*restPos ... 1*restPos-1:  previously coded bin at position n<restPos not available
-        1*restPos ... 2*restPos-1:  previously coded bin at position n<restPos is 0
-        2*restPos ... 3*restPos-1:  previously coded bin at position n<restPos is 1
-        3*restPos:                  position n>=restPos: rest case with single context
+        ctx_id:         meaning:
+        0*R ... 1*R-1:  previously coded bin at position n<R not available
+        1*R ... 2*R-1:  previously coded bin at position n<R is 0
+        2*R ... 3*R-1:  previously coded bin at position n<R is 1
+        3*R:            position n>=R: rest case with single context
         */
 
         unsigned int ctxId = 0;
         if(n < restPos) { // we are in the first n<restPos bins
             // actual context modelling
-            if(n > symbolPrev){ // previously coded bin at position n not available
+            if(n > symbolPrev) { // previously coded bin at position n not available
                 ctxId = 0*restPos + n; // N/A case
-            } else if(n < symbolPrev){ // previously coded bin 0 at position n available
+            } else if(n < symbolPrev) { // previously coded bin 0 at position n available
                 ctxId = 1*restPos + n; // 0 case
             } else { // n == prvSymbol // previously coded bin 1 at position n available
                 ctxId = 2*restPos + n; // 1 case
@@ -162,10 +162,10 @@ namespace contextSelector{
         Get context IDs for all bins of a TU-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the TU code.
         */
         
-        // get context ID for rest case as mini speedup
+        // get context ID for rest case (n=>restPos) as mini speedup
         unsigned int ctxIdRest = getContextIdBinsOrder1TU(restPos, symbolPrev, restPos);
-        for(unsigned int n=0; n<ctxIds.size(); n++){
-            if(n<restPos){ // actual context modelling for bins at position n<restPos 
+        for(unsigned int n=0; n < ctxIds.size(); n++) {
+            if(n < restPos) { // actual context modelling for bins at position n<restPos 
                 ctxIds[n] = getContextIdBinsOrder1TU(n, symbolPrev, restPos);
             } else { // bins at position n>=restPos are modeled with the same rest context
                 ctxIds[n] = ctxIdRest;
@@ -174,25 +174,12 @@ namespace contextSelector{
     }
 
     unsigned int getContextIdBinsOrder1EG0(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=10){
-        /*
-        EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
-        The prefix is modelled as a TU code with a context for each bin.
-        */
-
-        auto prevValuePlus1 = (unsigned int)(symbolPrev + 1);
-        auto prevNumLeadZeros = (unsigned int)(floor(log2(prevValuePlus1)));
-
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + 1)));
         return getContextIdBinsOrder1TU(n, prevNumLeadZeros, restPos);
     }
 
     void getContextIdsBinsOrder1EG0(std::vector<unsigned int>& ctxIds, const uint64_t symbolPrev, const unsigned int restPos){
-        /*
-        Get context IDs for all bins of a EG0-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
-        */
-        
-        auto prevValuePlus1 = (unsigned int)(symbolPrev + 1);
-        auto prevNumLeadZeros = (unsigned int)(floor(log2(prevValuePlus1)));
-
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + 1)));
         getContextIdsBinsOrder1TU(ctxIds, prevNumLeadZeros, restPos);
     }
 
@@ -210,14 +197,7 @@ namespace contextSelector{
     }
 
     void getContextIdsBinsOrder1EGk(std::vector<unsigned int>& ctxIds, const uint64_t symbolPrev, const unsigned int k, const unsigned int restPos){
-        /*
-        Get context IDs for all bins of a EGk-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
-        */
-        
-        // Get number of leading zeros to encode previous symbol with EGk code
         auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + (1 << k))) - k);
-
-        // Get Context IDs for the prefix TU code
         getContextIdsBinsOrder1TU(ctxIds, prevNumLeadZeros, restPos);
     }
 
@@ -229,31 +209,30 @@ namespace contextSelector{
         /* 
         ContextID dependent on bin position n of to-be-decoded symbol as well as previous integer symbol value, in fact
         modeling the probability p(b_n | symbolPrev) with bin b_n at position n in BI-binarized bin-string.
+        Let S = symbolMax and R = restPos
 
-        In total we have num_ctx_total = (symbolMax+2)*restPos + 1 contexts
+        In total we have num_ctx_total = (S+1)*R + 1 contexts
 
         The ctx_id is computed as follows:
-        ctx_id:                       meaning:
-        0*restPos ... 1*restPos-1:    previously coded symbol = 0 (and n<restPos)
-        1*restPos ... 2*restPos-1:    previously coded symbol = 1 (and n<restPos)
+        ctx_id:                 meaning:
+            0*R ...     1*R-1:  previously coded symbol = 0 (and n<R)
+            1*R ...     2*R-1:  previously coded symbol = 1 (and n<R)
         ...
-        (symbolMax+0)*restPos ... (symbolMax+1)*restPos-1:  previously coded symbol = symbolMax (and n<restPos)
-        (symbolMax+1)*restPos ... (symbolMax+2)*restPos-1:  previously coded symbol > symbolMax (and n<restPos)
-        (symbolMax+2)*restPos:                              position n>=restPos: rest case with single context
+        (S+0)*R ... (S+1)*R-1:  previously coded symbol = S (and n<R)
+        (S+0)*R ... (S+1)*R-1:  previously coded symbol > S (and n<R)
+        (S+1)*R:                position n>=R: rest case with single context
         */
 
         unsigned int ctxId = 0;
+        uint64_t symbolPrevClipped = symbolPrev <= symbolMax ? symbolPrev : symbolMax;
         
         if(n < restPos){  // we are in the first n<restPos bins
             // actual context modelling
-            if(symbolPrev <= symbolMax){
-                ctxId = symbolPrev*restPos + n;
-            } else{ // clip symbolPrev to symbolMax but still use bin-position dependent contexts
-                ctxId = (symbolMax+1)*restPos + n;
-            }
+            ctxId = symbolPrevClipped*restPos + n;
+            
         } else{ // we are in n>=restPos bins
             // no context modelling: rest case with single context for all n>=restPos bins
-            ctxId = (symbolMax+2) * restPos;
+            ctxId = (symbolMax+1) * restPos;
         }
 
         return ctxId;
@@ -264,7 +243,7 @@ namespace contextSelector{
         Get context IDs for all bins of a BI-binarized symbol given the previous symbol, the number of rest bins and the maximum symbol value.
         */
         
-        // get context ID for rest case as mini speedup
+        // get context ID for rest case (n=>restPos) as mini speedup
         unsigned int ctxIdRest = getContextIdSymbolOrder1BI(restPos, symbolPrev, restPos, symbolMax);
         for(unsigned int n=0; n<ctxIds.size(); n++){
             if(n<restPos){
@@ -276,46 +255,20 @@ namespace contextSelector{
     }
 
     unsigned int getContextIdSymbolOrder1TU(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
-        // For TU, the symbol-wise order1 context model is the same as for BI
-        return getContextIdSymbolOrder1BI(n, symbolPrev, restPos, symbolMax);
+        return getContextIdSymbolOrder1BI(n, symbolPrev, restPos, symbolMax); // For TU, the symbol-wise order1 context model is the same as for BI
     }
 
     void getContextIdsSymbolOrder1TU(std::vector<unsigned int>& ctxIds, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
-        /* 
-        Get context IDs for all bins of a TU-binarized symbol given the previous symbol, the number of rest bins and the maximum symbol value.
-        */
-        
-        // get context ID for rest case as mini speedup
-        unsigned int ctxIdRest = getContextIdSymbolOrder1TU(restPos, symbolPrev, restPos, symbolMax);
-        for(unsigned int n=0; n<ctxIds.size(); n++){
-            if(n<restPos){
-                ctxIds[n] = getContextIdSymbolOrder1TU(n, symbolPrev, restPos, symbolMax);
-            } else {
-                ctxIds[n] = ctxIdRest;
-            }
-        }
+        getContextIdsSymbolOrder1BI(ctxIds, symbolPrev, restPos, symbolMax); // For TU, the symbol-wise order1 context model is the same as for BI
     }
 
     unsigned int getContextIdSymbolOrder1EG0(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
-        /*
-        EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
-        The prefix is modelled as a TU code with a context for each bin.
-        */
-
-        auto prevValuePlus1 = (unsigned int)(symbolPrev + 1);
-        auto prevNumLeadZeros = (unsigned int)(floor(log2(prevValuePlus1)));
-
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + 1)));
         return getContextIdSymbolOrder1TU(n, prevNumLeadZeros, restPos, symbolMax);
     }
 
     void getContextIdsSymbolOrder1EG0(std::vector<unsigned int>& ctxIds, const uint64_t symbolPrev, const unsigned int restPos=8, const unsigned int symbolMax=32){
-        /*
-        Get context IDs for all bins of a EG0-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the prefix code.
-        */
-        
-        auto prevValuePlus1 = (unsigned int)(symbolPrev + 1);
-        auto prevNumLeadZeros = (unsigned int)(floor(log2(prevValuePlus1)));
-
+        auto prevNumLeadZeros = (unsigned int)(floor(log2(symbolPrev + 1)));
         getContextIdsSymbolOrder1TU(ctxIds, prevNumLeadZeros, restPos, symbolMax);
     }
 
@@ -392,6 +345,7 @@ namespace contextSelector{
         }
 
     }
-};
+
+}; // namespace contextSelector
 
 #endif  // RWTH_PYTHON_IF

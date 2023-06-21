@@ -11,6 +11,7 @@
 
 
 typedef uint64_t (cabacSymbolDecoder::*binReader)(const std::vector<unsigned int>&, std::vector<unsigned int>);
+typedef uint64_t (cabacSymbolDecoder::*binBypassReader)(std::vector<unsigned int>);
 
 class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
   public:
@@ -115,15 +116,11 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
       const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
     {
-      
-      uint64_t symbolPrev = 0;
-      
       const unsigned int numMaxBins = binParams[0];
       std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
-      binReader func = nullptr;
-
       // Get writer
+      binReader func = nullptr;
       switch(binId){
         case binarization::BinarizationId::BI:{
           func = &cabacSimpleSequenceDecoder::decodeBinsBI;
@@ -138,9 +135,10 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
           func = &cabacSimpleSequenceDecoder::decodeBinsEGk;
         } break;
         default:
-          throw std::runtime_error("encodeSymbols: Unknown binarization ID");
+          throw std::runtime_error("decodeSymbols: Unknown binarization ID");
       }
 
+      uint64_t symbolPrev = 0;
       for (unsigned int i = 0; i < numSymbols; i++) {
         // Get context ids for each bin
         if(i > 0) {
@@ -162,6 +160,50 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
       // Fill symbols
       decodeSymbols(symbols.data(), numSymbols, binId, ctxModelId, binParams, ctxParams);
+
+      // Return symbols
+      return symbols;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // This is a general method for bypass decoding a sequence of symbols for given binarization
+    // parameter definition see encodeSymbols
+    void decodeSymbolsBypass(uint64_t * symbols, const unsigned int numSymbols,
+      binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
+    {
+      // Get writer
+      binBypassReader func = nullptr;
+      switch(binId){
+        case binarization::BinarizationId::BI:{
+          func = &cabacSimpleSequenceDecoder::decodeBinsBIbypass;
+        } break;
+        case binarization::BinarizationId::TU: {
+          func = &cabacSimpleSequenceDecoder::decodeBinsTUbypass;
+        } break;
+        case binarization::BinarizationId::EG0: {
+          func = &cabacSimpleSequenceDecoder::decodeBinsEG0bypass;
+        } break;
+        case binarization::BinarizationId::EGk: {
+          func = &cabacSimpleSequenceDecoder::decodeBinsEGkbypass;
+        } break;
+        default:
+          throw std::runtime_error("decodeSymbolsBypass: Unknown binarization ID");
+      }
+
+      // Decode bins
+      for (unsigned int i = 0; i < numSymbols; i++) {
+        symbols[i] = (*this.*func)(binParams);
+      }
+    }
+
+    std::vector<uint64_t> decodeSymbolsBypass(const unsigned int numSymbols, 
+      binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
+    {
+      // Allocate memory
+      std::vector<uint64_t> symbols(numSymbols, 0);
+
+      // Fill symbols
+      decodeSymbolsBypass(symbols.data(), numSymbols, binId, binParams);
 
       // Return symbols
       return symbols;

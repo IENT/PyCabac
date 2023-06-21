@@ -135,10 +135,22 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
   // Overloaded functions for latter use in cabacSimpleSequenceEncoder
   // ---------------------------------------------------------------------------------------------------------------------
+  void encodeBinsBIbypass(uint64_t symbol, const std::vector<unsigned int> binParams) 
+  {
+    const unsigned int numBins = binParams[0];
+    encodeBinsBIbypass(symbol, numBins);
+  }
+
   void encodeBinsBI(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
   {
     const unsigned int numBins = binParams[0];
     encodeBinsBI(symbol, ctxIds.data(), numBins);
+  }
+
+  void encodeBinsTUbypass(uint64_t symbol, const std::vector<unsigned int> binParams) 
+  {
+    const unsigned int numMaxBins = binParams[0];
+    encodeBinsTUbypass(symbol, numMaxBins);
   }
 
   void encodeBinsTU(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
@@ -147,9 +159,20 @@ public:
     encodeBinsTU(symbol, ctxIds.data(), numMaxBins);
   }
 
+  void encodeBinsEG0bypass(uint64_t symbol, const std::vector<unsigned int> binParams) 
+  {
+    encodeBinsEG0bypass(symbol);
+  }
+
   void encodeBinsEG0(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
   {
     encodeBinsEG0(symbol, ctxIds.data());
+  }
+
+  void encodeBinsEGkbypass(uint64_t symbol, const std::vector<unsigned int> binParams) 
+  {
+    const unsigned int k = binParams[1];
+    encodeBinsEGkbypass(symbol, k);
   }
 
   void encodeBinsEGk(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
@@ -157,7 +180,6 @@ public:
     const unsigned int k = binParams[1];
     encodeBinsEGk(symbol, k, ctxIds.data());
   }
-
 
 };  // class cabacSymbolEncoder
 
