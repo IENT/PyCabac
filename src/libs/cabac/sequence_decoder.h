@@ -122,7 +122,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       const unsigned int numMaxBins = binParams[0];
       std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
-      // Get writer
+      // Get reader
       binReader func = nullptr;
       switch(binId){
         case binarization::BinarizationId::BI:{
@@ -179,7 +179,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
     void decodeSymbolsBypass(uint64_t * symbols, const unsigned int numSymbols,
       binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
     {
-      // Get writer
+      // Get reader
       binBypassReader func = nullptr;
       switch(binId){
         case binarization::BinarizationId::BI:{
