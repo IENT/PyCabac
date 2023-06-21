@@ -17,8 +17,13 @@ namespace contextSelector{
         BINSORDER1 = 0,
         SYMBOLORDER1 = 1,
         BINSORDERN = 2,
-        SYMBOLORDERN = 3
+        SYMBOLORDERN = 3,
+        BAC = 4,
+        BINPOSITION = 5
     };
+
+    unsigned int getContextIdBinPosition(const unsigned int, const unsigned int, const unsigned int);
+    void getContextIdsBinPosition(std::vector<unsigned int>&, const unsigned int, const unsigned int, const unsigned int);
 
     /* Context model on bin-to-symbol level, order=1 */
     // BI binarization

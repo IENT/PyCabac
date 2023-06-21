@@ -130,6 +130,11 @@ public:
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
   {
     auto order = ctxParams[0];
+    // Check order
+    if(order == 0 || order > 3) {
+      throw std::runtime_error("encodeSymbols: Order must be 1, 2 or 3");
+    }
+    
     std::vector<uint64_t> symbolsPrev(order, 0);
     const unsigned int numMaxBins = binParams[0];
     std::vector<unsigned int> ctxIds(numMaxBins, 0);

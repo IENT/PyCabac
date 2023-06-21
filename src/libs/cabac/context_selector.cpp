@@ -59,6 +59,50 @@ namespace contextSelector{
         
     */
 
+    unsigned int getContextIdBinPosition(const unsigned int n, const unsigned int restPos=10){
+        /* 
+        ContextID dependent on bin at position n in binarized bin-string.
+        In fact, it should model the probability p(b_t,n | n) with bin b_n at position n in binarized bin-string.
+        b_t,n is the bin at position n in binarized bin-string corresponding to current symbol.
+
+        In total we have num_ctx_total = R+1 contexts with R = restPos
+
+        The ctx_id is computed as follows:
+        ctx_id:         meaning:
+        n               position n<R
+        R               position n>=R: rest case with single context
+        */
+
+        unsigned int ctxId = 0;
+        if(n < restPos) { // we are in the first n<restPos bins
+            // actual context modelling
+            ctxId = n;
+        }
+        else {
+            // no context modelling: rest case with single context
+            ctxId = restPos;
+        }
+
+        return ctxId;
+    }
+
+    void getContextIdsBinPosition(std::vector<unsigned int>& ctxIds, const unsigned int restPos=10){
+        /* 
+        Get context IDs for all bins of a TU-binarized symbol given the previous symbol, the number of rest bins and the maximum number of bins in the TU code.
+        */
+        
+        // get context ID for rest case (n=>restPos) as mini speedup
+        unsigned int ctxIdRest = getContextIdBinPosition(restPos, restPos);
+        for(unsigned int n=0; n < ctxIds.size(); n++) {
+            if(n < restPos) { // actual context modelling for bins at position n<restPos 
+                ctxIds[n] = getContextIdBinPosition(n, restPos);
+            } else { // bins at position n>=restPos are modeled with the same rest context
+                ctxIds[n] = ctxIdRest;
+            }
+        }
+    }
+
+
     // --------------------------------------------------------------------------------
     // Bin-to-bin level, order 1
     // --------------------------------------------------------------------------------
@@ -661,6 +705,12 @@ namespace contextSelector{
                 auto symbolMax = ctxParams[3];
                 contextId = getContextIdSymbolOrderNTU(order, n, symbolsPrevForTU, restPos, symbolMax);
             } break;
+            case contextSelector::ContextModelId::BAC:{
+                contextId = 0;
+            } break;
+            case contextSelector::ContextModelId::BINPOSITION: {
+                contextId = getContextIdBinPosition(n, restPos);
+            }; break;
             default:
                 throw std::runtime_error("getContextId: Unknown context model ID. If you want to use the *ORDER1 context models, just set order=1 and use the *ORDERN models :).");
         }
@@ -719,6 +769,14 @@ namespace contextSelector{
                 auto symbolMax = ctxParams[3];
                 getContextIdsSymbolOrderNTU(ctxIds, order, symbolsPrevForTU, restPos, symbolMax);
             } break;
+            case contextSelector::ContextModelId::BAC:{
+                for(unsigned int n=0; n<ctxIds.size(); n++){
+                    ctxIds[n] = 0;
+                }
+            } break;
+            case contextSelector::ContextModelId::BINPOSITION: {
+                getContextIdsBinPosition(ctxIds, restPos);
+            }; break;
             default:
                 throw std::runtime_error("getContextIds: Unknown context model ID. If you want to use the *ORDER1 context models, just set order=1 and use the *ORDERN models :).");
         }
@@ -752,6 +810,12 @@ namespace contextSelector{
             case contextSelector::ContextModelId::SYMBOLORDERN: {
                 auto symbolMax = ctxParams[3];
                 numContexts = pow(symbolMax+1, order)*restPos + 1;
+            } break;
+            case contextSelector::ContextModelId::BAC:{
+                numContexts = 1;
+            } break;
+            case contextSelector::ContextModelId::BINPOSITION: {
+                numContexts = restPos + 1;
             } break;
             default:
                 throw std::runtime_error("getNumContexts: Unknown context model ID");
