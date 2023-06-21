@@ -11,6 +11,58 @@ def create_random_symbols_geometric_distribution(num_values, p):
 
 class MainTest(unittest.TestCase):
     
+    def test_ctx_selection_symbols_order_n(self):
+        import numpy as np  # TODO: move this import somewhere else
+        def ctx_ids_symbols_order_n_tu(order, n, prev_symbols=0, rest_pos=10, symbol_max=32):
+
+            n = np.asarray(n)
+            prev_symbols = np.asarray(prev_symbols)
+            ctx_id = np.zeros(n.shape, dtype=np.int32)
+
+            # binary mask
+            mask_not_rest = n < rest_pos  # mask for not-rest case
+
+            # clip previous symbols to symbol_max
+            prev_symbols0 = prev_symbols
+            prev_symbols0[prev_symbols > symbol_max] = symbol_max
+
+            offset = rest_pos
+            for o in range(0, order):
+                # bin position n < rest_pos
+                ctx_id[mask_not_rest] += (prev_symbols0[o])*offset
+                offset *= (symbol_max+1)
+
+            ctx_id[mask_not_rest] += n[mask_not_rest]
+            # bin position n >= rest_pos
+            # rst case, independent of position n
+            ctx_id[~mask_not_rest] = ((symbol_max+1)**order)*rest_pos
+
+            return ctx_id
+        
+        
+        num_max_val = 255
+        num_values = 1000
+        symbol_max = 15
+        order = 2
+        symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
+        
+        symbolsPrev = [0] * order
+        num_rest = 10
+
+        ctx_ids_symbols_order_n_tu(order, 1, [0,0], num_rest, symbol_max)
+        for i, symbol in enumerate(symbols):
+            if i > 0:
+                symbolsPrev[0] = symbols[i-1]
+            if order > 1 and i > 1:
+                symbolsPrev[1] = symbols[i-2]
+            if order > 2 and i > 2:
+                symbolsPrev[2] = symbols[i-3]
+            
+            n = list(range(0, symbol+1))
+            ctx_ids = ctx_ids_symbols_order_n_tu(order, n, symbolsPrev, num_rest, symbol_max)
+            ctx_ids2 = cabac.getContextIdsSymbolOrderNTU(order, symbolsPrev, num_rest, symbol_max, symbol+1)
+            self.assertTrue((ctx_ids == np.array(ctx_ids2)).all())
+
     def test_ctx_selection_bins_order1(self):
         import numpy as np  # TODO: move this import somewhere else
         def ctx_ids_bins_order1_tu(n, prev_symbol=0, n_rst=10):

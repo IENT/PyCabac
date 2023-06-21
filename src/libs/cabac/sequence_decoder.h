@@ -116,6 +116,9 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
       const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
     {
+      
+      auto order = ctxParams[0];
+      std::vector<uint64_t> symbolsPrev(order, 0);
       const unsigned int numMaxBins = binParams[0];
       std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
@@ -138,13 +141,18 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
           throw std::runtime_error("decodeSymbols: Unknown binarization ID");
       }
 
-      uint64_t symbolPrev = 0;
       for (unsigned int i = 0; i < numSymbols; i++) {
         // Get context ids for each bin
         if(i > 0) {
-          symbolPrev = symbols[i - 1];
-        } 
-        contextSelector::getContextIds(ctxIds, symbolPrev, binId, ctxModelId, binParams, ctxParams);
+          symbolsPrev[0] = symbols[i - 1];
+        }
+        if(order > 1 && i > 1) {
+          symbolsPrev[1] = symbols[i - 2];
+        }
+        if(order > 2 && i > 2) {
+          symbolsPrev[2] = symbols[i - 3];
+        }
+        contextSelector::getContextIds(ctxIds, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
 
         // Decode bins
         symbols[i] = (*this.*func)(ctxIds, binParams);

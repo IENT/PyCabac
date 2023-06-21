@@ -124,12 +124,13 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
   // This is a general method for encoding a sequence of symbols for given binarization and context model
   // binParams = {numMaxBins or numBins, k}
-  // ctxParams = {restPos, symbolMax}
+  // ctxParams = {order, restPos, offset, symbolMax}
   void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
   {
-
+    auto order = ctxParams[0];
+    std::vector<uint64_t> symbolsPrev(order, 0);
     const unsigned int numMaxBins = binParams[0];
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
@@ -152,13 +153,18 @@ public:
         throw std::runtime_error("encodeSymbols: Unknown binarization ID");
     }
 
-    uint64_t symbolPrev = 0;
     for (unsigned int i = 0; i < numSymbols; i++) {
       // Get context ids for each bin
       if(i > 0) {
-        symbolPrev = symbols[i - 1];
+        symbolsPrev[0] = symbols[i - 1];
       } 
-      contextSelector::getContextIds(ctxIds, symbolPrev, binId, ctxModelId, binParams, ctxParams);
+      if(order > 1 && i > 1) {
+        symbolsPrev[1] = symbols[i - 2];
+      }
+      if(order > 2 && i > 2) {
+        symbolsPrev[2] = symbols[i - 3];
+      }
+      contextSelector::getContextIds(ctxIds, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
 
       // Encode symbol
       (*this.*func)(symbols[i], ctxIds, binParams);
