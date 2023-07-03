@@ -53,86 +53,75 @@ class cabacSymbolDecoder : public cabacDecoder{
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // Taken from GABAC/GENIE
-    uint64_t decodeBinsEG0bypass() {
-        unsigned int bins = 0;
-        unsigned int numBinsSuffix = 0;
-        while (decodeBinsBIbypass(1) == 0) {
-            numBinsSuffix++;
-        }
-        if (numBinsSuffix != 0) {
-            bins = (1u << numBinsSuffix) | decodeBinsEP(numBinsSuffix);
-            return static_cast<uint64_t>(bins - 1);
-        } else {
-            return 0;
-        }
-        
-    }
-
-    // ---------------------------------------------------------------------------------------------------------------------
-    // Taken from GABAC/GENIE
-    uint64_t decodeBinsEG0(const unsigned int * ctxIds) {
-
-        // Prefix
-        unsigned int numBinsSuffix = 0;
-        while (decodeBin(ctxIds[numBinsSuffix]) == 0) {
-            numBinsSuffix++;
-        }
-
-        // Suffix
-        unsigned int bins = 0;
-        if (numBinsSuffix != 0) {
-            bins = (1u << numBinsSuffix) | decodeBinsEP(numBinsSuffix);
-            return static_cast<uint64_t>(bins - 1);
-        } else {
-            return 0;
-        }
-    }
-
-    // ---------------------------------------------------------------------------------------------------------------------
-
     uint64_t decodeBinsEGkbypass(unsigned k) {
 
-        unsigned int symbol = 0;
+        if (k == 0) { // Taken from GABAC/GENIE
+            unsigned int bins = 0;
+            unsigned int numBinsSuffix = 0;
+            while (decodeBinsBIbypass(1) == 0) {
+                numBinsSuffix++;
+            }
+            if (numBinsSuffix != 0) {
+                bins = (1u << numBinsSuffix) | decodeBinsEP(numBinsSuffix);
+                return static_cast<uint64_t>(bins - 1);
+            } else {
+                return 0;
+            }
+        } else {
+            unsigned int symbol = 0;
 
-        /* prefix */
-        unsigned int numLeadZeros = 0;
-        while (decodeBinsBIbypass(1) == 0) {
-          numLeadZeros++;
+            // Prefix
+            unsigned int numLeadZeros = 0;
+            while (decodeBinsBIbypass(1) == 0) {
+                numLeadZeros++;
+            }
+
+            // Suffix
+            auto m = (unsigned int)((1 << (numLeadZeros + k)) - (1 << k));
+            symbol = decodeBinsBIbypass(numLeadZeros + k);
+            symbol += m;
+
+            return static_cast<uint64_t>(symbol);
         }
-
-        if(k == 0 && numLeadZeros == 0){
-          return 0;
-        }
-        auto m = (unsigned int)((1 << (numLeadZeros + k)) - (1 << k));
-        symbol = decodeBinsBIbypass(numLeadZeros + k);
-        symbol += m;
-
-        return static_cast<uint64_t>(symbol);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-
     uint64_t decodeBinsEGk(unsigned k, const unsigned int * ctxIds) {
 
-        unsigned int symbol = 0;
+        if (k == 0) { // Taken from GABAC/GENIE
+            // Prefix
+            unsigned int numBinsSuffix = 0;
+            while (decodeBin(ctxIds[numBinsSuffix]) == 0) {
+                numBinsSuffix++;
+            }
 
-        /* prefix */
-        unsigned int numLeadZeros = 0;
-        while (decodeBin(ctxIds[numLeadZeros]) == 0) {
-            numLeadZeros++;
+            // Suffix
+            unsigned int bins = 0;
+            if (numBinsSuffix != 0) {
+                bins = (1u << numBinsSuffix) | decodeBinsEP(numBinsSuffix);
+                return static_cast<uint64_t>(bins - 1);
+            } else {
+                return 0;
+            }
+        } else {
+
+            unsigned int symbol = 0;
+
+            // Prefix
+            unsigned int numLeadZeros = 0;
+            while (decodeBin(ctxIds[numLeadZeros]) == 0) {
+                numLeadZeros++;
+            }
+
+            // Suffix
+            auto m = (unsigned int)((1 << (numLeadZeros + k)) - (1 << k));
+            symbol = decodeBinsBIbypass(numLeadZeros + k);
+            symbol += m;
+
+            return static_cast<uint64_t>(symbol);
         }
-
-        if(k == 0 && numLeadZeros == 0){
-          return 0;
-        }
-
-        auto m = (unsigned int)((1 << (numLeadZeros + k)) - (1 << k));
-        symbol = decodeBinsBIbypass(numLeadZeros + k);
-        symbol += m;
-
-        return static_cast<uint64_t>(symbol);
     }
+
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Overloaded functions for latter use in cabacSimpleSequenceDecoder
@@ -160,16 +149,6 @@ class cabacSymbolDecoder : public cabacDecoder{
     {
         const unsigned int numMaxBins = binParams[0];
         return decodeBinsTU(ctxIds.data(), numMaxBins);
-    }
-
-    uint64_t decodeBinsEG0bypass(const std::vector<unsigned int> binParams)
-    {
-        return decodeBinsEG0bypass();
-    }
-
-    uint64_t decodeBinsEG0(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
-    {
-        return decodeBinsEG0(ctxIds.data());
     }
 
     uint64_t decodeBinsEGkbypass(const std::vector<unsigned int> binParams)

@@ -43,17 +43,6 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    uint64_t decodeBinsEG0binsOrder1(uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
-      // Get context ids
-      std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-      contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
-
-      // Decode bins
-      return decodeBinsEG0(ctxIds.data());
-    }
-
-    // ---------------------------------------------------------------------------------------------------------------------
-
     uint64_t decodeBinsEGkbinsOrder1(uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
       // Get context ids
       std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -89,17 +78,6 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
 
-    uint64_t decodeBinsEG0symbolOrder1(uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24) {
-      // Get context ids
-      std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-      contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
-
-      // Decode bins
-      return decodeBinsEG0(ctxIds.data());
-    }
-
-    // ---------------------------------------------------------------------------------------------------------------------
-
     uint64_t decodeBinsEGksymbolOrder1(uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24) {
       // Get context ids
       std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
@@ -130,9 +108,6 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
         } break;
         case binarization::BinarizationId::TU: {
           func = &cabacSimpleSequenceDecoder::decodeBinsTU;
-        } break;
-        case binarization::BinarizationId::EG0: {
-          func = &cabacSimpleSequenceDecoder::decodeBinsEG0;
         } break;
         case binarization::BinarizationId::EGk: {
           func = &cabacSimpleSequenceDecoder::decodeBinsEGk;
@@ -187,9 +162,6 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
         } break;
         case binarization::BinarizationId::TU: {
           func = &cabacSimpleSequenceDecoder::decodeBinsTUbypass;
-        } break;
-        case binarization::BinarizationId::EG0: {
-          func = &cabacSimpleSequenceDecoder::decodeBinsEG0bypass;
         } break;
         case binarization::BinarizationId::EGk: {
           func = &cabacSimpleSequenceDecoder::decodeBinsEGkbypass;

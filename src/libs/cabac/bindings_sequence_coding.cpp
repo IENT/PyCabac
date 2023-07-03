@@ -23,10 +23,6 @@ void init_pybind_sequence_coding(py::module &m) {
             "TU-binarize and encode symbol with simple order1-context model",
             py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos")=10, py::arg("numMaxBins")=512
         )
-        .def("encodeBinsEG0binsOrder1", &cabacSimpleSequenceEncoder::encodeBinsEG0binsOrder1,
-            "EG0-binarize and encode symbol with simple order1-context model",
-            py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos")=10, py::arg("numMaxPrefixBins")=24
-        )
         .def("encodeBinsEGkbinsOrder1", &cabacSimpleSequenceEncoder::encodeBinsEGkbinsOrder1,
             "EGk-binarize and encode symbol with simple order1-context model",
             py::arg("symbol"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=10, py::arg("numMaxPrefixBins")=24
@@ -34,10 +30,6 @@ void init_pybind_sequence_coding(py::module &m) {
         .def("encodeBinsTUsymbolOrder1", &cabacSimpleSequenceEncoder::encodeBinsTUsymbolOrder1,
             "TU-binarize and encode symbol with simple order1-context model",
             py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxBins")=512
-        )
-        .def("encodeBinsEG0symbolOrder1", &cabacSimpleSequenceEncoder::encodeBinsEG0symbolOrder1,
-            "EG0-binarize and encode symbol with simple order1-context model",
-            py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins")=24
         )
         .def("encodeBinsEGksymbolOrder1", &cabacSimpleSequenceEncoder::encodeBinsEGksymbolOrder1,
             "EGk-binarize and encode symbol with simple order1-context model",
@@ -68,10 +60,6 @@ void init_pybind_sequence_coding(py::module &m) {
             "decode TU-binarized symbol with simple order1-context model",
             py::arg("symbolPrev"), py::arg("restPos")=10, py::arg("numMaxBins")=512
         )
-        .def("decodeBinsEG0binsOrder1", &cabacSimpleSequenceDecoder::decodeBinsEG0binsOrder1,
-            "decode EG0-binarized symbol with simple order1-context model",
-            py::arg("symbolPrev"), py::arg("restPos")=10, py::arg("numMaxPrefixBins")=24
-        )
         .def("decodeBinsEGkbinsOrder1", &cabacSimpleSequenceDecoder::decodeBinsEGkbinsOrder1,
             "decode EGk-binarized symbol with simple order1-context model",
             py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=10, py::arg("numMaxPrefixBins")=24
@@ -79,10 +67,6 @@ void init_pybind_sequence_coding(py::module &m) {
         .def("decodeBinsTUsymbolOrder1", &cabacSimpleSequenceDecoder::decodeBinsTUsymbolOrder1,
             "decode TU-binarized symbol with simple order1-context model",
             py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxBins")=512
-        )
-        .def("decodeBinsEG0symbolOrder1", &cabacSimpleSequenceDecoder::decodeBinsEG0symbolOrder1,
-            "decode EG0-binarized symbol with simple order1-context model",
-            py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins")=24
         )
         .def("decodeBinsEGksymbolOrder1", &cabacSimpleSequenceDecoder::decodeBinsEGksymbolOrder1,
             "decode EGk-binarized symbol with simple order1-context model",

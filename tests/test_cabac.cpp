@@ -142,7 +142,6 @@ TEST_CASE("test_encodeSymbols")
     binEncoder.initCtx(1, 0.5, 8);
     binEncoder.start();
     std::vector<unsigned> ctx_ids(512, 0);
-    //binEncoder.encodeBinsEG0bypass(5);
     for (unsigned int i = 0; i < symbols.size(); i++){
         //binEncoder.encodeBinsEGk(symbols[i], k, ctx_ids);
         binEncoder.encodeBinsTU(symbols[i], ctx_ids.data());
@@ -176,6 +175,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
     const int num_ctx = restPos * 3 + 1;
     const int numMaxPrefixBins = 12;
     const int numBins = 8;
+    const int k = 0;
     std::cout << "--- test_encodeSymbolsBinsOrder1" << std::endl;
 
     std::vector<uint64_t> symbols(numSymbols);
@@ -192,7 +192,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
         if(i > 0){
             symbolPrev = symbols[i-1];
         }
-        binEncoder.encodeBinsEG0binsOrder1(symbols[i], symbolPrev, restPos, numMaxPrefixBins);
+        binEncoder.encodeBinsEGkbinsOrder1(symbols[i], symbolPrev, k, restPos, numMaxPrefixBins);
         //binEncoder.encodeBinsTUbinsOrder1(symbols[i], symbolPrev, restPos, maxVal);
     }
 
@@ -211,7 +211,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
         if(i > 0){
             symbolDecodedPrev = symbolsDecoded[i-1];
         }
-        symbolsDecoded[i] = binDecoder.decodeBinsEG0binsOrder1(symbolDecodedPrev, restPos, numMaxPrefixBins);
+        symbolsDecoded[i] = binDecoder.decodeBinsEGkbinsOrder1(symbolDecodedPrev, k, restPos, numMaxPrefixBins);
         //symbolsDecoded[i] = binDecoder.decodeBinsTUbinsOrder1(symbolDecodedPrev, restPos, maxVal);
         //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
     }
@@ -253,7 +253,6 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
         if(i > 0){
             symbolPrev = symbols[i-1];
         }
-        //binEncoder.encodeBinsEG0order1(symbols[i], symbolPrev, restPos, numMaxPrefixBins);
         //binEncoder.encodeBinsEGkbypass(symbols[i], k);
         binEncoder.encodeBinsTUsymbolOrder1(symbols[i], symbolPrev, restPos, ctxSymbolMax, maxVal);
     }
@@ -273,7 +272,6 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
         if(i > 0){
             symbolDecodedPrev = symbolsDecoded[i-1];
         }
-        //symbolsDecoded[i] = binDecoder.decodeBinsEG0order1(symbolDecodedPrev, restPos, numMaxPrefixBins);
         //symbolsDecoded[i] = binDecoder.decodeBinsEGkbypass(k);
         //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
         symbolsDecoded[i] = binDecoder.decodeBinsTUsymbolOrder1(symbolDecodedPrev, restPos, ctxSymbolMax, maxVal);

@@ -32,13 +32,6 @@ void init_pybind_context_selector(py::module &m) {
         contextSelector::getContextIdsBinsOrder1TU(ctxIDs, symbolPrev, restPos);
         return ctxIDs;
     });
-    m.def("getContextIdBinsOrder1EG0", &contextSelector::getContextIdBinsOrder1EG0, 
-        py::arg("n"), py::arg("symbolPrev"), py::arg("restPos")=10);
-    m.def("getContextIdsBinsOrder1EG0", [](uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
-        std::vector<unsigned int> ctxIDs(numMaxPrefixBins, 0);
-        contextSelector::getContextIdsBinsOrder1EG0(ctxIDs, symbolPrev, restPos);
-        return ctxIDs;
-    });
     m.def("getContextIdBinsOrder1EGk", &contextSelector::getContextIdBinsOrder1EGk, 
         py::arg("n"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=10);
     m.def("getContextIdsBinsOrder1EGk", [](uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24) {
@@ -59,13 +52,6 @@ void init_pybind_context_selector(py::module &m) {
     m.def("getContextIdsSymbolOrder1TU", [](uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512) {
         std::vector<unsigned int> ctxIDs(numMaxBins, 0);
         contextSelector::getContextIdsSymbolOrder1TU(ctxIDs, symbolPrev, restPos, symbolMax);
-        return ctxIDs;
-    });
-    m.def("getContextIdSymbolOrder1EG0", &contextSelector::getContextIdSymbolOrder1EG0, 
-        py::arg("n"), py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32);
-    m.def("getContextIdsSymbolOrder1EG0", [](uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24) {
-        std::vector<unsigned int> ctxIDs(numMaxPrefixBins, 0);
-        contextSelector::getContextIdsSymbolOrder1EG0(ctxIDs, symbolPrev, restPos, symbolMax);
         return ctxIDs;
     });
     m.def("getContextIdSymbolOrder1EGk", &contextSelector::getContextIdSymbolOrder1EGk, 
@@ -104,7 +90,6 @@ void init_pybind_context_selector(py::module &m) {
     py::enum_<binarization::BinarizationId>(m, "BinarizationId")
         .value("BI", binarization::BinarizationId::BI)
         .value("TU", binarization::BinarizationId::TU)
-        .value("EG0", binarization::BinarizationId::EG0)
         .value("EGk", binarization::BinarizationId::EGk);
 
     py::enum_<contextSelector::ContextModelId>(m, "ContextModelId")

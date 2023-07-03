@@ -13,7 +13,7 @@ def create_random_symbols_geometric_distribution(num_values, p):
 class MainTest(unittest.TestCase):
     
 
-    def _call_cabac_order1(self, fun='EG0'):
+    def _call_cabac_order1(self, fun='EGk'):
         
         rest_pos = 8
         symbol_max = 16
@@ -47,12 +47,6 @@ class MainTest(unittest.TestCase):
                 enc.encodeBinsTUbinsOrder1(symbol, symbolPrev, rest_pos, num_max_val)
             elif fun == 'TUsymbolOrder1':
                 enc.encodeBinsTUsymbolOrder1(symbol, symbolPrev, rest_pos, symbol_max, num_max_val)
-            elif fun == 'EG0bypass':
-                enc.encodeBinsEG0bypass(symbol)
-            elif fun == 'EG0binsOrder1':
-                enc.encodeBinsEG0binsOrder1(symbol, symbolPrev, rest_pos, num_max_prefix_val)
-            elif fun == 'EG0symbolOrder1':
-                enc.encodeBinsEG0symbolOrder1(symbol, symbolPrev, rest_pos, symbol_max, num_max_prefix_val)
             elif fun == 'EGkbypass':
                 enc.encodeBinsEGkbypass(symbol, k)
             elif fun == 'EGkbinsOrder1':
@@ -85,12 +79,6 @@ class MainTest(unittest.TestCase):
                 decodedSymbol = dec.decodeBinsTUbinsOrder1(decodedSymbolPrev, rest_pos, num_max_val)
             elif fun == 'TUsymbolOrder1':
                 decodedSymbol = dec.decodeBinsTUsymbolOrder1(decodedSymbolPrev, rest_pos, symbol_max, num_max_val)
-            elif fun == 'EG0bypass':
-                decodedSymbol = dec.decodeBinsEG0bypass()
-            elif fun == 'EG0binsOrder1':
-                decodedSymbol = dec.decodeBinsEG0binsOrder1(decodedSymbolPrev, rest_pos, num_max_prefix_val)
-            elif fun == 'EG0symbolOrder1':
-                decodedSymbol = dec.decodeBinsEG0symbolOrder1(decodedSymbolPrev, rest_pos, symbol_max, num_max_prefix_val)
             elif fun == 'EGkbypass':
                 decodedSymbol = dec.decodeBinsEGkbypass(k)
             elif fun == 'EGkbinsOrder1':
@@ -109,13 +97,13 @@ class MainTest(unittest.TestCase):
     def test_encode_symbols_order1(self):
         random.seed(0)
         print('test_encode_symbols_symbol_order1')
-        funs = ['BIbypass', 'TUbypass', 'TUbinsOrder1', 'TUsymbolOrder1', 'EG0bypass', 'EG0binsOrder1', 'EG0symbolOrder1', 'EGkbypass', 'EGkbinsOrder1', 'EGksymbolOrder1']
+        funs = ['BIbypass', 'TUbypass', 'TUbinsOrder1', 'TUsymbolOrder1', 'EGkbypass', 'EGkbinsOrder1', 'EGksymbolOrder1']
 
         for fun in funs:
             print('Testing function: ' + fun)
             self._call_cabac_order1(fun)
 
-    def _call_cabac(self, fun='EG0'):
+    def _call_cabac(self, fun='EGk'):
         num_max_val = 255
         num_bins = 8
         num_values = 1000
@@ -138,10 +126,6 @@ class MainTest(unittest.TestCase):
                 enc.encodeBinsTUbypass(symbol, num_max_val)
             elif fun == 'TU':
                 enc.encodeBinsTU(symbol, ctx_ids, num_max_val)
-            elif fun == 'EG0bypass':
-                enc.encodeBinsEG0bypass(symbol)
-            elif fun == 'EG0':
-                enc.encodeBinsEG0(symbol, ctx_ids)
             elif fun == 'EGkbypass':
                 enc.encodeBinsEGkbypass(symbol, k)
             elif fun == 'EGk':
@@ -170,10 +154,6 @@ class MainTest(unittest.TestCase):
                 decodedSymbol = dec.decodeBinsTUbypass(num_max_val)
             elif fun == 'TU':
                 decodedSymbol = dec.decodeBinsTU(ctx_ids, num_max_val)
-            elif fun == 'EG0bypass':
-                decodedSymbol = dec.decodeBinsEG0bypass()
-            elif fun == 'EG0':
-                decodedSymbol = dec.decodeBinsEG0(ctx_ids)
             elif fun == 'EGkbypass':
                 decodedSymbol = dec.decodeBinsEGkbypass(k)
             elif fun == 'EGk':
@@ -190,7 +170,7 @@ class MainTest(unittest.TestCase):
     def test_encode_symbols(self):
         random.seed(0)
         print('test_encode_symbols')
-        funs = ['BIbypass', 'BI', 'TUbypass', 'TU', 'EG0bypass', 'EG0', 'EGkbypass', 'EGk']
+        funs = ['BIbypass', 'BI', 'TUbypass', 'TU', 'EGkbypass', 'EGk']
 
         for fun in funs:
             print('Testing function: ' + fun)

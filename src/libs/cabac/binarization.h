@@ -15,8 +15,7 @@ namespace binarization{
     enum class BinarizationId : uint8_t {
         BI = 0,
         TU = 1,
-        EG0 = 2,
-        EGk = 3,
+        EGk = 2,
     };
 
 };

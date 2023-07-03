@@ -48,13 +48,6 @@ void init_pybind_symbol_coding(py::module &m) {
             unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
             self.encodeBinsTU(symbol, ptr, numMaxVal);
         })
-        .def("encodeBinsEG0bypass", static_cast<void (cabacSymbolEncoder::*)(uint64_t)>(&cabacSymbolEncoder::encodeBinsEG0bypass))
-        .def("encodeBinsEG0", [](cabacSymbolEncoder &self, uint64_t symbol, const py::array_t<unsigned int>& ctxIdsNumpy) {
-            
-            auto buf = ctxIdsNumpy.request();
-            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
-            self.encodeBinsEG0(symbol, ptr);
-        })
         .def("encodeBinsEGkbypass", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const unsigned int)>(&cabacSymbolEncoder::encodeBinsEGkbypass))
         .def("encodeBinsEGk", [](cabacSymbolEncoder &self, uint64_t symbol, const unsigned int k,  const py::array_t<unsigned int>& ctxIdsNumpy) {
             
@@ -82,13 +75,6 @@ void init_pybind_symbol_coding(py::module &m) {
             auto buf = ctxIdsNumpy.request();
             unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
             return self.decodeBinsTU(ptr, numMaxVal);
-        })
-        .def("decodeBinsEG0bypass", static_cast<uint64_t (cabacSymbolDecoder::*)()>(&cabacSymbolDecoder::decodeBinsEG0bypass))
-        .def("decodeBinsEG0", [](cabacSymbolDecoder &self, const py::array_t<unsigned int>& ctxIdsNumpy) {
-            
-            auto buf = ctxIdsNumpy.request();
-            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
-            return self.decodeBinsEG0(ptr);
         })
         .def("decodeBinsEGkbypass", static_cast<uint64_t (cabacSymbolDecoder::*)(const unsigned int)>(&cabacSymbolDecoder::decodeBinsEGkbypass))
         .def("decodeBinsEGk", [](cabacSymbolDecoder &self, const unsigned int k, const py::array_t<unsigned int>& ctxIdsNumpy) {

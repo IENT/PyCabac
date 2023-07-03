@@ -34,10 +34,6 @@ namespace contextSelector{
     unsigned int getContextIdBinsOrder1TU(const unsigned int, const uint64_t, const unsigned int);
     void getContextIdsBinsOrder1TU(std::vector<unsigned int>&, const uint64_t, const unsigned int);
 
-    // EG0 binarization
-    unsigned int getContextIdBinsOrder1EG0(const unsigned int, const uint64_t, const unsigned int);
-    void getContextIdsBinsOrder1EG0(std::vector<unsigned int>&, const uint64_t, const unsigned int);
-
     // EGk binarization
     unsigned int getContextIdBinsOrder1EGk(const unsigned int, const uint64_t, const unsigned int, const unsigned int);
     void getContextIdsBinsOrder1EGk(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int);
@@ -55,13 +51,7 @@ namespace contextSelector{
         const unsigned int);
     void getContextIdsBinsOrderNTU(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
         const unsigned int);
-    
-    // EG0 binarization
-    unsigned int getContextIdBinsOrderNEG0(const unsigned int, const unsigned int, const std::vector<uint64_t>,
-        const unsigned int);
-    void getContextIdsBinsOrderNEG0(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
-        const unsigned int);
-    
+        
     // EGk binarization
     unsigned int getContextIdBinsOrderNEGk(const unsigned int, const unsigned int, const std::vector<uint64_t>,
         const unsigned int, const unsigned int);
@@ -78,10 +68,6 @@ namespace contextSelector{
     unsigned int getContextIdSymbolOrder1TU(const unsigned int, const uint64_t, const unsigned int, const unsigned int);
     void getContextIdsSymbolOrder1TU(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int);
 
-    // EG0 binarization
-    unsigned int getContextIdSymbolOrder1EG0(const unsigned int, const uint64_t, const unsigned int, const unsigned int);
-    void getContextIdsSymbolOrder1EG0(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int);
-
     // EGk binarization
     unsigned int getContextIdSymbolOrder1EGk(const unsigned int, const uint64_t, const unsigned int, const unsigned int, const unsigned int);
     void getContextIdsSymbolOrder1EGk(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int, const unsigned int);
@@ -97,12 +83,6 @@ namespace contextSelector{
     unsigned int getContextIdSymbolOrderNTU(const unsigned int, const unsigned int, const std::vector<uint64_t>,
         const unsigned int, const unsigned int);
     void getContextIdsSymbolOrderNTU(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
-        const unsigned int, const unsigned int);
-    
-    // EG0 binarization
-    unsigned int getContextIdSymbolOrderNEG0(const unsigned int, const unsigned int, const std::vector<uint64_t>,
-        const unsigned int, const unsigned int);
-    void getContextIdsSymbolOrderNEG0(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
         const unsigned int, const unsigned int);
     
     // EGk binarization

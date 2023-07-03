@@ -13,7 +13,7 @@ def create_random_symbols_geometric_distribution(num_values, p):
 class MainTest(unittest.TestCase):
 
     
-    def _call_cabac_symbols_bac_binposition(self, fun='EG0'):
+    def _call_cabac_symbols_bac_binposition(self, fun='EGk'):
         import numpy as np
         order = 1  # not used here
         rest_pos = 24
@@ -55,15 +55,7 @@ class MainTest(unittest.TestCase):
         elif fun == 'TUbinPosition':
             binId = cabac.BinarizationId.TU
             ctxModelId = cabac.ContextModelId.BINPOSITION
-        
-        elif fun == 'EG0BAC':
-            binId = cabac.BinarizationId.EG0
-            ctxModelId = cabac.ContextModelId.BAC
-        
-        elif fun == "EG0binPosition":
-            binId = cabac.BinarizationId.EG0
-            ctxModelId = cabac.ContextModelId.BINPOSITION
-        
+                
         elif fun == 'EGkBAC':
             binId = cabac.BinarizationId.EGk
             ctxModelId = cabac.ContextModelId.BAC
@@ -110,7 +102,6 @@ class MainTest(unittest.TestCase):
         funs = [
             'BIBAC', 'BIbinPosition',
             'TUBAC', 'TUbinPosition',
-            'EG0BAC', 'EG0binPosition',
             'EGkBAC', 'EGkbinPosition']
 
         for fun in funs:
@@ -152,16 +143,6 @@ class MainTest(unittest.TestCase):
 
         elif fun == 'TUsymbolOrderN':
             binId = cabac.BinarizationId.TU
-            ctxModelId = cabac.ContextModelId.SYMBOLORDERN
-
-            ctxParams = [order, rest_pos, ctx_id_offset, symbol_max]
-
-        elif fun == 'EG0binsOrderN':
-            binId = cabac.BinarizationId.EG0
-            ctxModelId = cabac.ContextModelId.BINSORDERN
-
-        elif fun == 'EG0symbolOrderN':
-            binId = cabac.BinarizationId.EG0
             ctxModelId = cabac.ContextModelId.SYMBOLORDERN
 
             ctxParams = [order, rest_pos, ctx_id_offset, symbol_max]
@@ -213,7 +194,6 @@ class MainTest(unittest.TestCase):
         funs = [
             'BIbinsOrderN',
             'TUbinsOrderN', 'TUsymbolOrderN',
-            'EG0binsOrderN', 'EG0symbolOrderN',
             'EGkbinsOrderN', 'EGksymbolOrderN'
         ]
         #funs = ['EGkbinsOrderN', 'EGksymbolOrderN']
@@ -224,7 +204,7 @@ class MainTest(unittest.TestCase):
                 self._call_cabac_symbols_order_n(fun, order)
 
     
-    def _call_cabac_symbols_bypass(self, fun='EG0'):
+    def _call_cabac_symbols_bypass(self, fun='EGk'):
         import numpy as np
 
         num_max_val = 255
@@ -246,9 +226,6 @@ class MainTest(unittest.TestCase):
 
         elif fun == 'TU':
             binId = cabac.BinarizationId.TU
-
-        elif fun == 'EG0':
-            binId = cabac.BinarizationId.EG0
 
         elif fun == 'EGk':
             binId = cabac.BinarizationId.EGk
@@ -285,7 +262,7 @@ class MainTest(unittest.TestCase):
     def test_encode_symbols_bypass_joint_fun(self):
         random.seed(0)
         print('test_encode_symbols_bypass_joint_fun')
-        funs = ['BI', 'TU', 'EG0', 'EGk']
+        funs = ['BI', 'TU', 'EGk']
         
         for fun in funs:
             print('Testing function: ' + fun)

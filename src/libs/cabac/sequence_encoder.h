@@ -22,6 +22,7 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
   // Context model dependent on bins of previous symbol value (bin at same position)
   // ---------------------------------------------------------------------------------------------------------------------
+
   void encodeBinsBIbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=10){
 
     // Get context ids
@@ -33,6 +34,7 @@ public:
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
+
   void encodeBinsTUbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
 
     // Get context ids
@@ -41,19 +43,6 @@ public:
 
     // Encode symbol
     encodeBinsTU(symbol, ctxIds.data(), numMaxBins);
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeBinsEG0binsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
-
-    // Get context ids for each bin
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-    contextSelector::getContextIdsBinsOrder1EG0(ctxIds, symbolPrev, restPos);
-
-    // Encode bins
-    encodeBinsEG0(symbol, ctxIds.data());
-    
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
@@ -97,19 +86,6 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
 
-  void encodeBinsEG0symbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
-
-    // Get context ids for each bin
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-    contextSelector::getContextIdsSymbolOrder1EG0(ctxIds, symbolPrev, restPos, symbolMax);
-
-    // Encode bins
-    encodeBinsEG0(symbol, ctxIds.data());
-    
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
   void encodeBinsEGksymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
 
     // Get context ids for each bin
@@ -132,7 +108,7 @@ public:
     auto order = ctxParams[0];
     // Check order
     if(order == 0 || order > 3) {
-      throw std::runtime_error("encodeSymbols: Order must be 1, 2 or 3");
+      throw std::runtime_error("encodeSymbols: Order must be 1, 2 or 3"); // TODO: Add support for higher orders
     }
     
     std::vector<uint64_t> symbolsPrev(order, 0);
@@ -147,9 +123,6 @@ public:
       } break;
       case binarization::BinarizationId::TU: {
         func = &cabacSimpleSequenceEncoder::encodeBinsTU;
-      } break;
-      case binarization::BinarizationId::EG0: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsEG0;
       } break;
       case binarization::BinarizationId::EGk: {
         func = &cabacSimpleSequenceEncoder::encodeBinsEGk;
@@ -190,9 +163,6 @@ public:
       } break;
       case binarization::BinarizationId::TU: {
         func = &cabacSimpleSequenceEncoder::encodeBinsTUbypass;
-      } break;
-      case binarization::BinarizationId::EG0: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsEG0bypass;
       } break;
       case binarization::BinarizationId::EGk: {
         func = &cabacSimpleSequenceEncoder::encodeBinsEGkbypass;
