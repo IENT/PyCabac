@@ -3,12 +3,7 @@ import random
 import cabac
 import math
 
-
-def create_random_symbols_geometric_distribution(num_values, p):
-    import numpy as np
-
-    return (np.random.default_rng(seed=0).geometric(p, num_values) - 1).tolist()
-
+import tests.utils.symbolgenerator as symbolgenerator
 
 class MainTest(unittest.TestCase):
     
@@ -24,10 +19,12 @@ class MainTest(unittest.TestCase):
         #num_ctxs = 3*rest_pos + 1 # binsOrder1
         num_ctxs = (symbol_max+1)*rest_pos + 1  # symbolOrder1
         k = 1
-        symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
-        symbols = create_random_symbols_geometric_distribution(num_values, 0.05)
-        #symbols = [0,1,2,3,4,5,6,7]
-        #num_values = len(symbols)
+
+        #symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values, num_max_val)
+        symbols = symbolgenerator.create_random_symbols_geometric_distribution(num_values, 0.05)
+        #symbols = list(range(0,8))
+
+        num_values = len(symbols)
         
 
         enc = cabac.cabacSimpleSequenceEncoder()
@@ -108,7 +105,7 @@ class MainTest(unittest.TestCase):
         num_bins = 8
         num_values = 1000
         num_ctx = 1
-        symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
+        symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values, num_max_val)
         k = 1
         
 
@@ -206,7 +203,8 @@ class MainTest(unittest.TestCase):
 
         p1_init = 0.6
         shift_idx = 8
-        bitsToEncode = [random.randint(0, 1) for _ in range(0, 1000)]
+        bitsToEncode = symbolgenerator.create_random_symbols_uniform_distribution(1000, 2)
+
         enc = cabac.cabacEncoder()
         enc.initCtx([(p1_init, shift_idx), (p1_init, shift_idx)])
         enc.start()

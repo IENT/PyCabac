@@ -3,78 +3,73 @@ import random
 import cabac
 import math
 
-
-def create_random_symbols_geometric_distribution(num_values, p):
-    import numpy as np
-
-    return (np.random.default_rng(seed=0).geometric(p, num_values) - 1).tolist()
-
+import tests.utils.symbolgenerator as symbolgenerator
 
 class MainTest(unittest.TestCase):
 
     
     def _call_cabac_symbols_bac_binposition(self, fun='EGk'):
         import numpy as np
-        order = 1  # not used here
-        rest_pos = 24
+        ctx_order = 1  # not used here
+        ctx_rest_pos = 24
+        ctx_id_offset = 0
         symbol_max = 16
         num_max_val = 255
         num_max_prefix_val = int(math.floor(math.log2(num_max_val/(2**0) + 1)) + 1)
         num_bins = 8
         num_values = 10000
         num_bi_bins = 8
-        ctx_id_offset = 0
         
         k = 1
-        #symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
-        symbols = create_random_symbols_geometric_distribution(num_values, 0.05)
-        #symbols = [0,1,2,3,4,5,6,7]
+        symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values, num_max_val)
+        symbols = symbolgenerator.create_random_symbols_geometric_distribution(num_values, 0.05)
+        #symbols = list(range(0,8))
 
         num_values = len(symbols)
         symbols = np.array(symbols)
         
-        binParams = [num_max_val]
-        ctxParams = [order, rest_pos, ctx_id_offset]
+        bin_params = [num_max_val]
+        ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset]
         
         if fun == 'BIBAC':
-            binId = cabac.BinarizationId.BI
-            ctxModelId = cabac.ContextModelId.BAC
+            bin_id = cabac.BinarizationId.BI
+            ctx_model_id = cabac.ContextModelId.BAC
 
-            binParams = [num_bi_bins]
+            bin_params = [num_bi_bins]
 
         elif fun == 'BIbinPosition':
-            binId = cabac.BinarizationId.BI
-            ctxModelId = cabac.ContextModelId.BINPOSITION
+            bin_id = cabac.BinarizationId.BI
+            ctx_model_id = cabac.ContextModelId.BINPOSITION
 
-            binParams = [num_bi_bins]
+            bin_params = [num_bi_bins]
 
         elif fun == 'TUBAC':
-            binId = cabac.BinarizationId.TU
-            ctxModelId = cabac.ContextModelId.BAC
+            bin_id = cabac.BinarizationId.TU
+            ctx_model_id = cabac.ContextModelId.BAC
         
         elif fun == 'TUbinPosition':
-            binId = cabac.BinarizationId.TU
-            ctxModelId = cabac.ContextModelId.BINPOSITION
+            bin_id = cabac.BinarizationId.TU
+            ctx_model_id = cabac.ContextModelId.BINPOSITION
                 
         elif fun == 'EGkBAC':
-            binId = cabac.BinarizationId.EGk
-            ctxModelId = cabac.ContextModelId.BAC
+            bin_id = cabac.BinarizationId.EGk
+            ctx_model_id = cabac.ContextModelId.BAC
 
-            binParams = [num_max_val, k]
+            bin_params = [num_max_val, k]
 
         elif fun == "EGkbinPosition":
-            binId = cabac.BinarizationId.EGk
-            ctxModelId = cabac.ContextModelId.BINPOSITION
+            bin_id = cabac.BinarizationId.EGk
+            ctx_model_id = cabac.ContextModelId.BINPOSITION
 
-            binParams = [num_max_val, k]
+            bin_params = [num_max_val, k]
 
-        num_ctxs = cabac.getNumContexts(binId, ctxModelId, binParams, ctxParams)
+        num_ctxs = cabac.getNumContexts(bin_id, ctx_model_id, bin_params, ctx_params)
 
         enc = cabac.cabacSimpleSequenceEncoder()
         enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
 
-        enc.encodeSymbols(symbols, binId, ctxModelId, binParams, ctxParams)
+        enc.encodeSymbols(symbols, bin_id, ctx_model_id, bin_params, ctx_params)
                     
         enc.encodeBinTrm(1)
         enc.finish()
@@ -87,7 +82,7 @@ class MainTest(unittest.TestCase):
         dec.initCtx(num_ctxs, 0.5, 8) 
         dec.start()
 
-        decodedSymbols = dec.decodeSymbols(len(symbols), binId, ctxModelId, binParams, ctxParams)
+        decodedSymbols = dec.decodeSymbols(len(symbols), bin_id, ctx_model_id, bin_params, ctx_params)
         
         dec.decodeBinTrm()
         dec.finish()
@@ -109,64 +104,64 @@ class MainTest(unittest.TestCase):
             self._call_cabac_symbols_bac_binposition(fun)
 
 
-    def _call_cabac_symbols_order_n(self, fun='BIbinsOrderN', order=1):
+    def _call_cabac_symbols_order_n(self, fun='BIbinsOrderN', ctx_order=1):
         import numpy as np
 
-        rest_pos = 24
+        ctx_rest_pos = 24
+        ctx_id_offset = 0
         symbol_max = 16
         num_max_val = 255
         num_max_prefix_val = int(math.floor(math.log2(num_max_val/(2**0) + 1)) + 1)
         num_bins = 8
         num_values = 10000
         num_bi_bins = 8
-        ctx_id_offset = 0
         
         k = 1
-        #symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
-        symbols = create_random_symbols_geometric_distribution(num_values, 0.05)
-        #symbols = [0,1,2,3,4,5,6,7]
+        
+        symbols = symbolgenerator.create_random_symbols_geometric_distribution(num_values, 0.05)
+        #symbols = list(range(0,8))
 
         num_values = len(symbols)
         symbols = np.array(symbols)
         
-        binParams = [num_max_val]
-        ctxParams = [order, rest_pos, ctx_id_offset]
+        bin_params = [num_max_val]
+        ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset]
         if fun == 'BIbinsOrderN':
-            binId = cabac.BinarizationId.BI
-            ctxModelId = cabac.ContextModelId.BINSORDERN
+            bin_id = cabac.BinarizationId.BI
+            ctx_model_id = cabac.ContextModelId.BINSORDERN
 
-            binParams = [num_bi_bins]
+            bin_params = [num_bi_bins]
 
         elif fun == 'TUbinsOrderN':
-            binId = cabac.BinarizationId.TU
-            ctxModelId = cabac.ContextModelId.BINSORDERN
+            bin_id = cabac.BinarizationId.TU
+            ctx_model_id = cabac.ContextModelId.BINSORDERN
 
         elif fun == 'TUsymbolOrderN':
-            binId = cabac.BinarizationId.TU
-            ctxModelId = cabac.ContextModelId.SYMBOLORDERN
+            bin_id = cabac.BinarizationId.TU
+            ctx_model_id = cabac.ContextModelId.SYMBOLORDERN
 
-            ctxParams = [order, rest_pos, ctx_id_offset, symbol_max]
+            ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset, symbol_max]
 
         elif fun == 'EGkbinsOrderN':
-            binId = cabac.BinarizationId.EGk
-            ctxModelId = cabac.ContextModelId.BINSORDERN
+            bin_id = cabac.BinarizationId.EGk
+            ctx_model_id = cabac.ContextModelId.BINSORDERN
 
-            binParams = [num_max_val, k]
+            bin_params = [num_max_val, k]
 
         elif fun == 'EGksymbolOrderN':
-            binId = cabac.BinarizationId.EGk
-            ctxModelId = cabac.ContextModelId.SYMBOLORDERN
+            bin_id = cabac.BinarizationId.EGk
+            ctx_model_id = cabac.ContextModelId.SYMBOLORDERN
 
-            binParams = [num_max_val, k]
-            ctxParams = [order, rest_pos, 0, symbol_max]
+            bin_params = [num_max_val, k]
+            ctx_params = [ctx_order, ctx_rest_pos, 0, symbol_max]
 
-        num_ctxs = cabac.getNumContexts(binId, ctxModelId, binParams, ctxParams)
+        num_ctxs = cabac.getNumContexts(bin_id, ctx_model_id, bin_params, ctx_params)
 
         enc = cabac.cabacSimpleSequenceEncoder()
         enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
 
-        enc.encodeSymbols(symbols, binId, ctxModelId, binParams, ctxParams)
+        enc.encodeSymbols(symbols, bin_id, ctx_model_id, bin_params, ctx_params)
                     
         enc.encodeBinTrm(1)
         enc.finish()
@@ -179,7 +174,7 @@ class MainTest(unittest.TestCase):
         dec.initCtx(num_ctxs, 0.5, 8) 
         dec.start()
 
-        decodedSymbols = dec.decodeSymbols(len(symbols), binId, ctxModelId, binParams, ctxParams)
+        decodedSymbols = dec.decodeSymbols(len(symbols), bin_id, ctx_model_id, bin_params, ctx_params)
         
         dec.decodeBinTrm()
         dec.finish()
@@ -212,24 +207,25 @@ class MainTest(unittest.TestCase):
         num_bi_bins = 8
         
         k = 1
-        symbols = [random.randint(0, num_max_val) for _ in range(0, num_values)]
-        symbols = create_random_symbols_geometric_distribution(num_values, 0.05)
-        #symbols = [0,1,2,3,4,5,6,7]
+        
+        symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values, num_max_val)
+        symbols = symbolgenerator.create_random_symbols_geometric_distribution(num_values, 0.05)
+        #symbols = list(range(0,8))
 
         num_values = len(symbols)
         symbols = np.array(symbols)
         
-        binParams = [num_max_val]
+        bin_params = [num_max_val]
         if fun == 'BI':
-            binId = cabac.BinarizationId.BI
-            binParams = [num_bi_bins]
+            bin_id = cabac.BinarizationId.BI
+            bin_params = [num_bi_bins]
 
         elif fun == 'TU':
-            binId = cabac.BinarizationId.TU
+            bin_id = cabac.BinarizationId.TU
 
         elif fun == 'EGk':
-            binId = cabac.BinarizationId.EGk
-            binParams = [num_max_val, k]
+            bin_id = cabac.BinarizationId.EGk
+            bin_params = [num_max_val, k]
 
         num_ctxs = 0
 
@@ -237,7 +233,7 @@ class MainTest(unittest.TestCase):
         enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
 
-        enc.encodeSymbolsBypass(symbols, binId, binParams)
+        enc.encodeSymbolsBypass(symbols, bin_id, bin_params)
                     
         enc.encodeBinTrm(1)
         enc.finish()
@@ -250,7 +246,7 @@ class MainTest(unittest.TestCase):
         dec.initCtx(num_ctxs, 0.5, 8) 
         dec.start()
 
-        decodedSymbols = dec.decodeSymbolsBypass(len(symbols), binId, binParams)
+        decodedSymbols = dec.decodeSymbolsBypass(len(symbols), bin_id, bin_params)
         
         dec.decodeBinTrm()
         dec.finish()
