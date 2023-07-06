@@ -404,3 +404,64 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     
     REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
 }
+
+
+
+
+TEST_CASE("test_encodeRemAbsEP")
+{
+    // encodeRemAbsEP(unsigned bins, unsigned goRicePar, unsigned cutoff, int maxLog2TrDynamicRange)
+    binarization::BinarizationId binId = binarization::BinarizationId::TU;
+    contextSelector::ContextModelId ctxModelId = contextSelector::ContextModelId::SYMBOLORDERN;
+
+    const unsigned int ricePar = 0;
+
+    const int maxVal = 255;
+    const int numSymbols = 1000; // 1000000
+
+    const int num_ctx = 1;
+
+    std::cout << "--- test_encodeSymbols_function_TU_orderN" << std::endl;
+    
+    //fillVectorRandomGeometric(&symbols);
+    
+    /*
+    std::srand(unsigned(std::time(nullptr)));
+    std::vector<uint64_t> symbols(numSymbols);
+    std::generate(symbols.begin(), symbols.end(), []() {
+        return rand() % maxVal;
+    });
+    */
+
+    std::vector<uint64_t> symbols = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+
+    cabacSimpleSequenceEncoder binEncoder;
+    binEncoder.initCtx(num_ctx, 0.5, 0);
+    binEncoder.start();
+
+    //binEncoder.encodeSymbols(symbols.data(), symbols.size(), binId, ctxModelId, binParams, ctxParams);
+
+    for(unsigned int i=0; i<symbols.size(); i++){
+        binEncoder.encodeRemAbsEP(symbols[i], ricePar, 5, 15);
+    }
+
+    binEncoder.encodeBinTrm(1);
+    binEncoder.finish();
+    binEncoder.writeByteAlignment();
+
+    std::vector<uint8_t> byteVector = binEncoder.getBitstream();
+
+    cabacSimpleSequenceDecoder binDecoder(byteVector);
+    binDecoder.initCtx(num_ctx, 0.5, 0);
+    binDecoder.start();
+    std::vector<uint64_t> symbolsDecoded(symbols.size(), 0);
+
+    for(unsigned int i=0; i<symbols.size(); i++){
+        symbolsDecoded[i] = binDecoder.decodeRemAbsEP(ricePar, 5, 15);
+    }
+
+    binDecoder.decodeBinTrm();
+    binDecoder.finish();
+    
+    REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
+}
