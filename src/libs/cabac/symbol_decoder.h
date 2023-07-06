@@ -19,14 +19,22 @@ class cabacSymbolDecoder : public cabacDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Taken from GABAC/GENIE
-    uint64_t decodeBinsBI(const unsigned int * ctxIds, const unsigned int numBins) {
+    uint64_t decodeBinsBI(CtxFunction &ctxFun, const unsigned int numBins) {
         unsigned int bins = 0; // bins to decode
         unsigned int i = 0; // counter for context selection
         for (int exponent = numBins; exponent > 0; exponent--) {
-            bins = (bins << 1u) | decodeBin(ctxIds[i]);
+            bins = (bins << 1u) | decodeBin(ctxFun(i));
             i++;
         }
         return static_cast<uint64_t>(bins);
+    }
+    uint64_t decodeBinsBI(const unsigned int * ctxIds, const unsigned int numBins) {
+        // Create wrapper function for array ctxIds
+        CtxFunction ctxFun = [&ctxIds](unsigned int n) {
+            return ctxIds[n];
+        };
+        // Call decodeBinsBI with wrapper function
+        return decodeBinsBI(ctxFun, numBins);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -42,14 +50,20 @@ class cabacSymbolDecoder : public cabacDecoder{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Taken from GABAC/GENIE
-    uint64_t decodeBinsTU(const unsigned int * ctxIds, const unsigned int numMaxBins=512) {
+    uint64_t decodeBinsTU(CtxFunction &ctxFun, const unsigned int numMaxBins=512) {
         unsigned int i = 0;
 
         while (i < numMaxBins) {
-            if (decodeBin(ctxIds[i]) == 0) break;
+            if (decodeBin(ctxFun(i)) == 0) break;
             i++;
         }
         return static_cast<uint64_t>(i);
+    }
+    uint64_t decodeBinsTU(const unsigned int * ctxIds, const unsigned int numMaxBins=512) {
+        CtxFunction ctxFun = [&ctxIds](unsigned int n) {
+            return ctxIds[n];
+        };
+        return decodeBinsTU(ctxFun, numMaxBins);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -86,12 +100,12 @@ class cabacSymbolDecoder : public cabacDecoder{
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    uint64_t decodeBinsEGk(unsigned k, const unsigned int * ctxIds) {
+    uint64_t decodeBinsEGk(unsigned k, CtxFunction &ctxFun) {
 
         if (k == 0) { // Taken from GABAC/GENIE
             // Prefix
             unsigned int numBinsSuffix = 0;
-            while (decodeBin(ctxIds[numBinsSuffix]) == 0) {
+            while (decodeBin(ctxFun(numBinsSuffix)) == 0) {
                 numBinsSuffix++;
             }
 
@@ -104,12 +118,11 @@ class cabacSymbolDecoder : public cabacDecoder{
                 return 0;
             }
         } else {
-
             unsigned int symbol = 0;
 
             // Prefix
             unsigned int numLeadZeros = 0;
-            while (decodeBin(ctxIds[numLeadZeros]) == 0) {
+            while (decodeBin(ctxFun(numLeadZeros)) == 0) {
                 numLeadZeros++;
             }
 
@@ -120,6 +133,12 @@ class cabacSymbolDecoder : public cabacDecoder{
 
             return static_cast<uint64_t>(symbol);
         }
+    }
+    uint64_t decodeBinsEGk(unsigned k, const unsigned int * ctxIds) {
+        CtxFunction ctxFun = [&ctxIds](unsigned int n) {
+            return ctxIds[n];
+        };
+        return decodeBinsEGk(k, ctxFun);
     }
 
 

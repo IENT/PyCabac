@@ -49,11 +49,11 @@ pip uninstall pycabac
 We expect that you are familiar with the concept of binary arithmetic coding.
 Hence, from a user perspective, it is most probably sufficient to understand how you can encode a binary sequence with PyCabac.
 For a demo, check the Python script in the demo folder.
-For a more technical/scientific description of the probality modelling in CABAC, you may want to have a look at:
-```
+For a more technical/scientific description of the probability modelling in CABAC, you may want to have a look at:
+
+```bibtex
 H. Schwarz et al., "Quantization and Entropy Coding in the Versatile Video Coding (VVC) Standard," in IEEE Transactions on Circuits and Systems for Video Technology, doi: 10.1109/TCSVT.2021.3072202.
 ```
-
 
 ## Pybind11 Example
 

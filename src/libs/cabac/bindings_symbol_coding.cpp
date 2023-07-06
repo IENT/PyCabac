@@ -5,6 +5,7 @@
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <pybind11/functional.h>
 
 #include "symbol_encoder.h"
 #include "symbol_decoder.h"
@@ -39,6 +40,9 @@ void init_pybind_symbol_coding(py::module &m) {
             // std::vector<unsigned int> ctxIds(ptr, ptr + buf.size); // this is slow
             self.encodeBinsBI(symbol, ptr, numBins);
         })
+        .def("encodeBinsBi", [](cabacSymbolEncoder &self, uint64_t symbol, CtxFunction &ctxFun, const unsigned int numBins) {
+            self.encodeBinsBI(symbol, ctxFun, numBins);
+        })
         .def("encodeBinsTUbypass", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const unsigned int)>(&cabacSymbolEncoder::encodeBinsTUbypass),
          "TU-binarize and and bypass-encode symbol",
             py::arg("symbol"), py::arg("numMaxBins")=512)
@@ -48,12 +52,29 @@ void init_pybind_symbol_coding(py::module &m) {
             unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
             self.encodeBinsTU(symbol, ptr, numMaxVal);
         })
+        .def("encodeBinsTU", [](cabacSymbolEncoder &self, uint64_t symbol, CtxFunction &ctxFun, const unsigned int numMaxVal) {
+            self.encodeBinsTU(symbol, ctxFun, numMaxVal);
+        })
+        /*.def("encodeBinsTUtest", [](cabacSymbolEncoder &self, uint64_t symbol, const py::array_t<unsigned int>& ctxIdsNumpy, const unsigned int numMaxVal) {
+            
+            auto buf = ctxIdsNumpy.request();
+            unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
+
+            CtxFunction ctxFun = [&ptr](unsigned int i) {
+                return ptr[i];
+            };
+
+            self.encodeBinsTU(symbol, ctxFun, numMaxVal);
+        })*/
         .def("encodeBinsEGkbypass", static_cast<void (cabacSymbolEncoder::*)(uint64_t, const unsigned int)>(&cabacSymbolEncoder::encodeBinsEGkbypass))
         .def("encodeBinsEGk", [](cabacSymbolEncoder &self, uint64_t symbol, const unsigned int k,  const py::array_t<unsigned int>& ctxIdsNumpy) {
             
             auto buf = ctxIdsNumpy.request();
             unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
             self.encodeBinsEGk(symbol, k, ptr);
+        })
+        .def("encodeBinsEGk", [](cabacSymbolEncoder &self, uint64_t symbol, const unsigned int k,  CtxFunction &ctxFun) {
+            self.encodeBinsEGk(symbol, k, ctxFun);
         });
 
     // ---------------------------------------------------------------------------------------------------------------------
@@ -68,6 +89,9 @@ void init_pybind_symbol_coding(py::module &m) {
             // std::vector<unsigned int> ctxIds(ptr, ptr + buf.size); // this is slow
             return self.decodeBinsBI(ptr, numBins);
         })
+        .def("decodeBinsBI", [](cabacSymbolDecoder &self, CtxFunction &ctxFun, const unsigned int numBins) {
+            return self.decodeBinsBI(ctxFun, numBins);
+        })
         .def("decodeBinsTUbypass", static_cast<uint64_t (cabacSymbolDecoder::*)(const unsigned int)>(&cabacSymbolDecoder::decodeBinsTUbypass),
             "bypass-decode TU-encoded symbol", py::arg("numMaxBins")=512)
         .def("decodeBinsTU", [](cabacSymbolDecoder &self, const py::array_t<unsigned int>& ctxIdsNumpy, const unsigned int numMaxVal) {
@@ -76,12 +100,18 @@ void init_pybind_symbol_coding(py::module &m) {
             unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
             return self.decodeBinsTU(ptr, numMaxVal);
         })
+        .def("decodeBinsTU", [](cabacSymbolDecoder &self, CtxFunction &ctxFun, const unsigned int numMaxVal) {
+            return self.decodeBinsTU(ctxFun, numMaxVal);
+        })
         .def("decodeBinsEGkbypass", static_cast<uint64_t (cabacSymbolDecoder::*)(const unsigned int)>(&cabacSymbolDecoder::decodeBinsEGkbypass))
         .def("decodeBinsEGk", [](cabacSymbolDecoder &self, const unsigned int k, const py::array_t<unsigned int>& ctxIdsNumpy) {
             
             auto buf = ctxIdsNumpy.request();
             unsigned int *ptr = static_cast<unsigned int *>(buf.ptr);
             return self.decodeBinsEGk(k, ptr);
+        })
+        .def("decodeBinsEGk", [](cabacSymbolDecoder &self, const unsigned int k, CtxFunction &ctxFun) {
+            return self.decodeBinsEGk(k, ctxFun);
         });
 
 }  // init_pybind_symbol_coding
