@@ -15,7 +15,7 @@ class MainTest(unittest.TestCase):
         symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values, num_max_val)
         k = 1
         
-
+        # Encode
         enc = cabac.cabacSimpleSequenceEncoder()
         enc.initCtx(num_ctx, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
@@ -84,6 +84,7 @@ class MainTest(unittest.TestCase):
         symbol = random.randint(0, 511)
         Nbits = math.ceil(math.log2(symbol))
 
+        # Encoder
         enc = cabac.cabacEncoder()
         enc.start()
         enc.encodeBinsEP(symbol, Nbits)
@@ -93,18 +94,14 @@ class MainTest(unittest.TestCase):
 
         bs = enc.getBitstream()
 
-        decodedBits = []
+        # Decoder
         dec = cabac.cabacDecoder(bs)
-
-
         dec.start()
         decodedSymbol = dec.decodeBinsEP(Nbits)
-
         dec.decodeBinTrm()
         dec.finish()
 
         self.assertTrue(decodedSymbol == symbol)
-
 
     def test_enc_dec(self):
 

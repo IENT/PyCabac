@@ -1,5 +1,11 @@
 import numpy as np
 
+
+def _get_egk_prefix(symbol, k):
+    # Prefix value which is encoded as TU code
+    symbol_prefix = np.floor(np.log2(symbol + (1 << k))) - k
+    return symbol_prefix
+
 def ctx_ids_bin_pos(n, n_rst=10):
     # n is the position of the to-be coded bin in the bin string (of the to be coded symbol)
     # bins with n < n_rst are coded with ctx model, all other bins are coded with the same context.
@@ -71,6 +77,9 @@ def ctx_ids_bins_order_1_tu(n, prev_symbol=0, n_rst=10):
 
     return ctx_id
 
+def ctx_ids_bins_order_1_egk(n, prev_symbol=0, n_rst=10, k=0):
+    prev_symbol_prefix = _get_egk_prefix(prev_symbol, k)
+    return ctx_ids_bins_order_1_tu(n=n, prev_symbol=prev_symbol_prefix, n_rst=n_rst)
 
 def ctx_id_bins_order_1_tu(n, prev_symbol=0, n_rst=10):
 
@@ -88,6 +97,9 @@ def ctx_id_bins_order_1_tu(n, prev_symbol=0, n_rst=10):
 
     return ctx_id
 
+def ctx_id_bins_order_1_egk(n, prev_symbol=0, n_rst=10, k=0):
+    prev_symbol_prefix = _get_egk_prefix(prev_symbol, k)
+    return ctx_id_bins_order_1_tu(n=n, prev_symbol=prev_symbol_prefix, n_rst=n_rst)
 
 def ctx_ids_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
     # n is the position of the to-be coded bin in the bin string (of the to be coded symbol)
@@ -124,6 +136,10 @@ def ctx_ids_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
 
     return ctx_id
 
+def ctx_ids_bins_order_n_egk(order, n, prev_symbols=0, rest_pos=10, k=0):
+    prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
+    return ctx_ids_bins_order_n_tu(order=order, n=n, prev_symbols=prev_symbols_prefix, rest_pos=rest_pos)
+
 
 def ctx_id_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
 
@@ -148,6 +164,10 @@ def ctx_id_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
         ctx_id = (3**order)*rest_pos
 
     return ctx_id
+
+def ctx_id_bins_order_n_egk(order, n, prev_symbols=0, rest_pos=10, k=0):
+    prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
+    return ctx_id_bins_order_n_tu(order=order, n=n, prev_symbols=prev_symbols_prefix, rest_pos=rest_pos)
 
 
 def ctx_ids_symbol_order_1_tu(n, prev_symbol=0, rest_pos=10, symbol_max=32):
@@ -184,6 +204,10 @@ def ctx_ids_symbol_order_1_tu(n, prev_symbol=0, rest_pos=10, symbol_max=32):
 
     return ctx_id
 
+def ctx_ids_symbol_order_1_egk(n, prev_symbol=0, rest_pos=10, symbol_max=32, k=0):
+    prev_symbol_prefix = _get_egk_prefix(prev_symbol, k)
+    return ctx_ids_symbol_order_1_tu(n=n, prev_symbol=prev_symbol_prefix, rest_pos=rest_pos, symbol_max=symbol_max)
+
 
 def ctx_id_symbol_order_1_tu(n, prev_symbol=0, rest_pos=10, symbol_max=32):
 
@@ -194,7 +218,11 @@ def ctx_id_symbol_order_1_tu(n, prev_symbol=0, rest_pos=10, symbol_max=32):
     else:  # rst case, independent of position n
         ctx_id = (symbol_max + 1)*rest_pos
 
-    return ctx_id
+    return int(ctx_id)
+
+def ctx_id_symbol_order_1_egk(n, prev_symbol=0, rest_pos=10, symbol_max=32, k=0):
+    prev_symbol_prefix = _get_egk_prefix(prev_symbol, k)
+    return ctx_id_symbol_order_1_tu(n=n, prev_symbol=prev_symbol_prefix, rest_pos=rest_pos, symbol_max=symbol_max)
 
 
 def ctx_ids_symbol_order_n_tu(order, n, prev_symbols=0, rest_pos=10, symbol_max=32):
@@ -223,6 +251,10 @@ def ctx_ids_symbol_order_n_tu(order, n, prev_symbols=0, rest_pos=10, symbol_max=
 
     return ctx_id
 
+def ctx_ids_symbol_order_n_egk(order, n, prev_symbols=0, rest_pos=10, symbol_max=32, k=0):
+    prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
+    return ctx_ids_symbol_order_n_tu(order=order, n=n, prev_symbols=prev_symbols_prefix, rest_pos=rest_pos, symbol_max=symbol_max)
+
 
 def ctx_id_symbol_order_n_tu(order, n, prev_symbols=0, rest_pos=10, symbol_max=32):
 
@@ -247,3 +279,7 @@ def ctx_id_symbol_order_n_tu(order, n, prev_symbols=0, rest_pos=10, symbol_max=3
         ctx_id = ((symbol_max+1)**order)*rest_pos
 
     return ctx_id
+
+def ctx_id_symbol_order_n_egk(order, n, prev_symbols=0, rest_pos=10, symbol_max=32, k=0):
+    prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
+    return ctx_id_symbol_order_n_tu(order=order, n=n, prev_symbols=prev_symbols_prefix, rest_pos=rest_pos, symbol_max=symbol_max)
