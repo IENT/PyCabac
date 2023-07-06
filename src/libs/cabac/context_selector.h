@@ -14,16 +14,14 @@
 namespace contextSelector{
     
     enum class ContextModelId : uint8_t {
-        BINSORDER1 = 0,
-        SYMBOLORDER1 = 1,
+        BAC = 0,
+        BINPOSITION = 1,
         BINSORDERN = 2,
-        SYMBOLORDERN = 3,
-        BAC = 4,
-        BINPOSITION = 5
+        SYMBOLORDERN = 3
     };
 
-    unsigned int getContextIdBinPosition(const unsigned int, const unsigned int, const unsigned int);
-    void getContextIdsBinPosition(std::vector<unsigned int>&, const unsigned int, const unsigned int, const unsigned int);
+    unsigned int getContextIdBinPosition(const unsigned int, const unsigned int);
+    void getContextIdsBinPosition(std::vector<unsigned int>&, const unsigned int);
 
     /* Context model on bin-to-symbol level, order=1 */
     // BI binarization
@@ -90,7 +88,6 @@ namespace contextSelector{
         const unsigned int, const unsigned int, const unsigned int);
     void getContextIdsSymbolOrderNEGk(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
         const unsigned int, const unsigned int, const unsigned int);
-
 
     /* General stuff */
     unsigned int getContextIdOrder1(const unsigned int, const uint64_t, 

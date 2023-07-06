@@ -10,8 +10,8 @@
 
 #if RWTH_PYTHON_IF
 namespace contextSelector{
-    const std::vector<unsigned int> offsetsBinOrder1BI = {1, 2, 4, 8}; // lookup table for "speedup"
-    const std::vector<unsigned int> offsetsBinOrder1TU = {1, 3, 9, 27}; // lookup table for "speedup"
+    const std::vector<unsigned int> offsetsBinOrderNBI = {1, 2, 4, 8}; // lookup table for "speedup"
+    const std::vector<unsigned int> offsetsBinOrderNTU = {1, 3, 9, 27}; // lookup table for "speedup"
 
     /*
     Context model on bin-to-symbol level
@@ -55,6 +55,9 @@ namespace contextSelector{
         
     */
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Bin position
+    // ---------------------------------------------------------------------------------------------------------------------
     unsigned int getContextIdBinPosition(const unsigned int n, const unsigned int restPos=10){
         /* 
         ContextID dependent on bin at position n in binarized bin-string.
@@ -97,9 +100,12 @@ namespace contextSelector{
     }
 
 
-    // --------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------------------
     // Bin-to-bin level, order 1
-    // --------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // BI
     unsigned int getContextIdBinsOrder1BI(const unsigned int n, const uint64_t symbolPrev, const unsigned int numBins, const unsigned int restPos=10){
         /* 
         ContextID dependent on bin at position n in BI-binarized bin-string corresponding to bin in previous symbol.
@@ -159,6 +165,8 @@ namespace contextSelector{
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // TU
     unsigned int getContextIdBinsOrder1TU(const unsigned int n, const uint64_t symbolPrev, const unsigned int restPos=10){
         /* 
         ContextID dependent on bin at position n in TU-binarized bin-string corresponding to bin in previous symbol.
@@ -209,6 +217,8 @@ namespace contextSelector{
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // EGk
     unsigned int getContextIdBinsOrder1EGk(const unsigned int n, const uint64_t symbolPrev, const unsigned int k, const unsigned int restPos=10){
         /*
         EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
@@ -237,10 +247,12 @@ namespace contextSelector{
     }
 
 
-    // --------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------------------
     // Bin-to-bin level, order N
-    // --------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------------------
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // BI
     unsigned int getContextIdBinsOrderNBI(const unsigned int order, const unsigned int n, const std::vector<uint64_t> symbolsPrev, 
         const unsigned int numBins, const unsigned int restPos=10
     ){
@@ -276,12 +288,12 @@ namespace contextSelector{
         if(n < restPos) { // actual context modelling for bins at position n<restPos 
             for(unsigned int o=0; o < order; o++) {
                 symbolPrevBin = static_cast<unsigned int>(symbolsPrev[o] >> static_cast<uint8_t>(numBins-n-1)) & 0x1u;
-                ctxId += symbolPrevBin*offsetsBinOrder1BI[o];
+                ctxId += symbolPrevBin*offsetsBinOrderNBI[o];
             }
             ctxId *= restPos; 
             ctxId += n;
         } else { // bins at position n>=restPos are modeled with the same rest context
-            ctxId = offsetsBinOrder1BI[order]*restPos;
+            ctxId = offsetsBinOrderNBI[order]*restPos;
         }
 
         return ctxId;
@@ -305,6 +317,8 @@ namespace contextSelector{
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // TU
     unsigned int getContextIdBinsOrderNTU(const unsigned int order, const unsigned int n, const std::vector<uint64_t> symbolsPrev,
         const unsigned int restPos=10
     ) {
@@ -357,12 +371,12 @@ namespace contextSelector{
                     ctxIdCurrent = 2;
                 }
 
-                ctxId += ctxIdCurrent*offsetsBinOrder1TU[o];
+                ctxId += ctxIdCurrent*offsetsBinOrderNTU[o];
             }
             ctxId *= restPos; 
             ctxId += n;
         } else { // bins at position n>=restPos are modeled with the same rest context
-            ctxId = offsetsBinOrder1TU[order]*restPos;
+            ctxId = offsetsBinOrderNTU[order]*restPos;
         }
 
         return ctxId;
@@ -383,6 +397,8 @@ namespace contextSelector{
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // EGk
     unsigned int getContextIdBinsOrderNEGk(const unsigned int n, const unsigned int order, const std::vector<uint64_t> symbolsPrev,
         const unsigned int k, const unsigned int restPos=10
     ) {
@@ -425,9 +441,13 @@ namespace contextSelector{
         getContextIdsBinsOrderNTU(ctxIds, order, prevNumsLeadZeros, restPos);
     }
 
-    // --------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------------------------------
     // Symbol-to-symbol level, order 1
-    // --------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // BI
     unsigned int getContextIdSymbolOrder1BI(const unsigned int n, const uint64_t symbolPrev,
         const unsigned int restPos=8, const unsigned int symbolMax=32
     ) {
@@ -479,6 +499,8 @@ namespace contextSelector{
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // TU
     unsigned int getContextIdSymbolOrder1TU(const unsigned int n, const uint64_t symbolPrev,
         const unsigned int restPos=8, const unsigned int symbolMax=32
     ){
@@ -491,6 +513,8 @@ namespace contextSelector{
         getContextIdsSymbolOrder1BI(ctxIds, symbolPrev, restPos, symbolMax); // For TU, the symbol-wise order1 context model is the same as for BI
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // EGk
     unsigned int getContextIdSymbolOrder1EGk(const unsigned int n, const uint64_t symbolPrev, const unsigned int k,
         const unsigned int restPos=8, const unsigned int symbolMax=32
     ) {
@@ -530,6 +554,13 @@ namespace contextSelector{
         getContextIdsSymbolOrder1TU(ctxIds, prevNumLeadZeros, restPos, symbolMax);
     }
 
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Symbol-to-symbol level, order N
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // BI
     unsigned int getContextIdSymbolOrderNBI(const unsigned int order, const unsigned int n, const std::vector<uint64_t> symbolsPrev,
         const unsigned int restPos=8, const unsigned int symbolMax=32
     ) {
@@ -613,6 +644,8 @@ namespace contextSelector{
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // TU
     unsigned int getContextIdSymbolOrderNTU(const unsigned int order, const unsigned int n, const std::vector<uint64_t> symbolsPrev,
         const unsigned int restPos=8, const unsigned int symbolMax=32
     ) {
@@ -625,6 +658,8 @@ namespace contextSelector{
         getContextIdsSymbolOrderNBI(ctxIds, order, symbolsPrev, restPos, symbolMax); // For TU, the symbol-wise orderN context model is the same as for BI
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // EGk
     unsigned int getContextIdSymbolOrderNEGk(const unsigned int n, const unsigned int order, const std::vector<uint64_t> symbolsPrev,
         const unsigned int k, const unsigned int restPos=10
     ) {
@@ -666,6 +701,11 @@ namespace contextSelector{
         getContextIdsSymbolOrderNTU(ctxIds, order, prevNumsLeadZeros, restPos);
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Generalization
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------------------------------
     // This is a general method for encoding a sequence of symbols for given binarization and context model
     // See encodeSymbols for definition of binParams and ctxParams
     unsigned int getContextId(const unsigned int n, const uint64_t* symbolsPrev,
@@ -688,7 +728,7 @@ namespace contextSelector{
             case binarization::BinarizationId::EGk: {
                 auto k = binParams[1];
                 if (k==0) {
-                    for(unsigned int o=0; o < order; o++){
+                    for(unsigned int o=0; o < order; o++) {
                         symbolsPrevForTU[o] = (unsigned int)(floor(log2(symbolsPrev[o] + 1))); // number of leading zeros
                     }
                 } else {
@@ -720,7 +760,7 @@ namespace contextSelector{
                 auto symbolMax = ctxParams[3];
                 contextId = getContextIdSymbolOrderNTU(order, n, symbolsPrevForTU, restPos, symbolMax);
             } break;
-            case contextSelector::ContextModelId::BAC:{
+            case contextSelector::ContextModelId::BAC: {
                 contextId = 0;
             } break;
             case contextSelector::ContextModelId::BINPOSITION: {
@@ -754,7 +794,7 @@ namespace contextSelector{
                 auto k = binParams[1];
 
                 if (k==0) {
-                    for(unsigned int o=0; o < order; o++){
+                    for(unsigned int o=0; o < order; o++) {
                         symbolsPrevForTU[o] = (unsigned int)(floor(log2(symbolsPrev[o] + 1))); // number of leading zeros
                     }
                 } else {
@@ -804,6 +844,8 @@ namespace contextSelector{
         }
     }
 
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Calculate number of total contexts per ctxModelId
     unsigned int getNumContexts(const binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId, 
         const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams){
         unsigned int numContexts = 0;
@@ -812,7 +854,6 @@ namespace contextSelector{
         auto restPos = ctxParams[1];
 
         switch(ctxModelId){
-            case contextSelector::ContextModelId::BINSORDER1:
             case contextSelector::ContextModelId::BINSORDERN: {
                 switch(binId){
                     case binarization::BinarizationId::BI: {
@@ -823,7 +864,6 @@ namespace contextSelector{
                     } break;
                 }
             } break;
-            case contextSelector::ContextModelId::SYMBOLORDER1:
             case contextSelector::ContextModelId::SYMBOLORDERN: {
                 auto symbolMax = ctxParams[3];
                 numContexts = pow(symbolMax+1, order)*restPos + 1;

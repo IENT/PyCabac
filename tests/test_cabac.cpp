@@ -169,13 +169,24 @@ TEST_CASE("test_encodeSymbols")
 
 TEST_CASE("test_encodeSymbolsBinsOrder1")
 {
+    binarization::BinarizationId binId = binarization::BinarizationId::TU;
+    contextSelector::ContextModelId ctxModelId = contextSelector::ContextModelId::BINSORDERN;
+    const int ctxOrder = 1;
+    const int ctxRestPos = 10;
+    const int ctxOffset = 0;
+    const int ctxMaxVal = 16;
+
     const int maxVal = 255;
     const int numSymbols = 1000;
-    const int restPos = 10;
-    const int num_ctx = restPos * 3 + 1;
+
+    const int num_ctx = ctxRestPos * 3 + 1;
     const int numMaxPrefixBins = 12;
     const int numBins = 8;
     const int k = 0;
+
+    std::vector<unsigned int> binParams = {maxVal, k};
+    std::vector<unsigned int> ctxParams = {ctxOrder, ctxRestPos, ctxOffset, ctxMaxVal};
+
     std::cout << "--- test_encodeSymbolsBinsOrder1" << std::endl;
 
     std::vector<uint64_t> symbols(numSymbols);
@@ -187,13 +198,12 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
     binEncoder.initCtx(num_ctx, 0.5, 8);
     binEncoder.start();
 
-    uint64_t symbolPrev = 0;
+    std::vector<uint64_t> symbolsPrev(1, 0);
     for (unsigned int i = 0; i < symbols.size(); i++) {
         if(i > 0){
-            symbolPrev = symbols[i-1];
+            symbolsPrev[0] = symbols[i-1];
         }
-        binEncoder.encodeBinsEGkbinsOrder1(symbols[i], symbolPrev, k, restPos, numMaxPrefixBins);
-        //binEncoder.encodeBinsTUbinsOrder1(symbols[i], symbolPrev, restPos, maxVal);
+        binEncoder.encodeSymbol(symbols[i], symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
     }
 
     binEncoder.encodeBinTrm(1);
@@ -206,14 +216,12 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
     binDecoder.initCtx(num_ctx, 0.5, 8);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded = std::vector<uint64_t>(symbols.size(), 0);
-    uint64_t symbolDecodedPrev = 0;
+    std::vector<uint64_t> symbolsPrevDec(1, 0);
     for (unsigned int i = 0; i < symbolsDecoded.size(); i++) {
         if(i > 0){
-            symbolDecodedPrev = symbolsDecoded[i-1];
+            symbolsPrevDec[0] = symbolsDecoded[i-1];
         }
-        symbolsDecoded[i] = binDecoder.decodeBinsEGkbinsOrder1(symbolDecodedPrev, k, restPos, numMaxPrefixBins);
-        //symbolsDecoded[i] = binDecoder.decodeBinsTUbinsOrder1(symbolDecodedPrev, restPos, maxVal);
-        //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
+        symbolsDecoded[i] = binDecoder.decodeSymbol(symbolsPrevDec.data(), binId, ctxModelId, binParams, ctxParams);
     }
     binDecoder.decodeBinTrm();
     binDecoder.finish();
@@ -223,15 +231,24 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
 
 TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
 {
+    const int ctxOrder = 1;
+    const int ctxOffset = 0;
     const int maxVal = 5000;
     const int numSymbols = 1000;
-    const int restPos = 10;
+    const int ctxRestPos = 10;
     const int ctxSymbolMax = 16;
-    //const int num_ctx = restPos * 3 + 1;
-    const int num_ctx = (ctxSymbolMax+1)*restPos  + 1;
+    //const int num_ctx = ctxRestPos * 3 + 1;
+    const int num_ctx = (ctxSymbolMax+1)*ctxRestPos  + 1;
     const int numMaxPrefixBins = 12;
     const int numBins = 8;
     const int k = 0;
+
+    std::vector<unsigned int> binParams = {maxVal, k};
+    std::vector<unsigned int> ctxParams = {ctxOrder, ctxRestPos, ctxOffset, ctxSymbolMax};
+
+    binarization::BinarizationId binId = binarization::BinarizationId::TU;
+    contextSelector::ContextModelId ctxModelId = contextSelector::ContextModelId::SYMBOLORDERN;
+
     std::cout << "--- test_encodeSymbolsSymbolsOrder1_TU" << std::endl;
 
     //std::vector<uint64_t> symbols(numSymbols);
@@ -248,13 +265,12 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
     binEncoder.initCtx(num_ctx, 0.5, 8);
     binEncoder.start();
 
-    uint64_t symbolPrev = 0;
+    std::vector<uint64_t> symbolsPrev(1, 0);
     for (unsigned int i = 0; i < symbols.size(); i++) {
         if(i > 0){
-            symbolPrev = symbols[i-1];
+            symbolsPrev[0] = symbols[i-1];
         }
-        //binEncoder.encodeBinsEGkbypass(symbols[i], k);
-        binEncoder.encodeBinsTUsymbolOrder1(symbols[i], symbolPrev, restPos, ctxSymbolMax, maxVal);
+        binEncoder.encodeSymbol(symbols[i], symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
     }
 
     binEncoder.encodeBinTrm(1);
@@ -266,15 +282,13 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
     cabacSimpleSequenceDecoder binDecoder(byteVector);
     binDecoder.initCtx(num_ctx, 0.5, 8);
     binDecoder.start();
-    std::vector<uint64_t> symbolsDecoded = std::vector<uint64_t>(symbols.size(), 0);
-    uint64_t symbolDecodedPrev = 0;
+    std::vector<uint64_t> symbolsDecoded(symbols.size(), 0);
+    std::vector<uint64_t> symbolsPrevDec(1, 0);
     for (unsigned int i = 0; i < symbolsDecoded.size(); i++) {
         if(i > 0){
-            symbolDecodedPrev = symbolsDecoded[i-1];
+            symbolsPrevDec[0] = symbolsDecoded[i-1];
         }
-        //symbolsDecoded[i] = binDecoder.decodeBinsEGkbypass(k);
-        //std::cout << "Decoded symbol: " << symbolsDecoded[i] << std::endl;
-        symbolsDecoded[i] = binDecoder.decodeBinsTUsymbolOrder1(symbolDecodedPrev, restPos, ctxSymbolMax, maxVal);
+        symbolsDecoded[i] = binDecoder.decodeSymbol(symbolsPrevDec.data(), binId, ctxModelId, binParams, ctxParams);
     }
     binDecoder.decodeBinTrm();
     binDecoder.finish();
@@ -291,13 +305,13 @@ TEST_CASE("test_encodeSymbols_function_TU")
     
     const int maxVal = 255;
     const int numSymbols = 1000; // 1000000
-    const int restPos = 10;
-    const int maxValCtx = 16;
-    const int order = 1;
-    const int offsetCtx = 0;
+    const int ctxRestPos = 10;
+    const int ctxMaxVal = 16;
+    const int ctxOrder = 1;
+    const int ctxOffset = 0;
 
     std::vector<unsigned int> binParams = {maxVal};
-    std::vector<unsigned int> ctxParams = {order, restPos, offsetCtx, maxValCtx};
+    std::vector<unsigned int> ctxParams = {ctxOrder, ctxRestPos, ctxOffset, ctxMaxVal};
 
     const int num_ctx = contextSelector::getNumContexts(binId, ctxModelId, binParams, ctxParams);
 
@@ -342,15 +356,16 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     binarization::BinarizationId binId = binarization::BinarizationId::TU;
     contextSelector::ContextModelId ctxModelId = contextSelector::ContextModelId::SYMBOLORDERN;
 
-    const int order = 2;
     const int maxVal = 255;
     const int numSymbols = 1000; // 1000000
-    const int restPos = 10;
-    const int maxValCtx = 16;
-    const int offsetCtx = 0;
 
-    std::vector<unsigned int> binParams = {maxVal};
-    std::vector<unsigned int> ctxParams = {order, restPos, offsetCtx, maxValCtx};
+    const int ctxOrder = 3;
+    const int ctxRestPos = 10;
+    const int ctxMaxVal = 16;
+    const int ctxOffset = 0;
+
+    std::vector<unsigned int> binParams = {maxVal+1};
+    std::vector<unsigned int> ctxParams = {ctxOrder, ctxRestPos, ctxOffset, ctxMaxVal};
 
     const int num_ctx = contextSelector::getNumContexts(binId, ctxModelId, binParams, ctxParams);
 
@@ -367,7 +382,7 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     //std::vector<uint64_t> symbols = {0, 1, 2, 3, 4, 5, 6, 7};
 
     cabacSimpleSequenceEncoder binEncoder;
-    binEncoder.initCtx(num_ctx, 0.5, 8);
+    binEncoder.initCtx(num_ctx, 0.5, 0);
     binEncoder.start();
 
     binEncoder.encodeSymbols(symbols.data(), symbols.size(), binId, ctxModelId, binParams, ctxParams);
@@ -379,7 +394,7 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     std::vector<uint8_t> byteVector = binEncoder.getBitstream();
 
     cabacSimpleSequenceDecoder binDecoder(byteVector);
-    binDecoder.initCtx(num_ctx, 0.5, 8);
+    binDecoder.initCtx(num_ctx, 0.5, 0);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded =
         binDecoder.decodeSymbols(symbols.size(), binId, ctxModelId, binParams, ctxParams);

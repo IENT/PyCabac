@@ -18,83 +18,41 @@ class cabacSimpleSequenceEncoder : public cabacSymbolEncoder{
 public:
   cabacSimpleSequenceEncoder() : cabacSymbolEncoder(){}
 
-
-  // ---------------------------------------------------------------------------------------------------------------------
-  // Context model dependent on bins of previous symbol value (bin at same position)
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeBinsBIbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=10){
-
-    // Get context ids
-    std::vector<unsigned int> ctxIds(numBins, 0);
-    contextSelector::getContextIdsBinsOrder1BI(ctxIds, symbolPrev, numBins, restPos);
-
-    // Encode symbol
-    encodeBinsBI(symbol, ctxIds.data(), numBins);
+  binWriter getWriter(binarization::BinarizationId binId){
+    binWriter func = nullptr;
+    switch(binId){
+      case binarization::BinarizationId::BI: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsBI;
+      } break;
+      case binarization::BinarizationId::TU: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsTU;
+      } break;
+      case binarization::BinarizationId::EGk: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsEGk;
+      } break;
+      default:
+        throw std::runtime_error("getWriter: Unknown binarization ID");
+    }
+    return func;
   }
 
-  // ---------------------------------------------------------------------------------------------------------------------
+  binBypassWriter getBypassWriter(binarization::BinarizationId binId){
+    binBypassWriter func = nullptr;
+      switch(binId){
+        case binarization::BinarizationId::BI: {
+          func = &cabacSimpleSequenceEncoder::encodeBinsBIbypass;
+        } break;
+        case binarization::BinarizationId::TU: {
+          func = &cabacSimpleSequenceEncoder::encodeBinsTUbypass;
+        } break;
+        case binarization::BinarizationId::EGk: {
+          func = &cabacSimpleSequenceEncoder::encodeBinsEGkbypass;
+        } break;
+        default:
+          throw std::runtime_error("getBypassWriter: Unknown binarization ID");
+      }
 
-  void encodeBinsTUbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=10, unsigned int numMaxBins=512){
-
-    // Get context ids
-    std::vector<unsigned int> ctxIds(numMaxBins, 0);
-    contextSelector::getContextIdsBinsOrder1TU(ctxIds, symbolPrev, restPos);
-
-    // Encode symbol
-    encodeBinsTU(symbol, ctxIds.data(), numMaxBins);
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeBinsEGkbinsOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=10, unsigned int numMaxPrefixBins=24){
-
-    // Get context ids for each bin
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-    contextSelector::getContextIdsBinsOrder1EGk(ctxIds, symbolPrev, k, restPos);
-
-    // Encode bins
-    encodeBinsEGk(symbol, k, ctxIds.data());
-    
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-  // Context model dependent on previous symbol value (integer)
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeBinsBIsymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=8, unsigned int symbolMax=32){
-
-    // Get context ids
-    std::vector<unsigned int> ctxIds(numBins, 0);
-    contextSelector::getContextIdsSymbolOrder1BI(ctxIds, symbolPrev, restPos, symbolMax);
-
-    // Encode symbol
-    encodeBinsBI(symbol, ctxIds.data(), numBins);
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeBinsTUsymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=512){
-
-    // Get context ids
-    std::vector<unsigned int> ctxIds(numMaxBins, 0);
-    contextSelector::getContextIdsSymbolOrder1TU(ctxIds, symbolPrev, restPos, symbolMax);
-
-    // Encode symbol
-    encodeBinsTU(symbol, ctxIds.data(), numMaxBins);
-  }
-
-  // ---------------------------------------------------------------------------------------------------------------------
-
-  void encodeBinsEGksymbolOrder1(uint64_t symbol, uint64_t symbolPrev, unsigned int k, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxPrefixBins=24){
-
-    // Get context ids for each bin
-    std::vector<unsigned int> ctxIds(numMaxPrefixBins, 0);
-    contextSelector::getContextIdsSymbolOrder1EGk(ctxIds, symbolPrev, k, restPos, symbolMax);
-
-    // Encode bins
-    encodeBinsEGk(symbol, k, ctxIds.data());
-    
+      return func;
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
@@ -116,31 +74,14 @@ public:
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
     // Get writer
-    binWriter func = nullptr;
-    switch(binId){
-      case binarization::BinarizationId::BI: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsBI;
-      } break;
-      case binarization::BinarizationId::TU: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsTU;
-      } break;
-      case binarization::BinarizationId::EGk: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsEGk;
-      } break;
-      default:
-        throw std::runtime_error("encodeSymbols: Unknown binarization ID");
-    }
+    binWriter func = getWriter(binId);
 
     for (unsigned int i = 0; i < numSymbols; i++) {
       // Get context ids for each bin
-      if(i > 0) {
-        symbolsPrev[0] = symbols[i - 1];
-      } 
-      if(order > 1 && i > 1) {
-        symbolsPrev[1] = symbols[i - 2];
-      }
-      if(order > 2 && i > 2) {
-        symbolsPrev[2] = symbols[i - 3];
+      for (unsigned int o = 0; o < order; o++){
+        if (i > o) {
+          symbolsPrev[o] = symbols[i-o - 1];
+        }
       }
       contextSelector::getContextIds(ctxIds, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
 
@@ -156,26 +97,46 @@ public:
     binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
   {
     // Get writer
-    binBypassWriter func = nullptr;
-    switch(binId){
-      case binarization::BinarizationId::BI: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsBIbypass;
-      } break;
-      case binarization::BinarizationId::TU: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsTUbypass;
-      } break;
-      case binarization::BinarizationId::EGk: {
-        func = &cabacSimpleSequenceEncoder::encodeBinsEGkbypass;
-      } break;
-      default:
-        throw std::runtime_error("encodeSymbolsBypass: Unknown binarization ID");
-    }
+    binBypassWriter func = getBypassWriter(binId);
 
     for (unsigned int i = 0; i < numSymbols; i++) {
       // Encode symbol
       (*this.*func)(symbols[i], binParams);
     }
   }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // This is a general method for encoding a symbol for given binarization and context model
+  // parameter definition see encodeSymbols
+  void encodeSymbol(const uint64_t symbol, const uint64_t * symbolsPrev, 
+    binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
+    const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+  {   
+    // Get writer
+    binWriter func = getWriter(binId);
+
+    // Get context id for each bin
+    const unsigned int numMaxBins = binParams[0];
+    std::vector<unsigned int> ctxIds(numMaxBins, 0);
+    contextSelector::getContextIds(ctxIds, symbolsPrev, binId, ctxModelId, binParams, ctxParams);
+
+    // Encode symbol
+    (*this.*func)(symbol, ctxIds, binParams);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // This is a general method for bypass-encoding a symbol for given binarization
+  // parameter definition see encodeSymbols
+  void encodeSymbolBypass(const uint64_t symbol, 
+    binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
+  {
+    // Get writer
+    binBypassWriter func = getBypassWriter(binId);
+
+    // Encode symbol
+    (*this.*func)(symbol, binParams);
+  }
+  
 
 }; // class cabacSimpleSequenceEncoder
 

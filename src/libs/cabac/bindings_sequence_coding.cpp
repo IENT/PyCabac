@@ -19,22 +19,6 @@ void init_pybind_sequence_coding(py::module &m) {
     // SequenceEncoder
     py::class_<cabacSimpleSequenceEncoder, cabacSymbolEncoder>(m, "cabacSimpleSequenceEncoder")
         .def(py::init<>())
-        .def("encodeBinsTUbinsOrder1", &cabacSimpleSequenceEncoder::encodeBinsTUbinsOrder1,
-            "TU-binarize and encode symbol with simple order1-context model",
-            py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos")=10, py::arg("numMaxBins")=512
-        )
-        .def("encodeBinsEGkbinsOrder1", &cabacSimpleSequenceEncoder::encodeBinsEGkbinsOrder1,
-            "EGk-binarize and encode symbol with simple order1-context model",
-            py::arg("symbol"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=10, py::arg("numMaxPrefixBins")=24
-        )
-        .def("encodeBinsTUsymbolOrder1", &cabacSimpleSequenceEncoder::encodeBinsTUsymbolOrder1,
-            "TU-binarize and encode symbol with simple order1-context model",
-            py::arg("symbol"), py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxBins")=512
-        )
-        .def("encodeBinsEGksymbolOrder1", &cabacSimpleSequenceEncoder::encodeBinsEGksymbolOrder1,
-            "EGk-binarize and encode symbol with simple order1-context model",
-            py::arg("symbol"), py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins")=24
-        )
         .def("encodeSymbolsBypass", [](cabacSimpleSequenceEncoder &self, const py::array_t<uint64_t> &symbols,
             binarization::BinarizationId binId, const std::vector<unsigned int> binParams
         ) {
@@ -49,6 +33,19 @@ void init_pybind_sequence_coding(py::module &m) {
             auto buf = symbols.request();
             uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
             self.encodeSymbols(ptr, buf.size, binId, ctxModelId, binParams, ctxParams);
+        })
+        .def("encodeSymbolBypass", [](cabacSimpleSequenceEncoder &self, const uint64_t symbol,
+            binarization::BinarizationId binId, const std::vector<unsigned int> binParams
+        ) {
+            self.encodeSymbolBypass(symbol, binId, binParams);
+        })
+        .def("encodeSymbol", [](cabacSimpleSequenceEncoder &self, const uint64_t symbol, const py::array_t<uint64_t> &symbolsPrev,
+            binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+        ) {
+            auto buf = symbolsPrev.request();
+            uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
+            self.encodeSymbol(symbol, ptr, binId, ctxModelId, binParams, ctxParams);
         });
 
 
@@ -56,22 +53,6 @@ void init_pybind_sequence_coding(py::module &m) {
     // SequenceDecoder
     py::class_<cabacSimpleSequenceDecoder, cabacSymbolDecoder>(m, "cabacSimpleSequenceDecoder")
         .def(py::init<std::vector<uint8_t>>())
-        .def("decodeBinsTUbinsOrder1", &cabacSimpleSequenceDecoder::decodeBinsTUbinsOrder1,
-            "decode TU-binarized symbol with simple order1-context model",
-            py::arg("symbolPrev"), py::arg("restPos")=10, py::arg("numMaxBins")=512
-        )
-        .def("decodeBinsEGkbinsOrder1", &cabacSimpleSequenceDecoder::decodeBinsEGkbinsOrder1,
-            "decode EGk-binarized symbol with simple order1-context model",
-            py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=10, py::arg("numMaxPrefixBins")=24
-        )
-        .def("decodeBinsTUsymbolOrder1", &cabacSimpleSequenceDecoder::decodeBinsTUsymbolOrder1,
-            "decode TU-binarized symbol with simple order1-context model",
-            py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxBins")=512
-        )
-        .def("decodeBinsEGksymbolOrder1", &cabacSimpleSequenceDecoder::decodeBinsEGksymbolOrder1,
-            "decode EGk-binarized symbol with simple order1-context model",
-            py::arg("symbolPrev"), py::arg("k"), py::arg("restPos")=8, py::arg("symbolMax")=32, py::arg("numMaxPrefixBins")=24
-        )
         .def("decodeSymbolsBypass", [](cabacSimpleSequenceDecoder &self, unsigned int numSymbols,
             binarization::BinarizationId binId, const std::vector<unsigned int> binParams
         ) {
@@ -97,6 +78,21 @@ void init_pybind_sequence_coding(py::module &m) {
             self.decodeSymbols(symbols_ptr, numSymbols, binId, ctxModelId, binParams, ctxParams);
 
             return symbols;
+        })
+        .def("decodeSymbolBypass", [](cabacSimpleSequenceDecoder &self, 
+            binarization::BinarizationId binId, const std::vector<unsigned int> binParams
+        ) {
+            return self.decodeSymbolBypass(binId, binParams);
+        })
+        .def("decodeSymbol", [](cabacSimpleSequenceDecoder &self, const py::array_t<uint64_t> &symbolsPrev,
+            binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+        ) {
+            
+            py::buffer_info buf = symbolsPrev.request();
+            uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
+
+            return self.decodeSymbol(ptr, binId, ctxModelId, binParams, ctxParams);
         });
 
 }  // init_pybind_sequence_coding

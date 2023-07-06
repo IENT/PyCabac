@@ -18,6 +18,20 @@ void init_pybind_context_selector(py::module &m) {
    
     // ---------------------------------------------------------------------------------------------------------------------
     // Context IDs
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Bin position
+    m.def("getContextIdBinPosition", &contextSelector::getContextIdBinPosition, 
+        py::arg("n"), py::arg("restPos")=10);
+    m.def("getContextIdsBinPosition", [](unsigned int restPos=10, unsigned int numMaxBins=512) {
+        std::vector<unsigned int> ctxIDs(numMaxBins, 0);
+        contextSelector::getContextIdsBinPosition(ctxIDs,  restPos);
+        return ctxIDs;
+    });
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Order 1, bin-to-bin
+    // ---------------------------------------------------------------------------------------------------------------------
     m.def("getContextIdBinsOrder1BI", &contextSelector::getContextIdBinsOrder1BI, 
         py::arg("n"), py::arg("symbolPrev"), py::arg("numBins"), py::arg("restPos")=10);
     m.def("getContextIdsBinsOrder1BI", [](uint64_t symbolPrev, unsigned int numBins, unsigned int restPos=10, unsigned int numMaxBins=512) {
@@ -39,6 +53,8 @@ void init_pybind_context_selector(py::module &m) {
         contextSelector::getContextIdsBinsOrder1EGk(ctxIDs, symbolPrev, k, restPos);
         return ctxIDs;
     });
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Order 1, symbol-to-symbol
     // ---------------------------------------------------------------------------------------------------------------------
     m.def("getContextIdSymbolOrder1BI", &contextSelector::getContextIdSymbolOrder1BI, 
         py::arg("n"), py::arg("symbolPrev"), py::arg("restPos")=8, py::arg("symbolMax")=32);
@@ -62,13 +78,18 @@ void init_pybind_context_selector(py::module &m) {
         return ctxIDs;
     });
 
-
-    m.def("getContextIdsSymbolOrderNTU", [](unsigned int order, std::vector<uint64_t> symbolsPrev, unsigned int restPos=8, unsigned int symbolMax=32, unsigned int numMaxBins=24) {
-        std::vector<unsigned int> ctxIDs(numMaxBins, 0);
-        contextSelector::getContextIdsSymbolOrderNTU(ctxIDs, order, symbolsPrev, restPos, symbolMax);
-        return ctxIDs;
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Generalized functions
+    // Use these for order > 1
+    // ---------------------------------------------------------------------------------------------------------------------
+    m.def("getContextId", [](const unsigned int n, const py::array_t<uint64_t> &symbolsPrev,
+        binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+        const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, unsigned int numMaxCtxs = 24
+    ) {
+        auto buf = symbolsPrev.request();
+        uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
+        return contextSelector::getContextId(n, ptr, binId, ctxModelId, binParams, ctxParams);
     });
-
     // ---------------------------------------------------------------------------------------------------------------------
     m.def("getContextIds", [](const py::array_t<uint64_t> &symbolsPrev,
         binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
@@ -93,11 +114,9 @@ void init_pybind_context_selector(py::module &m) {
         .value("EGk", binarization::BinarizationId::EGk);
 
     py::enum_<contextSelector::ContextModelId>(m, "ContextModelId")
-        .value("BINSORDER1", contextSelector::ContextModelId::BINSORDER1)
-        .value("SYMBOLORDER1", contextSelector::ContextModelId::SYMBOLORDER1)
-        .value("BINSORDERN", contextSelector::ContextModelId::BINSORDERN)
-        .value("SYMBOLORDERN", contextSelector::ContextModelId::SYMBOLORDERN)
         .value("BAC", contextSelector::ContextModelId::BAC)
-        .value("BINPOSITION", contextSelector::ContextModelId::BINPOSITION);
+        .value("BINPOSITION", contextSelector::ContextModelId::BINPOSITION)
+        .value("BINSORDERN", contextSelector::ContextModelId::BINSORDERN)
+        .value("SYMBOLORDERN", contextSelector::ContextModelId::SYMBOLORDERN);
 
 }  // init_pybind_context_selector
