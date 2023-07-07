@@ -199,14 +199,15 @@ class MainTest(unittest.TestCase):
                 self._call_cabac_symbols_order_n(fun, order)
 
     
-    def _call_cabac_symbols_bypass(self, fun='EGk'):
+    def _call_cabac_symbols_bypass(self, fun='EGk', k_or_rice_param=0):
         import numpy as np
 
         num_max_val = 255
         num_values = 10000
         num_bi_bins = 8
         
-        k = 1
+        k = k_or_rice_param
+        rice_param = k_or_rice_param
         
         symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values, num_max_val)
         symbols = symbolgenerator.create_random_symbols_geometric_distribution(num_values, 0.05)
@@ -226,6 +227,10 @@ class MainTest(unittest.TestCase):
         elif fun == 'EGk':
             bin_id = cabac.BinarizationId.EGk
             bin_params = [num_max_val, k]
+
+        elif fun == 'RICE':
+            bin_id = cabac.BinarizationId.RICE
+            bin_params = [0, 0, rice_param, 5, 15]
 
         num_ctxs = 0
 
@@ -258,11 +263,18 @@ class MainTest(unittest.TestCase):
     def test_encode_symbols_bypass_joint_fun(self):
         random.seed(0)
         print('test_encode_symbols_bypass_joint_fun')
-        funs = ['BI', 'TU', 'EGk']
+        funs = ['BI', 'TU']
         
         for fun in funs:
             print('Testing function: ' + fun)
             self._call_cabac_symbols_bypass(fun)
+
+        funs = ['EGk', 'RICE']
+        params = [0, 1, 2, 3]
+        for fun in funs:
+            for param in params:
+                print(f'Testing function: {fun} with parameter: {param}')
+                self._call_cabac_symbols_bypass(fun, k_or_rice_param=param)
 
     
     def test_encode_binary_symbols(self):
