@@ -180,7 +180,25 @@ class cabacSymbolDecoder : public cabacDecoder{
     {
         const unsigned int k = binParams[1];
         return decodeBinsEGk(k, ctxIds.data());
-    }    
+    }
+
+    uint64_t decodeBinsNAbypass(const std::vector<unsigned int> binParams)
+    {
+        return decodeBinEP();
+    }
+
+    uint64_t decodeBinsNA(const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams)
+    {
+        return decodeBin(ctxIds[0]);
+    }
+
+    uint64_t decodeBinsRicebypass(const std::vector<unsigned int> binParams)
+    {
+        const unsigned int riceParam = binParams[2];
+        const unsigned int cutoff = binParams[3];
+        const unsigned int maxLog2TrDynamicRange = binParams[4];
+        return decodeRemAbsEP(riceParam, cutoff, maxLog2TrDynamicRange);
+    }
 
 }; // class cabacSymbolDecoder
 

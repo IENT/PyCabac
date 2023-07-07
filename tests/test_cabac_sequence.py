@@ -264,5 +264,44 @@ class MainTest(unittest.TestCase):
             print('Testing function: ' + fun)
             self._call_cabac_symbols_bypass(fun)
 
+    
+    def test_encode_binary_symbols(self):
+        random.seed(0)
+        num_values = 10000
+        symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values=num_values, max_val=2)
+        
+        # bin_id = cabac.BinarizationId.BI
+        # bin_params = [1]
+
+        bin_id = cabac.BinarizationId.NA
+        bin_params = []
+
+        num_ctxs = 0
+
+        enc = cabac.cabacSimpleSequenceEncoder()
+        enc.initCtx(num_ctxs, 0.5, 0)  # initialize one context with p1 = 0.5 and shift_idx = 8
+        enc.start()
+
+        enc.encodeSymbolsBypass(symbols, bin_id, bin_params)
+                    
+        enc.encodeBinTrm(1)
+        enc.finish()
+        enc.writeByteAlignment()
+
+        bs = enc.getBitstream()
+
+        # Decode
+        dec = cabac.cabacSimpleSequenceDecoder(bs)
+        dec.initCtx(num_ctxs, 0.5, 0) 
+        dec.start()
+
+        symbols_dec = dec.decodeSymbolsBypass(len(symbols), bin_id, bin_params)
+        
+        dec.decodeBinTrm()
+        dec.finish()
+        print('Bitstream length: ' + str(len(bs)))
+
+        self.assertTrue((symbols_dec == symbols).all())
+
 if __name__ == "__main__":
     unittest.main()

@@ -16,6 +16,8 @@ namespace binarization{
         BI = 0,
         TU = 1,
         EGk = 2,
+        NA = 3,
+        RICE = 4
     };
 
 };

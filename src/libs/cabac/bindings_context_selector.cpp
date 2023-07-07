@@ -111,7 +111,9 @@ void init_pybind_context_selector(py::module &m) {
     py::enum_<binarization::BinarizationId>(m, "BinarizationId")
         .value("BI", binarization::BinarizationId::BI)
         .value("TU", binarization::BinarizationId::TU)
-        .value("EGk", binarization::BinarizationId::EGk);
+        .value("EGk", binarization::BinarizationId::EGk)
+        .value("NA", binarization::BinarizationId::NA)
+        .value("RICE", binarization::BinarizationId::RICE);
 
     py::enum_<contextSelector::ContextModelId>(m, "ContextModelId")
         .value("BAC", contextSelector::ContextModelId::BAC)

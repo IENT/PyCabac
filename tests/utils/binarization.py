@@ -43,8 +43,12 @@ def encode_tu(x, xmax=512):
 
 def decode_tu(bits):
     
-    x = np.sum(bits)
-    return x
+    if bits[0] == 0:
+        return 0
+    
+    change_idx = np.argwhere(np.diff(bits))[0][0]
+
+    return change_idx + 1
 
 
 # Encode integer symbol to Exponential-Golomb code with order k
@@ -67,4 +71,11 @@ def encode_eg(x, k, return_prefix_suffix=False):
         return code, prefix, suffix
     else:
         return code
+
+
+def decode_eg(bits, k):
+
+    prefix = decode_tu(bits)
+    bits_suffix = bits[prefix:prefix+k]
+    suffix = decode_bi(bits_suffix)
 

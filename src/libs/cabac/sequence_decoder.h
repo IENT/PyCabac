@@ -30,6 +30,12 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
         case binarization::BinarizationId::EGk: {
           func = &cabacSimpleSequenceDecoder::decodeBinsEGk;
         } break;
+        case binarization::BinarizationId::NA: {
+          func = &cabacSimpleSequenceDecoder::decodeBinsNA;
+        } break;
+        case binarization::BinarizationId::RICE: {
+          throw std::runtime_error("getReader: Binarization RICE not supported with context-adaptive coding");
+        } break;
         default:
           throw std::runtime_error("getReader: Unknown binarization ID");
       }
@@ -48,6 +54,12 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
         } break;
         case binarization::BinarizationId::EGk: {
           func = &cabacSimpleSequenceDecoder::decodeBinsEGkbypass;
+        } break;
+        case binarization::BinarizationId::NA: {
+          func = &cabacSimpleSequenceDecoder::decodeBinsNAbypass;
+        } break;
+        case binarization::BinarizationId::RICE: {
+          func = &cabacSimpleSequenceDecoder::decodeBinsRicebypass;
         } break;
         default:
           throw std::runtime_error("getBypassReader: Unknown binarization ID");

@@ -406,6 +406,57 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
 }
 
 
+TEST_CASE("test_encodeBinarySequence")
+{
+    binarization::BinarizationId binId = binarization::BinarizationId::BI;
+
+    const int maxVal = 2;
+    const int numSymbols = 10000; // 1000000
+
+
+
+    std::vector<unsigned int> binParams = {1};
+
+
+    const int num_ctx =0;
+
+    std::cout << "--- test_encodeBinarySequence" << std::endl;
+    
+    
+    std::srand(unsigned(std::time(nullptr)));
+    std::vector<uint64_t> symbols(numSymbols);
+    std::generate(symbols.begin(), symbols.end(), []() {
+        return rand() % maxVal;
+    });
+    
+    //std::vector<uint64_t> symbols = {0, 1, 0, 1, 1, 0};
+
+    cabacSimpleSequenceEncoder binEncoder;
+    binEncoder.initCtx(num_ctx, 0.5, 0);
+    binEncoder.start();
+
+    binEncoder.encodeSymbolsBypass(symbols.data(), symbols.size(), binId, binParams);
+
+    binEncoder.encodeBinTrm(1);
+    binEncoder.finish();
+    binEncoder.writeByteAlignment();
+
+    std::vector<uint8_t> byteVector = binEncoder.getBitstream();
+
+    cabacSimpleSequenceDecoder binDecoder(byteVector);
+    binDecoder.initCtx(num_ctx, 0.5, 0);
+    binDecoder.start();
+    std::vector<uint64_t> symbolsDecoded =
+        binDecoder.decodeSymbolsBypass(symbols.size(), binId, binParams);
+
+    binDecoder.decodeBinTrm();
+    binDecoder.finish();
+    
+    std::cout << "Lengths of bytestream: " << byteVector.size() << std::endl;
+
+    REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
+
+}
 
 
 TEST_CASE("test_encodeRemAbsEP")
@@ -421,7 +472,7 @@ TEST_CASE("test_encodeRemAbsEP")
 
     const int num_ctx = 1;
 
-    std::cout << "--- test_encodeSymbols_function_TU_orderN" << std::endl;
+    std::cout << "--- test_encodeRemAbsEP" << std::endl;
     
     //fillVectorRandomGeometric(&symbols);
     

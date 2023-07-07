@@ -166,6 +166,24 @@ public:
     encodeBinsEGk(symbol, k, ctxIds.data());
   }
 
+  void encodeBinsNAbypass(uint64_t symbol, const std::vector<unsigned int> binParams) 
+  {
+    encodeBinEP(symbol);
+  }
+
+  void encodeBinsNA(uint64_t symbol, const std::vector<unsigned int>& ctxIds, const std::vector<unsigned int> binParams) 
+  {
+    encodeBin(symbol, ctxIds[0]);
+  }
+
+  void encodeBinsRicebypass(uint64_t symbol, const std::vector<unsigned int> binParams) 
+  {
+    const unsigned int riceParam = binParams[2];
+    const unsigned int cutoff = binParams[3];
+    const unsigned int maxLog2TrDynamicRange = binParams[4];
+    encodeRemAbsEP(symbol, riceParam, cutoff, maxLog2TrDynamicRange);
+  }
+
 };  // class cabacSymbolEncoder
 
 

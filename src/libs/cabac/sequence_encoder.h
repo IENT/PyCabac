@@ -30,6 +30,12 @@ public:
       case binarization::BinarizationId::EGk: {
         func = &cabacSimpleSequenceEncoder::encodeBinsEGk;
       } break;
+      case binarization::BinarizationId::NA: {
+        func = &cabacSimpleSequenceEncoder::encodeBinsNA;
+      } break;
+      case binarization::BinarizationId::RICE: {
+        throw std::runtime_error("getWriter: Binarization RICE not supported with context-adaptive coding");
+      } break;
       default:
         throw std::runtime_error("getWriter: Unknown binarization ID");
     }
@@ -48,6 +54,12 @@ public:
         case binarization::BinarizationId::EGk: {
           func = &cabacSimpleSequenceEncoder::encodeBinsEGkbypass;
         } break;
+        case binarization::BinarizationId::NA: {
+          func = &cabacSimpleSequenceEncoder::encodeBinsNAbypass;
+        } break;
+        case binarization::BinarizationId::RICE: {
+          func = &cabacSimpleSequenceEncoder::encodeBinsRicebypass;
+        } break;
         default:
           throw std::runtime_error("getBypassWriter: Unknown binarization ID");
       }
@@ -57,7 +69,7 @@ public:
 
   // ---------------------------------------------------------------------------------------------------------------------
   // This is a general method for encoding a sequence of symbols for given binarization and context model
-  // binParams = {numMaxBins or numBins, k}
+  // binParams = {numMaxBins or numBins, [k, [riceParam, cuttoff, maxLog2TrDynamicRange]]}
   // ctxParams = {order, restPos, offset, symbolMax}
   void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 

@@ -32,7 +32,7 @@ class MainTest(unittest.TestCase):
         num_max_val = 255
         num_max_prefix_val = int(math.floor(math.log2(num_max_val/(2**0) + 1)) + 1)
         num_bi_bins = 8
-        num_symbols = 1000
+        num_symbols = 5000
         #num_ctxs = 3*rest_pos + 1 # binsOrder1
         num_ctxs = (ctx_symbol_max+1)*ctx_rest_pos + 1  # symbolOrder1
         k = 1
@@ -62,6 +62,8 @@ class MainTest(unittest.TestCase):
 
             return ctx_id
 
+
+        # Encode
         enc = cabac.cabacEncoder()
         enc.initCtx(num_ctxs, 0.5, 8) # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
@@ -165,6 +167,7 @@ class MainTest(unittest.TestCase):
 
             return ctx_ids
 
+        # Encode
         enc = cabac.cabacSymbolEncoder()
         enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
@@ -235,6 +238,7 @@ class MainTest(unittest.TestCase):
             
             return ctx_fun
 
+        # Encode
         enc = cabac.cabacSymbolEncoder()
         enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
@@ -305,6 +309,7 @@ class MainTest(unittest.TestCase):
             return ctx_fun
 
 
+        # Encode
         enc = cabac.cabacSymbolEncoder()
         enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
@@ -352,11 +357,12 @@ class MainTest(unittest.TestCase):
 
         self.assertTrue((symbols_dec == symbols).all())
         self.assertTrue(bs1 == bs2c)
-        
+
 
         ############################################################
         # 3. Encode sequence
         ############################################################
+        # 3.a) Encode whole sequence in one pass
 
         bin_params = [num_max_val, k]
         ctx_params = [ctx_order, ctx_rest_pos, ctx_offset, ctx_symbol_max]
@@ -370,42 +376,104 @@ class MainTest(unittest.TestCase):
         elif fun == 'TUsymbolOrder1' or fun == 'EGksymbolOrder1':
             ctx_model_id = cabac.ContextModelId.SYMBOLORDERN      
 
+
+        # Encode
         enc = cabac.cabacSimpleSequenceEncoder()
         enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
         enc.start()
         t = self._tic()
         enc.encodeSymbols(symbols, bin_id, ctx_model_id, bin_params, ctx_params)
-        t_enc3 = self._toc(t)
+        t_enc3a = self._toc(t)
 
         enc.encodeBinTrm(1)
         enc.finish()
         enc.writeByteAlignment()
 
-        bs3 = enc.getBitstream()
+        bs3a = enc.getBitstream()
 
         # Decode
-        dec = cabac.cabacSimpleSequenceDecoder(bs3)
+        dec = cabac.cabacSimpleSequenceDecoder(bs3a)
         dec.initCtx(num_ctxs, 0.5, 8)
         dec.start()
 
         t = self._tic()
         symbols_dec = dec.decodeSymbols(len(symbols), bin_id, ctx_model_id, bin_params, ctx_params)
-        t_dec3 = self._toc(t)
+        t_dec3a = self._toc(t)
 
         dec.decodeBinTrm()
         dec.finish()
         
         self.assertTrue((symbols_dec == symbols).all())
-        self.assertTrue(bs1 == bs3)
+        self.assertTrue(bs1 == bs3a)
 
 
-        print('Bitstream length: ' + str(len(bs3)))
-        print('Time overview:')
-        print(f'Step 1  (bin)        : total time = {(t_enc1  + t_dec1 ):2.3f} s (enc: {t_enc1 :2.3f} s, dec: {t_dec1 :2.3f} s)')
-        print(f'Step 2a (sym, ids)   : total time = {(t_enc2a + t_dec2a):2.3f} s (enc: {t_enc2a:2.3f} s, dec: {t_dec2a:2.3f} s)')
-        print(f'Step 2b (sym, pyfun) : total time = {(t_enc2b + t_dec2b):2.3f} s (enc: {t_enc2b:2.3f} s, dec: {t_dec2b:2.3f} s)')
-        print(f'Step 2c (sym, c-fun) : total time = {(t_enc2c + t_dec2c):2.3f} s (enc: {t_enc2c:2.3f} s, dec: {t_dec2c:2.3f} s)')
-        print(f'Step 3  (sequence)   : total time = {(t_enc3  + t_dec3 ):2.3f} s (enc: {t_enc3 :2.3f} s, dec: {t_dec3 :2.3f} s)')
+        bin_params = [num_max_val, k]
+        ctx_params = [ctx_order, ctx_rest_pos, ctx_offset, ctx_symbol_max]
+
+        if fun == 'TUBAC' or fun == 'EGkBAC':
+            ctx_model_id = cabac.ContextModelId.BAC
+        elif fun == 'TUBinPos' or fun == 'EGkBinPos':
+            ctx_model_id = cabac.ContextModelId.BINPOSITION
+        elif fun == 'TUbinsOrder1' or fun == 'EGkbinsOrder1':
+            ctx_model_id = cabac.ContextModelId.BINSORDERN
+        elif fun == 'TUsymbolOrder1' or fun == 'EGksymbolOrder1':
+            ctx_model_id = cabac.ContextModelId.SYMBOLORDERN      
+
+
+        ############################################################
+        # 3.b) Encode sequence symbol-wise
+
+        # Encode
+        enc = cabac.cabacSimpleSequenceEncoder()
+        enc.initCtx(num_ctxs, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
+        enc.start()
+        t = self._tic()
+        symbol_prev = 0
+        for i, symbol in enumerate(symbols):
+            enc.encodeSymbol(symbol, [symbol_prev], bin_id, ctx_model_id, bin_params, ctx_params)
+            symbol_prev = symbol
+        t_enc3b = self._toc(t)
+
+        enc.encodeBinTrm(1)
+        enc.finish()
+        enc.writeByteAlignment()
+
+        bs3b = enc.getBitstream()
+
+        # Decode
+        dec = cabac.cabacSimpleSequenceDecoder(bs3b)
+        dec.initCtx(num_ctxs, 0.5, 8)
+        dec.start()
+
+        t = self._tic()
+        symbol_prev_dec = 0
+        for i in range(0, num_symbols):            
+            symbol_dec = dec.decodeSymbol([symbol_prev_dec], bin_id, ctx_model_id, bin_params, ctx_params)
+
+            symbol_prev_dec = symbol_dec
+
+            symbols_dec[i] = symbol_dec       
+        
+        t_dec3b = self._toc(t)
+
+        dec.decodeBinTrm()
+        dec.finish()
+        
+        self.assertTrue((symbols_dec == symbols).all())
+        self.assertTrue(bs1 == bs3b)
+
+
+        # Print overview
+        print(
+            f'Bitstream length: {len(bs1)}\n'
+            f'Time overview:\n'
+            f'Step 1  (bin)        : total time = {(t_enc1  + t_dec1 ):2.3f} s (enc: {t_enc1 :2.3f} s, dec: {t_dec1 :2.3f} s)\n'
+            f'Step 2a (sym, ids)   : total time = {(t_enc2a + t_dec2a):2.3f} s (enc: {t_enc2a:2.3f} s, dec: {t_dec2a:2.3f} s)\n'
+            f'Step 2b (sym, pyfun) : total time = {(t_enc2b + t_dec2b):2.3f} s (enc: {t_enc2b:2.3f} s, dec: {t_dec2b:2.3f} s)\n'
+            f'Step 2c (sym, c-fun) : total time = {(t_enc2c + t_dec2c):2.3f} s (enc: {t_enc2c:2.3f} s, dec: {t_dec2c:2.3f} s)\n'
+            f'Step 3a (sequence)   : total time = {(t_enc3a + t_dec3a):2.3f} s (enc: {t_enc3a:2.3f} s, dec: {t_dec3a:2.3f} s)\n'
+            f'Step 3b (symbol-wise): total time = {(t_enc3b + t_dec3b):2.3f} s (enc: {t_enc3b:2.3f} s, dec: {t_dec3b:2.3f} s)\n'
+        )
 
     def test_encode_symbols_timing(self):
         random.seed(0)
@@ -414,7 +482,7 @@ class MainTest(unittest.TestCase):
             'TUBAC', 'TUBinPos', 'TUbinsOrder1', 'TUsymbolOrder1',
             'EGkBAC', 'EGkBinPos', 'EGkbinsOrder1', 'EGksymbolOrder1'
         ]
-
+        
         for fun in funs:
             print('Testing function: ' + fun)
             self._call_cabac_order1(fun)
