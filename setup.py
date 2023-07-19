@@ -63,7 +63,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='pycabac',
-    version='1.0.6',
+    version='1.0.7',
     author='Jens Schneider, Christian Rohlfing, Jan Voges',
     author_email='schneider@ient.rwth-aachen.de, rohlfing@ient.rwth-aachen.de, janvoges@me.com',
     description='[Easy|Educational|Extensible|Experimental] CABAC',

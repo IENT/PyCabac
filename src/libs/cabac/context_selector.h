@@ -17,7 +17,11 @@ namespace contextSelector{
         BAC = 0,
         BINPOSITION = 1,
         BINSORDERN = 2,
-        SYMBOLORDERN = 3
+        SYMBOLORDERN = 3,
+        SYMBOLPOSITION = 4,
+        BINSYMBOLPOSITION = 5,
+        BINSORDERNSYMBOLPOSITION = 6,
+        SYMBOLORDERNSYMBOLPOSITION = 7,
     };
 
     unsigned int getContextIdBinPosition(const unsigned int, const unsigned int);
@@ -96,17 +100,23 @@ namespace contextSelector{
     void getContextIdsOrder1(std::vector<unsigned int>&, const uint64_t, 
         const binarization::BinarizationId, const contextSelector::ContextModelId, 
         const std::vector<unsigned int>, const std::vector<unsigned int>);
-    unsigned int getContextId(const unsigned int, const uint64_t *,
+    unsigned int getContextId(const unsigned int, const unsigned int, const uint64_t *,
         const binarization::BinarizationId, const contextSelector::ContextModelId, 
         const std::vector<unsigned int>, const std::vector<unsigned int>);
-    void getContextIds(std::vector<unsigned int>&, const uint64_t *, 
+    void getContextIds(std::vector<unsigned int>&, const unsigned int, const uint64_t *, 
         const binarization::BinarizationId, const contextSelector::ContextModelId, 
         const std::vector<unsigned int>, const std::vector<unsigned int>);
 
     unsigned int getNumContexts(const binarization::BinarizationId, const contextSelector::ContextModelId, 
         const std::vector<unsigned int>, const std::vector<unsigned int>);
-    
-};
+
+    unsigned int getSymbolPositionContextOffset(const unsigned int, 
+        const binarization::BinarizationId, const contextSelector::ContextModelId, 
+        const std::vector<unsigned int>, const std::vector<unsigned int>);
+
+    contextSelector::ContextModelId getBaseContextModelId(const contextSelector::ContextModelId);
+
+};  // namespace contextSelector
 
 #endif  // RWTH_PYTHON_IF
 #endif  // __RWTH_CONTEXT_SELECTOR_H__

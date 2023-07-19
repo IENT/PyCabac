@@ -552,13 +552,13 @@ class MainTest(unittest.TestCase):
             f'Step 2a (sym, ids)   : total time = {(t_enc2a + t_dec2a):2.3f}' +
             f's (enc: {t_enc2a:2.3f}s, dec: {t_dec2a:2.3f}s)\n'
             f'Step 2b (sym, pyfun) : total time = {(t_enc2b + t_dec2b):2.3f}' +
-            f's (enc: {t_enc2b:2.3f} s, dec: {t_dec2b:2.3f}s)\n'
+            f's (enc: {t_enc2b:2.3f}s, dec: {t_dec2b:2.3f}s)\n'
             f'Step 2c (sym, c-fun) : total time = {(t_enc2c + t_dec2c):2.3f}' +
-            f's (enc: {t_enc2c:2.3f} s, dec: {t_dec2c:2.3f}s)\n'
+            f's (enc: {t_enc2c:2.3f}s, dec: {t_dec2c:2.3f}s)\n'
             f'Step 3a (sequence)   : total time = {(t_enc3a + t_dec3a):2.3f}' +
-            f's (enc: {t_enc3a:2.3f} s, dec: {t_dec3a:2.3f}s)\n'
+            f's (enc: {t_enc3a:2.3f}s, dec: {t_dec3a:2.3f}s)\n'
             f'Step 3b (symbol-wise): total time = {(t_enc3b + t_dec3b):2.3f}' +
-            f's (enc: {t_enc3b:2.3f} s, dec: {t_dec3b:2.3f}s)\n'
+            f's (enc: {t_enc3b:2.3f}s, dec: {t_dec3b:2.3f}s)\n'
         )
 
     def test_encode_symbols_timing(self):

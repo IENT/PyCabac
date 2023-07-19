@@ -179,7 +179,10 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
     const int maxVal = 255;
     const int numSymbols = 1000;
 
-    const int num_ctx = ctxRestPos * 3 + 1;
+    const int numCtx = ctxRestPos * 3 + 1;
+    const double p1Init = 0.5;
+    const int shiftIdx = 8;
+    
     const int numMaxPrefixBins = 12;
     const int numBins = 8;
     const int k = 0;
@@ -195,7 +198,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
     //std::vector<uint64_t> symbols = {0, 1, 2, 3, 4, 5, 6, 7};
 
     cabacSimpleSequenceEncoder binEncoder;
-    binEncoder.initCtx(num_ctx, 0.5, 8);
+    binEncoder.initCtx(numCtx, p1Init, shiftIdx);
     binEncoder.start();
 
     std::vector<uint64_t> symbolsPrev(1, 0);
@@ -203,7 +206,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
         if(i > 0){
             symbolsPrev[0] = symbols[i-1];
         }
-        binEncoder.encodeSymbol(symbols[i], symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
+        binEncoder.encodeSymbol(symbols[i], i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
     }
 
     binEncoder.encodeBinTrm(1);
@@ -213,7 +216,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
     std::vector<uint8_t> byteVector = binEncoder.getBitstream();
 
     cabacSimpleSequenceDecoder binDecoder(byteVector);
-    binDecoder.initCtx(num_ctx, 0.5, 8);
+    binDecoder.initCtx(numCtx, p1Init, shiftIdx);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded = std::vector<uint64_t>(symbols.size(), 0);
     std::vector<uint64_t> symbolsPrevDec(1, 0);
@@ -221,7 +224,7 @@ TEST_CASE("test_encodeSymbolsBinsOrder1")
         if(i > 0){
             symbolsPrevDec[0] = symbolsDecoded[i-1];
         }
-        symbolsDecoded[i] = binDecoder.decodeSymbol(symbolsPrevDec.data(), binId, ctxModelId, binParams, ctxParams);
+        symbolsDecoded[i] = binDecoder.decodeSymbol(i, symbolsPrevDec.data(), binId, ctxModelId, binParams, ctxParams);
     }
     binDecoder.decodeBinTrm();
     binDecoder.finish();
@@ -237,8 +240,12 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
     const int numSymbols = 1000;
     const int ctxRestPos = 10;
     const int ctxSymbolMax = 16;
-    //const int num_ctx = ctxRestPos * 3 + 1;
-    const int num_ctx = (ctxSymbolMax+1)*ctxRestPos  + 1;
+
+    //const int numCtx = ctxRestPos * 3 + 1;
+    const int numCtx = (ctxSymbolMax+1)*ctxRestPos  + 1;
+    const double p1Init = 0.5;
+    const int shiftIdx = 8;
+
     const int numMaxPrefixBins = 12;
     const int numBins = 8;
     const int k = 0;
@@ -262,7 +269,7 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
     //std::vector<unsigned> symbols = {255, 0, 1, 2, 3, 4, 5, 6, 7};
 
     cabacSimpleSequenceEncoder binEncoder;
-    binEncoder.initCtx(num_ctx, 0.5, 8);
+    binEncoder.initCtx(numCtx, p1Init, shiftIdx);
     binEncoder.start();
 
     std::vector<uint64_t> symbolsPrev(1, 0);
@@ -270,7 +277,7 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
         if(i > 0){
             symbolsPrev[0] = symbols[i-1];
         }
-        binEncoder.encodeSymbol(symbols[i], symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
+        binEncoder.encodeSymbol(symbols[i], i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
     }
 
     binEncoder.encodeBinTrm(1);
@@ -280,7 +287,7 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
     std::vector<uint8_t> byteVector = binEncoder.getBitstream();
 
     cabacSimpleSequenceDecoder binDecoder(byteVector);
-    binDecoder.initCtx(num_ctx, 0.5, 8);
+    binDecoder.initCtx(numCtx, p1Init, shiftIdx);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded(symbols.size(), 0);
     std::vector<uint64_t> symbolsPrevDec(1, 0);
@@ -288,7 +295,7 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
         if(i > 0){
             symbolsPrevDec[0] = symbolsDecoded[i-1];
         }
-        symbolsDecoded[i] = binDecoder.decodeSymbol(symbolsPrevDec.data(), binId, ctxModelId, binParams, ctxParams);
+        symbolsDecoded[i] = binDecoder.decodeSymbol(i, symbolsPrevDec.data(), binId, ctxModelId, binParams, ctxParams);
     }
     binDecoder.decodeBinTrm();
     binDecoder.finish();
@@ -313,7 +320,9 @@ TEST_CASE("test_encodeSymbols_function_TU")
     std::vector<unsigned int> binParams = {maxVal};
     std::vector<unsigned int> ctxParams = {ctxOrder, ctxRestPos, ctxOffset, ctxMaxVal};
 
-    const int num_ctx = contextSelector::getNumContexts(binId, ctxModelId, binParams, ctxParams);
+    const int numCtx = contextSelector::getNumContexts(binId, ctxModelId, binParams, ctxParams);
+    const double p1Init = 0.5;
+    const int shiftIdx = 8;
 
     std::cout << "--- test_encodeSymbols_function_TU" << std::endl;
     
@@ -327,7 +336,7 @@ TEST_CASE("test_encodeSymbols_function_TU")
     //std::vector<unsigned> symbols = {255, 0, 1, 2, 3, 4, 5, 6, 7};
 
     cabacSimpleSequenceEncoder binEncoder;
-    binEncoder.initCtx(num_ctx, 0.5, 8);
+    binEncoder.initCtx(numCtx, p1Init, shiftIdx);
     binEncoder.start();
 
     binEncoder.encodeSymbols(symbols.data(), symbols.size(), binId, ctxModelId, binParams, ctxParams);
@@ -339,7 +348,7 @@ TEST_CASE("test_encodeSymbols_function_TU")
     std::vector<uint8_t> byteVector = binEncoder.getBitstream();
 
     cabacSimpleSequenceDecoder binDecoder(byteVector);
-    binDecoder.initCtx(num_ctx, 0.5, 8);
+    binDecoder.initCtx(numCtx, p1Init, shiftIdx);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded =
         binDecoder.decodeSymbols(symbols.size(), binId, ctxModelId, binParams, ctxParams);
@@ -367,7 +376,9 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     std::vector<unsigned int> binParams = {maxVal+1};
     std::vector<unsigned int> ctxParams = {ctxOrder, ctxRestPos, ctxOffset, ctxMaxVal};
 
-    const int num_ctx = contextSelector::getNumContexts(binId, ctxModelId, binParams, ctxParams);
+    const int numCtx = contextSelector::getNumContexts(binId, ctxModelId, binParams, ctxParams);
+    const double p1Init = 0.5;
+    const int shiftIdx = 0;
 
     std::cout << "--- test_encodeSymbols_function_TU_orderN" << std::endl;
     
@@ -382,7 +393,7 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     //std::vector<uint64_t> symbols = {0, 1, 2, 3, 4, 5, 6, 7};
 
     cabacSimpleSequenceEncoder binEncoder;
-    binEncoder.initCtx(num_ctx, 0.5, 0);
+    binEncoder.initCtx(numCtx, p1Init, shiftIdx);
     binEncoder.start();
 
     binEncoder.encodeSymbols(symbols.data(), symbols.size(), binId, ctxModelId, binParams, ctxParams);
@@ -394,7 +405,7 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     std::vector<uint8_t> byteVector = binEncoder.getBitstream();
 
     cabacSimpleSequenceDecoder binDecoder(byteVector);
-    binDecoder.initCtx(num_ctx, 0.5, 0);
+    binDecoder.initCtx(numCtx, p1Init, shiftIdx);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded =
         binDecoder.decodeSymbols(symbols.size(), binId, ctxModelId, binParams, ctxParams);
@@ -413,12 +424,11 @@ TEST_CASE("test_encodeBinarySequence")
     const int maxVal = 2;
     const int numSymbols = 10000; // 1000000
 
-
-
     std::vector<unsigned int> binParams = {1};
 
-
-    const int num_ctx =0;
+    const int numCtx =0;
+    const double p1Init = 0.5;
+    const int shiftIdx = 0;
 
     std::cout << "--- test_encodeBinarySequence" << std::endl;
     
@@ -432,7 +442,7 @@ TEST_CASE("test_encodeBinarySequence")
     //std::vector<uint64_t> symbols = {0, 1, 0, 1, 1, 0};
 
     cabacSimpleSequenceEncoder binEncoder;
-    binEncoder.initCtx(num_ctx, 0.5, 0);
+    binEncoder.initCtx(numCtx, p1Init, shiftIdx);
     binEncoder.start();
 
     binEncoder.encodeSymbolsBypass(symbols.data(), symbols.size(), binId, binParams);
@@ -444,7 +454,7 @@ TEST_CASE("test_encodeBinarySequence")
     std::vector<uint8_t> byteVector = binEncoder.getBitstream();
 
     cabacSimpleSequenceDecoder binDecoder(byteVector);
-    binDecoder.initCtx(num_ctx, 0.5, 0);
+    binDecoder.initCtx(numCtx, p1Init, shiftIdx);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded =
         binDecoder.decodeSymbolsBypass(symbols.size(), binId, binParams);
@@ -455,7 +465,6 @@ TEST_CASE("test_encodeBinarySequence")
     std::cout << "Lengths of bytestream: " << byteVector.size() << std::endl;
 
     REQUIRE_THAT(symbols, Catch::Matchers::UnorderedEquals(symbolsDecoded));
-
 }
 
 
@@ -470,7 +479,9 @@ TEST_CASE("test_encodeRemAbsEP")
     const int maxVal = 255;
     const int numSymbols = 1000; // 1000000
 
-    const int num_ctx = 1;
+    const int numCtx = 1;
+    const double p1Init = 0.5;
+    const int shiftIdx = 0;
 
     std::cout << "--- test_encodeRemAbsEP" << std::endl;
     
@@ -487,7 +498,7 @@ TEST_CASE("test_encodeRemAbsEP")
     std::vector<uint64_t> symbols = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 
     cabacSimpleSequenceEncoder binEncoder;
-    binEncoder.initCtx(num_ctx, 0.5, 0);
+    binEncoder.initCtx(numCtx, p1Init, shiftIdx);
     binEncoder.start();
 
     //binEncoder.encodeSymbols(symbols.data(), symbols.size(), binId, ctxModelId, binParams, ctxParams);
@@ -503,7 +514,7 @@ TEST_CASE("test_encodeRemAbsEP")
     std::vector<uint8_t> byteVector = binEncoder.getBitstream();
 
     cabacSimpleSequenceDecoder binDecoder(byteVector);
-    binDecoder.initCtx(num_ctx, 0.5, 0);
+    binDecoder.initCtx(numCtx, p1Init, shiftIdx);
     binDecoder.start();
     std::vector<uint64_t> symbolsDecoded(symbols.size(), 0);
 

@@ -82,23 +82,23 @@ void init_pybind_context_selector(py::module &m) {
     // Generalized functions
     // Use these for order > 1
     // ---------------------------------------------------------------------------------------------------------------------
-    m.def("getContextId", [](const unsigned int n, const py::array_t<uint64_t> &symbolsPrev,
+    m.def("getContextId", [](const unsigned int n, const unsigned int d, const py::array_t<uint64_t> &symbolsPrev,
         binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
         const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, unsigned int numMaxCtxs = 24
     ) {
         auto buf = symbolsPrev.request();
         uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
-        return contextSelector::getContextId(n, ptr, binId, ctxModelId, binParams, ctxParams);
+        return contextSelector::getContextId(n, d, ptr, binId, ctxModelId, binParams, ctxParams);
     });
     // ---------------------------------------------------------------------------------------------------------------------
-    m.def("getContextIds", [](const py::array_t<uint64_t> &symbolsPrev,
+    m.def("getContextIds", [](const unsigned int d, const py::array_t<uint64_t> &symbolsPrev,
         binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
         const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, unsigned int numMaxCtxs = 24
     ) {
         auto buf = symbolsPrev.request();
         uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
         std::vector<unsigned int> ctxIDs(numMaxCtxs, 0);
-        contextSelector::getContextIds(ctxIDs, ptr, binId, ctxModelId, binParams, ctxParams);
+        contextSelector::getContextIds(ctxIDs, d, ptr, binId, ctxModelId, binParams, ctxParams);
         return ctxIDs;
     });
     // ---------------------------------------------------------------------------------------------------------------------
@@ -119,6 +119,10 @@ void init_pybind_context_selector(py::module &m) {
         .value("BAC", contextSelector::ContextModelId::BAC)
         .value("BINPOSITION", contextSelector::ContextModelId::BINPOSITION)
         .value("BINSORDERN", contextSelector::ContextModelId::BINSORDERN)
-        .value("SYMBOLORDERN", contextSelector::ContextModelId::SYMBOLORDERN);
+        .value("SYMBOLORDERN", contextSelector::ContextModelId::SYMBOLORDERN)
+        .value("SYMBOLPOSITION", contextSelector::ContextModelId::SYMBOLPOSITION)
+        .value("BINSYMBOLPOSITION", contextSelector::ContextModelId::BINSYMBOLPOSITION)
+        .value("BINSORDERNSYMBOLPOSITION", contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION)
+        .value("SYMBOLORDERNSYMBOLPOSITION", contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION);
 
 }  // init_pybind_context_selector

@@ -70,7 +70,7 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
   // This is a general method for encoding a sequence of symbols for given binarization and context model
   // binParams = {numMaxBins or numBins, [k, [riceParam, cuttoff, maxLog2TrDynamicRange]]}
-  // ctxParams = {order, restPos, offset, symbolMax}
+  // ctxParams = {order, restPos, offset, symbolMax, symbolPosMode}
   void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
@@ -95,7 +95,7 @@ public:
           symbolsPrev[o] = symbols[i-o - 1];
         }
       }
-      contextSelector::getContextIds(ctxIds, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
+      contextSelector::getContextIds(ctxIds, i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
 
       // Encode symbol
       (*this.*func)(symbols[i], ctxIds, binParams);
@@ -120,7 +120,7 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
   // This is a general method for encoding a symbol for given binarization and context model
   // parameter definition see encodeSymbols
-  void encodeSymbol(const uint64_t symbol, const uint64_t * symbolsPrev, 
+  void encodeSymbol(const uint64_t symbol, const unsigned int d, const uint64_t * symbolsPrev, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
   {   
@@ -130,7 +130,7 @@ public:
     // Get context id for each bin
     const unsigned int numMaxBins = binParams[0];
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
-    contextSelector::getContextIds(ctxIds, symbolsPrev, binId, ctxModelId, binParams, ctxParams);
+    contextSelector::getContextIds(ctxIds, d, symbolsPrev, binId, ctxModelId, binParams, ctxParams);
 
     // Encode symbol
     (*this.*func)(symbol, ctxIds, binParams);

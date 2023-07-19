@@ -137,12 +137,12 @@ namespace contextSelector{
         unsigned int ctxId = 0;
         if(n < restPos) { // actual context modelling for the first n<restPos bins
             if(symbolPrevBin){
-                ctxId = 1*restPos + n; // 1 case
+                ctxId = 1*restPos; // 1 case
             } else {
-                ctxId = 0*restPos + n; // 0 case
+                ctxId = 0*restPos; // 0 case
             }
-        }
-        else { // bins at position n>=restPos are modeled with the same rest context
+            ctxId += n; // bin position
+        } else {  // bins at position n>=restPos are modeled with the same rest context
             ctxId = 2 * restPos;
         }
 
@@ -187,14 +187,14 @@ namespace contextSelector{
         unsigned int ctxId = 0;
         if(n < restPos) { // actual context modelling for the first n<restPos bins
             if(n > symbolPrev) { // previously coded bin at position n not available
-                ctxId = 0*restPos + n; // N/A case
+                ctxId = 0*restPos; // N/A case
             } else if(n < symbolPrev) { // previously coded bin 0 at position n available
-                ctxId = 1*restPos + n; // 0 case
+                ctxId = 1*restPos; // 0 case
             } else { // n == prvSymbol // previously coded bin 1 at position n available
-                ctxId = 2*restPos + n; // 1 case
+                ctxId = 2*restPos; // 1 case
             }
-        }
-        else { // bins at position n>=restPos are modeled with the same rest context
+            ctxId += n; // bin position
+        } else {  // bins at position n>=restPos are modeled with the same rest context
             ctxId = 3 * restPos;
         }
 
@@ -291,7 +291,7 @@ namespace contextSelector{
                 ctxId += symbolPrevBin*offsetsBinOrderNBI[o];
             }
             ctxId *= restPos; 
-            ctxId += n;
+            ctxId += n; // bin position
         } else { // bins at position n>=restPos are modeled with the same rest context
             ctxId = offsetsBinOrderNBI[order]*restPos;
         }
@@ -472,8 +472,9 @@ namespace contextSelector{
         uint64_t symbolPrevClipped = symbolPrev <= symbolMax ? symbolPrev : symbolMax;
         
         if(n < restPos){ // actual context modelling for bins at position n<restPos 
-            ctxId = symbolPrevClipped*restPos + n;
-            
+            ctxId = symbolPrevClipped*restPos;
+            ctxId += n; // bin position
+
         } else{ // bins at position n>=restPos are modeled with the same rest context
             ctxId = (symbolMax+1) * restPos;
         }
@@ -708,7 +709,7 @@ namespace contextSelector{
     // ---------------------------------------------------------------------------------------------------------------------
     // This is a general method for encoding a sequence of symbols for given binarization and context model
     // See encodeSymbols for definition of binParams and ctxParams
-    unsigned int getContextId(const unsigned int n, const uint64_t* symbolsPrev,
+    unsigned int getContextId(const unsigned int n, const unsigned int d, const uint64_t* symbolsPrev,
         const binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId, 
         const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
     {
@@ -743,7 +744,8 @@ namespace contextSelector{
 
         // Get context ID
         switch (ctxModelId){
-            case contextSelector::ContextModelId::BINSORDERN: {
+            case contextSelector::ContextModelId::BINSORDERN:
+            case contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION: {
                 
                 switch (binId) {
                     case binarization::BinarizationId::BI: {
@@ -756,18 +758,32 @@ namespace contextSelector{
                 }
 
             } break;
-            case contextSelector::ContextModelId::SYMBOLORDERN: {
+            case contextSelector::ContextModelId::SYMBOLORDERN:
+            case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: {
                 auto symbolMax = ctxParams[3];
                 contextId = getContextIdSymbolOrderNTU(order, n, symbolsPrevForTU, restPos, symbolMax);
             } break;
-            case contextSelector::ContextModelId::BAC: {
+            case contextSelector::ContextModelId::BAC:
+            case contextSelector::ContextModelId::SYMBOLPOSITION: {
                 contextId = 0;
             } break;
-            case contextSelector::ContextModelId::BINPOSITION: {
+            case contextSelector::ContextModelId::BINPOSITION:
+            case contextSelector::ContextModelId::BINSYMBOLPOSITION: {
                 contextId = getContextIdBinPosition(n, restPos);
             }; break;
             default:
                 throw std::runtime_error("getContextId: Unknown context model ID. If you want to use the *ORDER1 context models, just set order=1 and use the *ORDERN models :).");
+        }
+
+        // Handle symbol position offset
+        if (
+            ctxModelId == contextSelector::ContextModelId::SYMBOLPOSITION ||
+            ctxModelId == contextSelector::ContextModelId::BINSYMBOLPOSITION ||
+            ctxModelId == contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION ||
+            ctxModelId == contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION
+        ) {
+                unsigned int ctxOffset0 = getSymbolPositionContextOffset(d, binId, ctxModelId, binParams, ctxParams);
+                contextId += ctxOffset0;
         }
 
         // Add offset to context ID
@@ -776,7 +792,7 @@ namespace contextSelector{
         return contextId;
     }
 
-    void getContextIds(std::vector<unsigned int>& ctxIds, const uint64_t * symbolsPrev,
+    void getContextIds(std::vector<unsigned int>& ctxIds, const unsigned int d, const uint64_t * symbolsPrev,
         const binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId, 
         const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
     {
@@ -809,7 +825,8 @@ namespace contextSelector{
 
         // Get context IDs
         switch (ctxModelId){
-            case contextSelector::ContextModelId::BINSORDERN: {
+            case contextSelector::ContextModelId::BINSORDERN:
+            case contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION: {
 
                 switch (binId) {
                     case binarization::BinarizationId::BI: {
@@ -821,21 +838,38 @@ namespace contextSelector{
                     } break;
                 }
             } break;
-            case contextSelector::ContextModelId::SYMBOLORDERN: {
+            case contextSelector::ContextModelId::SYMBOLORDERN:
+            case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: {
 
                 auto symbolMax = ctxParams[3];
                 getContextIdsSymbolOrderNTU(ctxIds, order, symbolsPrevForTU, restPos, symbolMax);
             } break;
-            case contextSelector::ContextModelId::BAC:{
+            case contextSelector::ContextModelId::BAC:
+            case contextSelector::ContextModelId::SYMBOLPOSITION: {
                 for(unsigned int n=0; n<ctxIds.size(); n++){
                     ctxIds[n] = 0;
                 }
             } break;
-            case contextSelector::ContextModelId::BINPOSITION: {
+            case contextSelector::ContextModelId::BINPOSITION:
+            case contextSelector::ContextModelId::BINSYMBOLPOSITION: {
                 getContextIdsBinPosition(ctxIds, restPos);
             }; break;
             default:
                 throw std::runtime_error("getContextIds: Unknown context model ID. If you want to use the *ORDER1 context models, just set order=1 and use the *ORDERN models :).");
+        }
+
+        // Handle symbol position offset
+        if (
+            ctxModelId == contextSelector::ContextModelId::SYMBOLPOSITION ||
+            ctxModelId == contextSelector::ContextModelId::BINSYMBOLPOSITION ||
+            ctxModelId == contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION ||
+            ctxModelId == contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION
+        ) {
+                unsigned int ctxOffset0 = getSymbolPositionContextOffset(d, binId, ctxModelId, binParams, ctxParams);
+
+                for(unsigned int n=0; n<ctxIds.size(); n++){
+                    ctxIds[n] += ctxOffset0;
+                }
         }
 
         // Add offset to context IDs
@@ -846,8 +880,10 @@ namespace contextSelector{
 
     // ---------------------------------------------------------------------------------------------------------------------
     // Calculate number of total contexts per ctxModelId
+    // See encodeSymbols for definition of binParams and ctxParams
     unsigned int getNumContexts(const binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId, 
-        const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams){
+        const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+    ){
         unsigned int numContexts = 0;
 
         auto order = ctxParams[0];
@@ -874,11 +910,119 @@ namespace contextSelector{
             case contextSelector::ContextModelId::BINPOSITION: {
                 numContexts = restPos + 1;
             } break;
+            case contextSelector::ContextModelId::SYMBOLPOSITION:
+            case contextSelector::ContextModelId::BINSYMBOLPOSITION: 
+            case contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION: 
+            case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: 
+            {
+                auto ctxSymbolPosMode = ctxParams[4];
+                contextSelector::ContextModelId ctxModelId0 = getBaseContextModelId(ctxModelId);
+                unsigned int numContexts0 = getNumContexts(binId, ctxModelId0, binParams, ctxParams);
+                if (ctxSymbolPosMode == 0) {
+                    numContexts = 1 * numContexts0; // no offset
+                } else if (ctxSymbolPosMode == 1) {
+                    numContexts = 4 * numContexts0; // custom offset with 4 intervals
+                } else if (ctxSymbolPosMode == 2) {
+                    numContexts = 3 * numContexts0;
+                } else if (ctxSymbolPosMode == 3) {
+                    numContexts = 2 * numContexts0;
+                } else if (ctxSymbolPosMode == 4) {
+                    numContexts = 4 * numContexts0;
+                } else if (ctxSymbolPosMode == 5) {
+                    numContexts = 2 * numContexts0;
+                }
+            } break;
             default:
                 throw std::runtime_error("getNumContexts: Unknown context model ID");
         }
 
         return numContexts;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // Calculate symbol position context offset for given binarization and context model, depending on symbol position d
+    // See encodeSymbols for definition of binParams and ctxParams
+    unsigned int getSymbolPositionContextOffset(const unsigned int d, 
+        const binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId, 
+        const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+    ) {
+        // Get number of contexts without symbol position offset
+        auto ctxSymbolPosMode = ctxParams[4];
+        contextSelector::ContextModelId ctxModelId0 = getBaseContextModelId(ctxModelId);
+        unsigned int numContexts0 = getNumContexts(binId, ctxModelId0, binParams, ctxParams);
+
+        // Determine symbol position offset
+        unsigned int ctxOffset = 0;  // default case, ctxSymbolPosMode == 0
+
+        if (ctxSymbolPosMode == 1) {
+            // Custom with four variable intervals:
+            // [0, idx1), [idx1, idx2), [idx2, idx3), [idx3, oo)
+            auto idx1 = ctxParams[5];
+            auto idx2 = ctxParams[6];
+            auto idx3 = ctxParams[7];
+
+            if (d < idx1) {
+                ctxOffset = 1 * numContexts0;
+            } else if (d < idx2) {
+                ctxOffset = 2 * numContexts0;
+            } else if (d < idx3) {
+                ctxOffset = 3 * numContexts0;
+            }
+
+         } else if (ctxSymbolPosMode == 2) {
+            // VVC significance luminance with three intervals
+            // [0, 2), [2, 5), [5, oo)
+            if (d < 2) {
+                ctxOffset = 1 * numContexts0;
+            } else if (d < 5) {
+                ctxOffset = 2 * numContexts0;
+            }
+        } else if (ctxSymbolPosMode == 3) {
+            // VVC significance chrominance with two intervals
+            // [0, 2), [2, oo)
+            if (d < 2) {
+                ctxOffset = 1 * numContexts0;
+            }
+        } else if (ctxSymbolPosMode == 4) {
+            // VVC gt1, par, gt3 luminance with four intervals
+            // [0], [1, 3), [3, 10), [10, oo)
+            if (d == 0) {
+                ctxOffset = 3 * numContexts0;
+            } else if (d < 3) {
+                ctxOffset = 2 * numContexts0;
+            } else if (d < 10) {
+                ctxOffset = 1 * numContexts0;
+            }
+        } else if (ctxSymbolPosMode == 5) {
+            // VVC gt1, par, gt3 chrominance with two intervals
+            // [0], [1, oo)
+            if (d == 0) {
+                ctxOffset = 1 * numContexts0;
+            }
+        }
+
+        return ctxOffset;
+    } // getSymbolPositionContextOffset
+
+    contextSelector::ContextModelId getBaseContextModelId(const contextSelector::ContextModelId ctxModelId) {
+        contextSelector::ContextModelId ctxModelId0;
+        switch (ctxModelId) {
+            case contextSelector::ContextModelId::SYMBOLPOSITION: {
+                ctxModelId0 = contextSelector::ContextModelId::BAC;
+            } break;
+            case contextSelector::ContextModelId::BINSYMBOLPOSITION: {
+                ctxModelId0 = contextSelector::ContextModelId::BINPOSITION;
+            } break;
+            case contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION: {
+                ctxModelId0 = contextSelector::ContextModelId::BINSORDERN;
+            } break;
+            case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: {
+                ctxModelId0 = contextSelector::ContextModelId::SYMBOLORDERN;
+            } break;
+            default:
+                ctxModelId0 = ctxModelId;
+        }
+        return ctxModelId0;
     }
 
 }; // namespace contextSelector

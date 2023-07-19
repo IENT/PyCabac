@@ -90,7 +90,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
             symbolsPrev[o] = symbols[i-o - 1];
           }
         }
-        contextSelector::getContextIds(ctxIds, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
+        contextSelector::getContextIds(ctxIds, i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
 
         // Decode bins
         symbols[i] = (*this.*func)(ctxIds, binParams);
@@ -142,7 +142,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
     // ---------------------------------------------------------------------------------------------------------------------
     // This is a general method for decoding a symbol for given binarization and context model
     // parameter definition see encodeSymbols
-    uint64_t decodeSymbol(const uint64_t * symbolsPrev,
+    uint64_t decodeSymbol(const unsigned int d, const uint64_t * symbolsPrev,
       binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
       const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
     {
@@ -152,7 +152,7 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       // Get context id for each bin
       const unsigned int numMaxBins = binParams[0];
       std::vector<unsigned int> ctxIds(numMaxBins, 0);
-      contextSelector::getContextIds(ctxIds, symbolsPrev, binId, ctxModelId, binParams, ctxParams);
+      contextSelector::getContextIds(ctxIds, d, symbolsPrev, binId, ctxModelId, binParams, ctxParams);
 
       // Decode bins
       return (*this.*func)(ctxIds, binParams);

@@ -39,13 +39,21 @@ void init_pybind_sequence_coding(py::module &m) {
         ) {
             self.encodeSymbolBypass(symbol, binId, binParams);
         })
+        .def("encodeSymbol", [](cabacSimpleSequenceEncoder &self, const uint64_t symbol, const unsigned int d, const py::array_t<uint64_t> &symbolsPrev,
+            binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+        ) {
+            auto buf = symbolsPrev.request();
+            uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
+            self.encodeSymbol(symbol, d, ptr, binId, ctxModelId, binParams, ctxParams);
+        })
         .def("encodeSymbol", [](cabacSimpleSequenceEncoder &self, const uint64_t symbol, const py::array_t<uint64_t> &symbolsPrev,
             binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
             const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
         ) {
             auto buf = symbolsPrev.request();
             uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
-            self.encodeSymbol(symbol, ptr, binId, ctxModelId, binParams, ctxParams);
+            self.encodeSymbol(symbol, 0, ptr, binId, ctxModelId, binParams, ctxParams);
         });
 
 
@@ -84,6 +92,16 @@ void init_pybind_sequence_coding(py::module &m) {
         ) {
             return self.decodeSymbolBypass(binId, binParams);
         })
+        .def("decodeSymbol", [](cabacSimpleSequenceDecoder &self, const unsigned int d, const py::array_t<uint64_t> &symbolsPrev,
+            binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+        ) {
+            
+            py::buffer_info buf = symbolsPrev.request();
+            uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
+
+            return self.decodeSymbol(d, ptr, binId, ctxModelId, binParams, ctxParams);
+        })
         .def("decodeSymbol", [](cabacSimpleSequenceDecoder &self, const py::array_t<uint64_t> &symbolsPrev,
             binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
             const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
@@ -92,7 +110,7 @@ void init_pybind_sequence_coding(py::module &m) {
             py::buffer_info buf = symbolsPrev.request();
             uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
 
-            return self.decodeSymbol(ptr, binId, ctxModelId, binParams, ctxParams);
+            return self.decodeSymbol(0, ptr, binId, ctxModelId, binParams, ctxParams);
         });
 
 }  // init_pybind_sequence_coding
