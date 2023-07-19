@@ -6,8 +6,8 @@ import cabac
 # More specifically, we will use the "cabacTraceEncoder" class.
 # Tracing allows to get the internal state of the CABAC encoder at each bin
 # for each context.
-# This can be used to evaluate the internal estimates for the probability of the next bin (p1)
-# and the most probable symbol (mps).
+# This can be used to evaluate the internal estimates for the probability of
+# the next bin (p1) and the most probable symbol (mps).
 
 # Let's encode a unit step function
 bitsToEncode = [0] * 1000 + [1] * 1000
@@ -50,7 +50,7 @@ dec.decodeBinTrm()
 dec.finish()
 
 # Assert that the decoded sequence matches the source symbols
-assert(bitsToEncode == decodedBits)
+assert bitsToEncode == decodedBits
 
 # Evaluation
 # Let's check how long our encoded sequence is (in bits)
@@ -71,5 +71,3 @@ ax.plot(bitsToEncode)
 ax.set_xlabel("bin")
 ax.legend(["p_1", "mps", "source"])
 plt.show()
-
-

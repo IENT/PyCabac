@@ -5,19 +5,24 @@ import math
 
 import tests.utils.symbolgenerator as symbolgenerator
 
+
 class MainTest(unittest.TestCase):
-    
+
     def _call_cabac(self, fun='EGk'):
         num_max_val = 255
         num_bins = 8
         num_values = 1000
-        num_ctx = 1
-        symbols = symbolgenerator.create_random_symbols_uniform_distribution(num_values, num_max_val)
+
+        symbols = symbolgenerator.random_uniform(num_values, num_max_val)
         k = 1
-        
+
+        num_ctx = 1
+        p1_init = 0.5
+        shift_idx = 8
+
         # Encode
         enc = cabac.cabacSimpleSequenceEncoder()
-        enc.initCtx(num_ctx, 0.5, 8)  # initialize one context with p1 = 0.5 and shift_idx = 8
+        enc.initCtx(num_ctx, p1_init, shift_idx)
         enc.start()
 
         ctx_ids = [0] * (num_max_val+2)
@@ -35,7 +40,6 @@ class MainTest(unittest.TestCase):
             elif fun == 'EGk':
                 enc.encodeBinsEGk(symbol, k, ctx_ids)
 
-        
         enc.encodeBinTrm(1)
         enc.finish()
         enc.writeByteAlignment()
@@ -44,7 +48,7 @@ class MainTest(unittest.TestCase):
 
         # Decode
         dec = cabac.cabacSimpleSequenceDecoder(bs)
-        dec.initCtx(num_ctx, 0.5, 8) 
+        dec.initCtx(num_ctx, p1_init, shift_idx)
         dec.start()
 
         decodedSymbols = []
@@ -64,7 +68,7 @@ class MainTest(unittest.TestCase):
                 decodedSymbol = dec.decodeBinsEGk(k, ctx_ids)
 
             decodedSymbols.append(decodedSymbol)
-        
+
         dec.decodeBinTrm()
         dec.finish()
         print('bitstream length: ' + str(len(bs)))
@@ -107,7 +111,7 @@ class MainTest(unittest.TestCase):
 
         p1_init = 0.6
         shift_idx = 8
-        bitsToEncode = symbolgenerator.create_random_symbols_uniform_distribution(1000, 2)
+        bitsToEncode = symbolgenerator.random_uniform(1000, 2)
 
         enc = cabac.cabacEncoder()
         enc.initCtx([(p1_init, shift_idx), (p1_init, shift_idx)])
