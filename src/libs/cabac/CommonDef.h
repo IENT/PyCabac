@@ -7,7 +7,11 @@
 
 // We assume that 1000 contexts are enough for most of the scenarios.
 #define RWTH_PYTHON_IF 1
-#define RWTH_ENABLE_TRACING 1
+#define RWTH_ENABLE_TRACING 0
+
+#if RWTH_PYTHON_IF
+#include <functional>
+#endif // RWTH_PYTHON_IF
 
 class Exception : public std::exception
 {
@@ -35,6 +39,10 @@ static constexpr int SCALE_BITS = 15;  // Precision for fractional bit estimates
 
 static const int RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS =     4;
 
+
+#if RWTH_PYTHON_IF
+typedef const std::function<unsigned int(unsigned int)> CtxFunction;
+#endif // RWTH_PYTHON_IF
 
 
 #endif /* COMMONDEF_H */

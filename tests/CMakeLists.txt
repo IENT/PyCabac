@@ -1,6 +1,7 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(source_files
+        common.cpp
         catch_main.cpp
         test_cabac.cpp
         test_math.cpp

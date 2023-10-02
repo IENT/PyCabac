@@ -40,6 +40,9 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include <cmath>
+
+
 
 #if !RWTH_PYTHON_IF
 class BinStore
@@ -244,6 +247,7 @@ public:
 private:
 #if RWTH_PYTHON_IF
   friend class cabacEncoder;
+  friend class cabacTraceEncoder;
   std::vector<BinProbModel> m_Ctx;
 #else
   CtxStore<BinProbModel>& m_Ctx;
@@ -271,6 +275,16 @@ public:
 #endif
   }
 
+  void initCtx(unsigned numCtx, double pInit, uint8_t shiftInit){
+    m_Ctx.resize(numCtx);
+    for (int i = 0; i < numCtx; ++i) {
+      m_Ctx[i].initFromP1AndShiftIdx(pInit, shiftInit);
+    }
+#if RWTH_ENABLE_TRACING
+    m_pAndMpsTrace.resize(numCtx);
+#endif
+  }
+
   void writeByteAlignment() { m_Bitstream->writeByteAlignment(); }
 
   std::vector<uint8_t> getBitstream() {
@@ -289,4 +303,41 @@ public:
   }
 #endif
 #endif
-};
+}; // class cabacEncoder 
+
+
+
+#if RWTH_PYTHON_IF
+
+// Encoder with trace
+// very slow and memory intensive
+class cabacTraceEncoder : public cabacEncoder{
+  public:
+    cabacTraceEncoder() : cabacEncoder(){}
+    void encodeBin(unsigned bin, unsigned ctxId)
+    {
+      BinProbModel_Std& rcProbModel = m_Ctx[ctxId];
+      m_pAndMpsTrace[ctxId].push_back(std::make_pair(rcProbModel.getState() >> 1, rcProbModel.mps())); // YOLO
+      cabacEncoder::encodeBin(bin, ctxId);
+    }
+
+    std::vector<std::list<std::pair<uint16_t, uint8_t>>> getTrace() {
+      return m_pAndMpsTrace;
+    }
+
+    void initCtx(const std::vector<std::tuple<double, uint8_t>> initCtx) {
+      cabacEncoder::initCtx(initCtx);
+      m_pAndMpsTrace.resize(initCtx.size());
+    }
+
+    void initCtx(unsigned numCtx, double pInit, uint8_t shiftInit){
+      cabacEncoder::initCtx(numCtx, pInit, shiftInit);
+      m_pAndMpsTrace.resize(numCtx);
+    }
+
+  protected:
+    std::vector<std::list<std::pair<uint16_t, uint8_t>>> m_pAndMpsTrace;
+
+}; // class cabacTraceEncoder
+
+#endif // RWTH_PYTHON_IF
