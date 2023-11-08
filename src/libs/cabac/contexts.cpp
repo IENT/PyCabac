@@ -135,14 +135,16 @@ void BinProbModel_Std::init( int qp, int initId )
 
 #if RWTH_PYTHON_IF
 void BinProbModel_Std::initFromP1AndShiftIdx( double p1, uint8_t shiftIdx ) {
- 
+  // Set states
+  // Convert double p1 to integer with precision PROB_BITS
   int prob = p1 * (1 << PROB_BITS);
   prob = std::max(0, std::min((1 << PROB_BITS) - 1 , prob));
-  // I do not really know, whether this initialization is correct...
-  m_state[0] = prob;
-  m_state[1] = prob;
+  // JS: I do not really know, whether this initialization is correct...
+  m_state[0] = prob & MASK_0;
+  m_state[1] = prob & MASK_1;
+
+  // Set rate
   CHECK(shiftIdx > 13, "I think shiftIdx should not be greater than 13")
   setLog2WindowSize(shiftIdx);
- 
 }
 #endif
