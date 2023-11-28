@@ -44,6 +44,12 @@ Note: Uninstall via:
 pip uninstall pycabac
 ```
 
+In order to be able to run the unit tests, `numpy` is required:
+
+```bash
+pip install numpy
+```
+
 ## Demo
 
 We expect that you are familiar with the concept of binary arithmetic coding.
