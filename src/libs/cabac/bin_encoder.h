@@ -298,8 +298,7 @@ public:
   }
 
   std::list<std::pair<uint16_t, uint8_t>> getPAndMps() {
-      std::list<std::pair<uint16_t, uint8_t>> pAndMps = std::list<std::pair<uint16_t, uint8_t>>();
-      pAndMps.resize(m_Ctx.size());
+      auto pAndMps = std::list<std::pair<uint16_t, uint8_t>>();
       for (int i = 0; i < m_Ctx.size(); ++i) {
         pAndMps.push_back(std::make_pair(m_Ctx[i].getState() >> 1, m_Ctx[i].mps()));
       }
