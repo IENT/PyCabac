@@ -32,7 +32,21 @@ void init_pybind_cabac(py::module &m) {
         )
         .def("initCtx", static_cast<void (cabacEncoder::*)(unsigned, double, uint8_t)>(&cabacEncoder::initCtx),
             "Initialize all contexts to same probability and shift idx."
-        );
+        )
+        //.def("getPAndMps", &cabacEncoder::getPAndMps)
+        .def("getPAndMps", [](cabacEncoder &self) {
+
+            std::list<std::pair<uint16_t, uint8_t>> pAndMps = self.getPAndMps();
+            std::list<std::pair<float, uint8_t>> pAndMpsFloat(pAndMps.size());
+            const uint16_t NUM_BITS = 15;
+
+            // Convert the first element of the pair to a float by dividing by 2^15
+            std::transform(pAndMps.begin(), pAndMps.end(), pAndMpsFloat.begin(), [](std::pair<uint16_t, uint8_t> pAndMpsPair) {
+                return std::make_pair(static_cast<float>(pAndMpsPair.first) / static_cast<float>(1 << NUM_BITS), pAndMpsPair.second);
+            });
+
+            return pAndMpsFloat;
+        });
     
     // ---------------------------------------------------------------------------------------------------------------------
     // Decoder
