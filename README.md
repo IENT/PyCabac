@@ -24,7 +24,7 @@ Just clone this repository and install via pip. Note the `--recursive` option wh
 needed for the pybind11 submodule:
 
 ```bash
-git clone --recursive git@github.com:IENT/PyCabac.git
+git clone --recursive https://github.com/IENT/PyCabac.git
 pip install .
 ```
 
@@ -42,6 +42,12 @@ Note: Uninstall via:
 
 ```bash
 pip uninstall pycabac
+```
+
+In order to be able to run the unit tests, `numpy` is required:
+
+```bash
+pip install numpy
 ```
 
 ## Demo
@@ -70,7 +76,7 @@ pybind11_example.add(1, 2)
 
 ## Python Unit Tests
 
-Python unit tests are done using Python's built-in ``unittest`` module. Python unit tests live in the ``tests`` folder. As long as all of your files match ``'test*.py'``, ``unittest`` will automatically discover them. Run ``python3 -m unittest discover [--verbose]`` to run all unit tests.
+Python unit tests are done using Python's built-in ``unittest`` module. Note that ``numpy`` is required. Python unit tests live in the ``tests`` folder. As long as all of your files match ``'test*.py'``, ``unittest`` will automatically discover them. Run ``python3 -m unittest discover [--verbose]`` to run all unit tests.
 
 ## C++ Unit Tests
 

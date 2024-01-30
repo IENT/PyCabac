@@ -1,3 +1,4 @@
-autopep8
+numpy
+autopep8==1.5.2
+pycodestyle==2.5.0
 setuptools
-pycodestyle
