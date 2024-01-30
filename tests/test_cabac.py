@@ -66,6 +66,8 @@ class MainTest(unittest.TestCase):
                 decodedSymbol = dec.decodeBinsEGkbypass(k)
             elif fun == 'EGk':
                 decodedSymbol = dec.decodeBinsEGk(k, ctx_ids)
+            else:
+                raise Exception('Unknown function: ' + fun)
 
             decodedSymbols.append(decodedSymbol)
 

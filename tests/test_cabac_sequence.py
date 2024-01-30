@@ -59,6 +59,8 @@ class MainTest(unittest.TestCase):
             ctx_model_id = cabac.ContextModelId.BINPOSITION
 
             bin_params = [num_max_val, k]
+        else:
+            raise ValueError('Unknown function: ' + fun)
 
         num_ctxs = cabac.getNumContexts(
             bin_id, ctx_model_id, bin_params, ctx_params
@@ -156,6 +158,9 @@ class MainTest(unittest.TestCase):
             bin_params = [num_max_val, k]
             ctx_params = [ctx_order, ctx_rest_pos, 0, symbol_max]
 
+        else:
+            raise ValueError('Unknown function: ' + fun)
+
         num_ctxs = cabac.getNumContexts(
             bin_id, ctx_model_id, bin_params, ctx_params
         )
@@ -239,6 +244,9 @@ class MainTest(unittest.TestCase):
         elif fun == 'RICE':
             bin_id = cabac.BinarizationId.RICE
             bin_params = [0, 0, rice_param, 5, 15]
+
+        else:
+            raise ValueError('Unknown function: ' + fun)
 
         num_ctxs = 0
         p1_init = 0.5

@@ -29,6 +29,8 @@ class MainTest(unittest.TestCase):
             fun == 'EGksymbolOrder1'
         ):
             bin_id = cabac.BinarizationId.EGk
+        else:
+            raise ValueError('Unknown function: ' + fun)
 
         # Parameters
         num_symbols = 5000
@@ -81,6 +83,8 @@ class MainTest(unittest.TestCase):
                     n=n, prev_symbol=symbol_prev, rest_pos=ctx_rest_pos,
                     symbol_max=ctx_symbol_max, k=k
                 )
+            else:
+                raise ValueError('Unknown function: ' + fun)
 
             return ctx_id
 
@@ -102,6 +106,8 @@ class MainTest(unittest.TestCase):
                 _, bins, bins_suffix = binarization.encode_eg(
                     symbol, k, return_prefix_suffix=True
                 )
+            else:
+                raise ValueError('Unknown binarization ID: ' + str(bin_id))
 
             # Encode each bin
             for n, bin in enumerate(bins):
@@ -141,6 +147,8 @@ class MainTest(unittest.TestCase):
             bin_value_to_check = 1
         elif bin_id == cabac.BinarizationId.EGk:
             bin_value_to_check = 0
+        else:
+            raise ValueError('Unknown binarization ID: ' + str(bin_id))
 
         for i in range(0, num_symbols):
             symbol = 0
@@ -206,6 +214,8 @@ class MainTest(unittest.TestCase):
                     n=n_array, prev_symbol=symbol_prev, rest_pos=ctx_rest_pos,
                     symbol_max=ctx_symbol_max, k=k
                 )
+            else:
+                raise ValueError('Unknown function: ' + fun)
 
             return ctx_ids
 
@@ -250,6 +260,8 @@ class MainTest(unittest.TestCase):
                 symbol_dec = dec.decodeBinsTU(ctx_ids, num_max_val)
             elif bin_id == cabac.BinarizationId.EGk:
                 symbol_dec = dec.decodeBinsEGk(k, ctx_ids)
+            else:
+                raise ValueError('Unknown binarization ID: ' + str(bin_id))
 
             symbol_prev_dec = symbol_dec
 
@@ -292,6 +304,8 @@ class MainTest(unittest.TestCase):
                     n=n, prev_symbol=symbol_prev, rest_pos=ctx_rest_pos,
                     symbol_max=ctx_symbol_max, k=k
                 )
+            else:
+                raise ValueError('Unknown function: ' + fun)
 
             return ctx_fun
 
@@ -338,6 +352,9 @@ class MainTest(unittest.TestCase):
                 symbol_dec = dec.decodeBinsTU(ctx_fun, num_max_val)
             elif bin_id == cabac.BinarizationId.EGk:
                 symbol_dec = dec.decodeBinsEGk(k, ctx_fun)
+            else:
+                raise ValueError('Unknown binarization ID: ' + str(bin_id))
+
             symbol_prev_dec = symbol_dec
 
             symbols_dec[i] = symbol_dec
@@ -376,6 +393,8 @@ class MainTest(unittest.TestCase):
                 ctx_fun = lambda n: cabac.getContextIdSymbolOrder1EGk(
                     n, symbol_prev, k, ctx_rest_pos, ctx_symbol_max
                 )
+            else:
+                raise ValueError('Unknown function: ' + fun)
 
             return ctx_fun
 
@@ -421,6 +440,9 @@ class MainTest(unittest.TestCase):
                 symbol_dec = dec.decodeBinsTU(ctx_fun, num_max_val)
             elif bin_id == cabac.BinarizationId.EGk:
                 symbol_dec = dec.decodeBinsEGk(k, ctx_fun)
+            else:
+                raise ValueError('Unknown binarization ID: ' + str(bin_id))
+
             symbol_prev_dec = symbol_dec
 
             symbols_dec[i] = symbol_dec
@@ -449,6 +471,8 @@ class MainTest(unittest.TestCase):
             ctx_model_id = cabac.ContextModelId.BINSORDERN
         elif fun == 'TUsymbolOrder1' or fun == 'EGksymbolOrder1':
             ctx_model_id = cabac.ContextModelId.SYMBOLORDERN
+        else:
+            raise ValueError('Unknown function: ' + fun)
 
         # Encode
         enc = cabac.cabacSimpleSequenceEncoder()

@@ -116,7 +116,7 @@ def ctx_id_bins_order_1_egk(n, prev_symbol=0, n_rst=10, k=0):
     )
 
 
-def ctx_ids_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
+def ctx_ids_bins_order_n_tu(order, n, prev_symbols=np.array([0]), rest_pos=10):
     # n is the position of the to-be coded bin in the bin string (of the to be
     # coded symbol)
     # prev_symbols is a list of previously coded symbols
@@ -158,14 +158,16 @@ def ctx_ids_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
     return ctx_id
 
 
-def ctx_ids_bins_order_n_egk(order, n, prev_symbols=0, rest_pos=10, k=0):
+def ctx_ids_bins_order_n_egk(
+        order, n, prev_symbols=np.array([0]), rest_pos=10, k=0
+):
     prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
     return ctx_ids_bins_order_n_tu(
         order=order, n=n, prev_symbols=prev_symbols_prefix, rest_pos=rest_pos
     )
 
 
-def ctx_id_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
+def ctx_id_bins_order_n_tu(order, n, prev_symbols=np.array([0]), rest_pos=10):
 
     if n < rest_pos:
         ctx_id = 0
@@ -190,7 +192,9 @@ def ctx_id_bins_order_n_tu(order, n, prev_symbols=0, rest_pos=10):
     return ctx_id
 
 
-def ctx_id_bins_order_n_egk(order, n, prev_symbols=0, rest_pos=10, k=0):
+def ctx_id_bins_order_n_egk(
+    order, n, prev_symbols=np.array([0]), rest_pos=10, k=0
+):
     prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
     return ctx_id_bins_order_n_tu(
         order=order, n=n, prev_symbols=prev_symbols_prefix, rest_pos=rest_pos
@@ -267,7 +271,7 @@ def ctx_id_symbol_order_1_egk(
 
 
 def ctx_ids_symbol_order_n_tu(
-    order, n, prev_symbols=0, rest_pos=10, symbol_max=32
+    order, n, prev_symbols=np.array([0]), rest_pos=10, symbol_max=32
 ):
 
     n = np.asarray(n)
@@ -297,7 +301,7 @@ def ctx_ids_symbol_order_n_tu(
 
 
 def ctx_ids_symbol_order_n_egk(
-    order, n, prev_symbols=0, rest_pos=10, symbol_max=32, k=0
+    order, n, prev_symbols=np.array([0]), rest_pos=10, symbol_max=32, k=0
 ):
     prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
     return ctx_ids_symbol_order_n_tu(
@@ -307,7 +311,7 @@ def ctx_ids_symbol_order_n_egk(
 
 
 def ctx_id_symbol_order_n_tu(
-    order, n, prev_symbols=0, rest_pos=10, symbol_max=32
+    order, n, prev_symbols=np.array([0]), rest_pos=10, symbol_max=32
 ):
 
     prev_symbols = np.asarray(prev_symbols)
@@ -333,7 +337,7 @@ def ctx_id_symbol_order_n_tu(
 
 
 def ctx_id_symbol_order_n_egk(
-    order, n, prev_symbols=0, rest_pos=10, symbol_max=32, k=0
+    order, n, prev_symbols=np.array([0]), rest_pos=10, symbol_max=32, k=0
 ):
     prev_symbols_prefix = _get_egk_prefix(prev_symbols, k)
     return ctx_id_symbol_order_n_tu(

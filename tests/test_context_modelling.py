@@ -1,5 +1,4 @@
 import unittest
-import random
 import cabac
 
 import numpy as np
