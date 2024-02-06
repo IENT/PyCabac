@@ -22,6 +22,8 @@ namespace contextSelector{
         BINSYMBOLPOSITION = 5,
         BINSORDERNSYMBOLPOSITION = 6,
         SYMBOLORDERNSYMBOLPOSITION = 7,
+        SUMORDERN = 8,
+        SUMORDERNSYMBOLPOSITION = 9
     };
 
     unsigned int getContextIdBinPosition(const unsigned int, const unsigned int);
@@ -74,7 +76,7 @@ namespace contextSelector{
     unsigned int getContextIdSymbolOrder1EGk(const unsigned int, const uint64_t, const unsigned int, const unsigned int, const unsigned int);
     void getContextIdsSymbolOrder1EGk(std::vector<unsigned int>&, const uint64_t, const unsigned int, const unsigned int, const unsigned int);
 
-    /* Context model on symbol-to-symbol level, order=1 */
+    /* Context model on symbol-to-symbol level, order=N */
     // BI binarization
     unsigned int getContextIdSymbolOrderNBI(const unsigned int, const unsigned int, const std::vector<uint64_t>,
         const unsigned int, const unsigned int, const unsigned int);
@@ -92,6 +94,26 @@ namespace contextSelector{
         const unsigned int, const unsigned int, const unsigned int);
     void getContextIdsSymbolOrderNEGk(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
         const unsigned int, const unsigned int, const unsigned int);
+
+    /* Context model on sum-to-symbol level, order=N */
+    // BI binarization
+    unsigned int getContextIdSumOrderNBI(const unsigned int, const unsigned int, const std::vector<uint64_t>,
+        const unsigned int, const unsigned int, const unsigned int);
+    void getContextIdsSumOrderNBI(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
+        const unsigned int, const unsigned int, const unsigned int);
+    
+    // TU binarization
+    unsigned int getContextIdSumOrderNTU(const unsigned int, const unsigned int, const std::vector<uint64_t>,
+        const unsigned int, const unsigned int);
+    void getContextIdsSumOrderNTU(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
+        const unsigned int, const unsigned int);
+    
+    // EGk binarization
+    unsigned int getContextIdSumOrderNEGk(const unsigned int, const unsigned int, const std::vector<uint64_t>,
+        const unsigned int, const unsigned int, const unsigned int);
+    void getContextIdsSumOrderNEGk(std::vector<unsigned int>&, const unsigned int, const std::vector<uint64_t>,
+        const unsigned int, const unsigned int, const unsigned int);
+
 
     /* General stuff */
     unsigned int getContextIdOrder1(const unsigned int, const uint64_t, 

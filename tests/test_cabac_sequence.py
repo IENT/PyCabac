@@ -145,6 +145,12 @@ class MainTest(unittest.TestCase):
 
             ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset, symbol_max]
 
+        elif fun == 'TUsumOrderN':
+            bin_id = cabac.BinarizationId.TU
+            ctx_model_id = cabac.ContextModelId.SUMORDERN
+
+            ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset, symbol_max]
+
         elif fun == 'EGkbinsOrderN':
             bin_id = cabac.BinarizationId.EGk
             ctx_model_id = cabac.ContextModelId.BINSORDERN
@@ -154,6 +160,13 @@ class MainTest(unittest.TestCase):
         elif fun == 'EGksymbolOrderN':
             bin_id = cabac.BinarizationId.EGk
             ctx_model_id = cabac.ContextModelId.SYMBOLORDERN
+
+            bin_params = [num_max_val, k]
+            ctx_params = [ctx_order, ctx_rest_pos, 0, symbol_max]
+
+        elif fun == 'EGksumOrderN':
+            bin_id = cabac.BinarizationId.EGk
+            ctx_model_id = cabac.ContextModelId.SUMORDERN
 
             bin_params = [num_max_val, k]
             ctx_params = [ctx_order, ctx_rest_pos, 0, symbol_max]
@@ -203,9 +216,10 @@ class MainTest(unittest.TestCase):
         funs = [
             'BIbinsOrderN',
             'TUbinsOrderN', 'TUsymbolOrderN',
-            'EGkbinsOrderN', 'EGksymbolOrderN'
+            'EGkbinsOrderN', 'EGksymbolOrderN',
+            'TUsumOrderN', 'EGksumOrderN'
         ]
-        # funs = ['EGkbinsOrderN', 'EGksymbolOrderN']
+        # funs = ['TUsumOrderN', 'EGksymbolOrderN']
 
         for fun in funs:
             for order in [1, 2, 3]:

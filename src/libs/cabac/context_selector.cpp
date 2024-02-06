@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 #include <cmath>
+#include <numeric>
 #include "binarization.h"
 
 
@@ -702,6 +703,123 @@ namespace contextSelector{
         getContextIdsSymbolOrderNTU(ctxIds, order, prevNumsLeadZeros, restPos);
     }
 
+     // ---------------------------------------------------------------------------------------------------------------------
+    // Symbol-to-sum level, order N
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // BI
+    unsigned int getContextIdSumOrderNBI(const unsigned int order, const unsigned int n, const std::vector<uint64_t> symbolsPrev,
+        const unsigned int restPos=8, const unsigned int symbolMax=32
+    ) {
+        /* 
+        ContextID dependent on bin position n of to-be-decoded symbol as well as the sum ofprevious integer symbol value, in fact
+        modeling the probability p(b_n | sum(symbolsPrev)) with bin b_n at position n in BI-binarized bin-string.
+        
+        In total we have num_ctx_total = S*R + 1 contexts with S = symbolMax and R = restPos
+
+        The ctx_id is computed as follows:
+        
+        sum(symbolsPrev)    ctx_id
+        0                   0*R + n
+        1                   1*R + n
+        2                   2*R + n
+        ...                 ...
+        S                   S*R + n
+        S+1                 S*R + n
+
+        --------------------------------------------------------------------------------------------------
+        n >= R                              ( S+1 )*R
+
+        */
+
+        uint64_t symbolMaxPlusOne = symbolMax + 1;
+        uint64_t sumSymbolsPrevClipped = 0;
+        unsigned int ctxId = 0;
+
+        sumSymbolsPrevClipped = std::accumulate(symbolsPrev.begin(), symbolsPrev.end(), 0);
+        sumSymbolsPrevClipped = std::min<uint64_t>(sumSymbolsPrevClipped, symbolMax);
+        
+        ctxId = getContextIdSymbolOrder1BI(n, sumSymbolsPrevClipped, restPos, symbolMax);
+
+        return ctxId;
+    }
+
+    void getContextIdsSumOrderNBI(std::vector<unsigned int>& ctxIds, const unsigned int order, const std::vector<uint64_t> symbolsPrev,
+        const unsigned int restPos=8, const unsigned int symbolMax=32
+    ) {
+        /* 
+        Get context IDs for all bins of a BI-binarized symbol given the previous symbol, the number of rest bins and the maximum symbol value.
+        */
+        
+        // Get context ID for rest case (n=>restPos) as mini speedup
+        unsigned int ctxIdRest = getContextIdSumOrderNBI(order, restPos, symbolsPrev, restPos, symbolMax);
+        for(unsigned int n=0; n < ctxIds.size(); n++) {
+            if (n < restPos) {
+                ctxIds[n] = getContextIdSumOrderNBI(order, n, symbolsPrev, restPos, symbolMax);
+            } else {
+                ctxIds[n] = ctxIdRest;
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // TU
+    unsigned int getContextIdSumOrderNTU(const unsigned int order, const unsigned int n, const std::vector<uint64_t> symbolsPrev,
+        const unsigned int restPos=8, const unsigned int symbolMax=32
+    ) {
+        return getContextIdSumOrderNBI(order, n, symbolsPrev, restPos, symbolMax); // For TU, the symbol-wise orderN context model is the same as for BI
+    }
+
+    void getContextIdsSumOrderNTU(std::vector<unsigned int>& ctxIds, const unsigned int order, const std::vector<uint64_t> symbolsPrev,
+        const unsigned int restPos=8, const unsigned int symbolMax=32
+    ) {
+        getContextIdsSumOrderNBI(ctxIds, order, symbolsPrev, restPos, symbolMax); // For TU, the symbol-wise orderN context model is the same as for BI
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // EGk
+    unsigned int getContextIdSumOrderNEGk(const unsigned int n, const unsigned int order, const std::vector<uint64_t> symbolsPrev,
+        const unsigned int k, const unsigned int restPos=10
+    ) {
+        /*
+        EG-Codes are constructed out of prefix and suffix. Here, only the prefix is modelled.
+        The prefix is modelled as a TU code with a context for each bin.
+        */
+
+        // Get number of leading zeros to encode previous symbol with EGk code
+        std::vector<uint64_t> prevNumsLeadZeros(order, 0);
+        if (k==0) {
+            for(unsigned int o=0; o < order; o++){
+                prevNumsLeadZeros[o] = (unsigned int)(floor(log2(symbolsPrev[o] + 1))); // number of leading zeros
+            }
+        } else {
+            for(unsigned int o=0; o < order; o++) {
+                prevNumsLeadZeros[o] = (unsigned int)(floor(log2(symbolsPrev[o] + (1 << k))) - k); // number of leading zeros
+            }
+        }
+
+        // Return context ID for the prefix TU code
+        return getContextIdSumOrderNTU(order, n, prevNumsLeadZeros, restPos);
+    }
+
+    void getContextIdsSumOrderNEGk(std::vector<unsigned int>& ctxIds, const unsigned int order, const std::vector<uint64_t> symbolsPrev,
+        const unsigned int k, const unsigned int restPos
+    ) {
+        std::vector<uint64_t> prevNumsLeadZeros(order, 0);
+        if (k==0) {
+            for(unsigned int o=0; o < order; o++){
+                prevNumsLeadZeros[o] = (unsigned int)(floor(log2(symbolsPrev[o] + 1))); // number of leading zeros
+            }
+        } else {
+            for(unsigned int o=0; o < order; o++) {
+                prevNumsLeadZeros[o] = (unsigned int)(floor(log2(symbolsPrev[o] + (1 << k))) - k); // number of leading zeros
+            }
+        }
+
+        getContextIdsSumOrderNTU(ctxIds, order, prevNumsLeadZeros, restPos);
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------
     // Generalization
     // ---------------------------------------------------------------------------------------------------------------------
@@ -840,10 +958,14 @@ namespace contextSelector{
             } break;
             case contextSelector::ContextModelId::SYMBOLORDERN:
             case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: {
-
                 auto symbolMax = ctxParams[3];
                 getContextIdsSymbolOrderNTU(ctxIds, order, symbolsPrevForTU, restPos, symbolMax);
             } break;
+            case contextSelector::ContextModelId::SUMORDERN:
+            case contextSelector::ContextModelId::SUMORDERNSYMBOLPOSITION: {
+                auto symbolMax = ctxParams[3];
+                getContextIdsSumOrderNTU(ctxIds, order, symbolsPrevForTU, restPos, symbolMax);
+            }; break;
             case contextSelector::ContextModelId::BAC:
             case contextSelector::ContextModelId::SYMBOLPOSITION: {
                 for(unsigned int n=0; n<ctxIds.size(); n++){
@@ -863,7 +985,8 @@ namespace contextSelector{
             ctxModelId == contextSelector::ContextModelId::SYMBOLPOSITION ||
             ctxModelId == contextSelector::ContextModelId::BINSYMBOLPOSITION ||
             ctxModelId == contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION ||
-            ctxModelId == contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION
+            ctxModelId == contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION ||
+            ctxModelId == contextSelector::ContextModelId::SUMORDERNSYMBOLPOSITION
         ) {
                 unsigned int ctxOffset0 = getSymbolPositionContextOffset(d, binId, ctxModelId, binParams, ctxParams);
 
@@ -904,7 +1027,11 @@ namespace contextSelector{
                 auto symbolMax = ctxParams[3];
                 numContexts = pow(symbolMax+1, order)*restPos + 1;
             } break;
-            case contextSelector::ContextModelId::BAC:{
+            case contextSelector::ContextModelId::SUMORDERN : {
+                auto symbolMax = ctxParams[3];
+                numContexts = (symbolMax+1)*restPos + 1;
+            } break;
+            case contextSelector::ContextModelId::BAC: {
                 numContexts = 1;
             } break;
             case contextSelector::ContextModelId::BINPOSITION: {
@@ -914,6 +1041,7 @@ namespace contextSelector{
             case contextSelector::ContextModelId::BINSYMBOLPOSITION: 
             case contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION: 
             case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: 
+            case contextSelector::ContextModelId::SUMORDERNSYMBOLPOSITION:
             {
                 auto ctxSymbolPosMode = ctxParams[4];
                 contextSelector::ContextModelId ctxModelId0 = getBaseContextModelId(ctxModelId);
@@ -1018,6 +1146,9 @@ namespace contextSelector{
             } break;
             case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: {
                 ctxModelId0 = contextSelector::ContextModelId::SYMBOLORDERN;
+            } break;
+            case contextSelector::ContextModelId::SUMORDERNSYMBOLPOSITION: {
+                ctxModelId0 = contextSelector::ContextModelId::SUMORDERN;
             } break;
             default:
                 ctxModelId0 = ctxModelId;

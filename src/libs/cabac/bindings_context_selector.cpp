@@ -120,9 +120,11 @@ void init_pybind_context_selector(py::module &m) {
         .value("BINPOSITION", contextSelector::ContextModelId::BINPOSITION)
         .value("BINSORDERN", contextSelector::ContextModelId::BINSORDERN)
         .value("SYMBOLORDERN", contextSelector::ContextModelId::SYMBOLORDERN)
+        .value("SUMORDERN", contextSelector::ContextModelId::SUMORDERN)
         .value("SYMBOLPOSITION", contextSelector::ContextModelId::SYMBOLPOSITION)
         .value("BINSYMBOLPOSITION", contextSelector::ContextModelId::BINSYMBOLPOSITION)
         .value("BINSORDERNSYMBOLPOSITION", contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION)
-        .value("SYMBOLORDERNSYMBOLPOSITION", contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION);
+        .value("SYMBOLORDERNSYMBOLPOSITION", contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION)
+        .value("SUMORDERNSYMBOLPOSITION", contextSelector::ContextModelId::SUMORDERNSYMBOLPOSITION);
 
 }  // init_pybind_context_selector
