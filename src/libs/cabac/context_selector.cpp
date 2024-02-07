@@ -5,14 +5,15 @@
 #include <tuple>
 #include <cmath>
 #include <numeric>
+#include <iostream>
 #include "binarization.h"
 
 
 
 #if RWTH_PYTHON_IF
 namespace contextSelector{
-    const std::vector<unsigned int> offsetsBinOrderNBI = {1, 2, 4, 8}; // lookup table for "speedup"
-    const std::vector<unsigned int> offsetsBinOrderNTU = {1, 3, 9, 27}; // lookup table for "speedup"
+    const std::vector<unsigned int> offsetsBinOrderNBI = {1, 2, 4,  8, 16,  32,  64,  128,  256}; // lookup table for "speedup"
+    const std::vector<unsigned int> offsetsBinOrderNTU = {1, 3, 9, 27, 81, 243, 729, 2187, 6561}; // lookup table for "speedup"
 
     /*
     Context model on bin-to-symbol level
@@ -1062,6 +1063,11 @@ namespace contextSelector{
             } break;
             default:
                 throw std::runtime_error("getNumContexts: Unknown context model ID");
+        }
+
+        // Warn if number of contexts is too high
+        if(numContexts > 1000){
+            std::cerr << "Warning: getNumContexts: Number of contexts is " << numContexts << ". This might be too high." << std::endl;
         }
 
         return numContexts;

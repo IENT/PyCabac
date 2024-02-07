@@ -70,15 +70,25 @@ public:
   // ---------------------------------------------------------------------------------------------------------------------
   // This is a general method for encoding a sequence of symbols for given binarization and context model
   // binParams = {numMaxBins or numBins, [k, [riceParam, cuttoff, maxLog2TrDynamicRange]]}
-  // ctxParams = {order, restPos, offset, symbolMax, symbolPosMode}
+  // ctxParams = {order, restPos, offset, symbolMax, symbolPosMode, idx1, idx2, idx3}
+  // If symbolPosMode=1: The ctxs ids get an offset corresponding to the following symbol position intervals 
+  // [0, idx1), [idx1, idx2), [idx2, idx3), [idx3, oo)
   void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
   {
     auto order = ctxParams[0];
     // Check order
-    if(order == 0 || order > 3) {
-      throw std::runtime_error("encodeSymbols: Order must be 1, 2 or 3"); // TODO: Add support for higher orders
+    if(order == 0) {
+      throw std::runtime_error("encodeSymbols: Order must be larger than 0"); // TODO: Add support for higher orders
+    }
+    if(
+        (
+          ctxModelId == contextSelector::ContextModelId::BINSORDERN || 
+          ctxModelId == contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION
+        ) && order > 8
+      ) {
+      throw std::runtime_error("encodeSymbols: Order must be smaller than 8 for BINSORDERN* context models");
     }
     
     std::vector<uint64_t> symbolsPrev(order, 0);

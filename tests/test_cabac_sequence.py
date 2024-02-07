@@ -222,7 +222,7 @@ class MainTest(unittest.TestCase):
         # funs = ['TUsumOrderN', 'EGksymbolOrderN']
 
         for fun in funs:
-            for order in [1, 2, 3]:
+            for order in [1, 2, 3, 4]:
                 print('Testing function: ' + fun + ' with order ' + str(order))
                 self._call_cabac_symbols_order_n(fun, order)
 
