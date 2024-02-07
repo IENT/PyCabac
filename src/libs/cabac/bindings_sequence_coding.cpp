@@ -5,6 +5,7 @@
 #include <pybind11/stl_bind.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <pybind11/functional.h>
 
 #include "sequence_encoder.h"
 #include "sequence_decoder.h"
@@ -25,15 +26,19 @@ void init_pybind_sequence_coding(py::module &m) {
             auto buf = symbols.request();
             uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
             self.encodeSymbolsBypass(ptr, buf.size, binId, binParams);
-        })
+        }, "Bypass-encode a sequence of symbols", 
+            py::arg("symbols"), py::arg("binId"), py::arg("binParams"))
         .def("encodeSymbols", [](cabacSimpleSequenceEncoder &self, const py::array_t<uint64_t> &symbols,
             binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
-            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, 
+            std::vector<unsigned int> prevSymbolOffsets
         ) {
             auto buf = symbols.request();
             uint64_t *ptr = static_cast<uint64_t *>(buf.ptr);
-            self.encodeSymbols(ptr, buf.size, binId, ctxModelId, binParams, ctxParams);
-        })
+            self.encodeSymbols(ptr, buf.size, binId, ctxModelId, binParams, ctxParams, prevSymbolOffsets);
+        }, "Context-encode a sequence of symbols", 
+            py::arg("symbols"), py::arg("binId"), py::arg("ctxModelId"), py::arg("binParams"), py::arg("ctxParams"), py::arg("prevSymbolOffsets")=std::vector<unsigned int>{}
+        )
         .def("encodeSymbolBypass", [](cabacSimpleSequenceEncoder &self, const uint64_t symbol,
             binarization::BinarizationId binId, const std::vector<unsigned int> binParams
         ) {
@@ -72,10 +77,13 @@ void init_pybind_sequence_coding(py::module &m) {
             self.decodeSymbolsBypass(symbols_ptr, numSymbols, binId, binParams);
 
             return symbols;
-        })
+        }, "Bypass-decode a sequence of symbols", 
+            py::arg("numSymbols"), py::arg("binId"), py::arg("binParams")
+        )
         .def("decodeSymbols", [](cabacSimpleSequenceDecoder &self, unsigned int numSymbols,
             binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId,
-            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams
+            const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams,
+            std::vector<unsigned int> prevSymbolOffsets = {}
         ) {
             
             auto symbols = py::array_t<uint64_t>(numSymbols);
@@ -83,10 +91,12 @@ void init_pybind_sequence_coding(py::module &m) {
             py::buffer_info buf = symbols.request();
             uint64_t *symbols_ptr = static_cast<uint64_t *>(buf.ptr);
 
-            self.decodeSymbols(symbols_ptr, numSymbols, binId, ctxModelId, binParams, ctxParams);
+            self.decodeSymbols(symbols_ptr, numSymbols, binId, ctxModelId, binParams, ctxParams, prevSymbolOffsets);
 
             return symbols;
-        })
+        }, "Context-decode a sequence of symbols", 
+            py::arg("numSymbols"), py::arg("binId"), py::arg("ctxModelId"), py::arg("binParams"), py::arg("ctxParams"), py::arg("prevSymbolOffsets")=std::vector<unsigned int>{}
+        )
         .def("decodeSymbolBypass", [](cabacSimpleSequenceDecoder &self, 
             binarization::BinarizationId binId, const std::vector<unsigned int> binParams
         ) {

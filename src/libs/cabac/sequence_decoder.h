@@ -72,7 +72,8 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
     // parameter definition see encodeSymbols
     void decodeSymbols(uint64_t * symbols, const unsigned int numSymbols,
       binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
-      const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+      const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams,
+      std::vector<unsigned int> prevSymbolOffsets = {})
     {
       // Allocate memory
       auto order = ctxParams[0];
@@ -83,11 +84,20 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       // Get reader
       binReader func = getReader(binId);
 
+      // Fill prevSymbolOffsets
+      if(prevSymbolOffsets.empty()){
+        for (unsigned int i = 0; i < order; i++){
+          prevSymbolOffsets.push_back(i+1); // holds offsets 1, 2, 3, ...
+        }
+      }
+
+      int i_offset = 0;
       for (unsigned int i = 0; i < numSymbols; i++) {
         // Get context ids for each bin
         for (unsigned int o = 0; o < order; o++) {
-          if (i > o) {
-            symbolsPrev[o] = symbols[i-o - 1];
+          i_offset = i - prevSymbolOffsets[o];    
+          if (i_offset >= 0) {  // Take only previous values
+            symbolsPrev[o] = symbols[i_offset];
           }
         }
         contextSelector::getContextIds(ctxIds, i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);

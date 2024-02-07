@@ -71,11 +71,14 @@ public:
   // This is a general method for encoding a sequence of symbols for given binarization and context model
   // binParams = {numMaxBins or numBins, [k, [riceParam, cuttoff, maxLog2TrDynamicRange]]}
   // ctxParams = {order, restPos, offset, symbolMax, symbolPosMode, idx1, idx2, idx3}
-  // If symbolPosMode=1: The ctxs ids get an offset corresponding to the following symbol position intervals 
-  // [0, idx1), [idx1, idx2), [idx2, idx3), [idx3, oo)
+  //    If symbolPosMode=1: The ctxs ids get an offset corresponding to the following symbol position intervals 
+  //    [0, idx1), [idx1, idx2), [idx2, idx3), [idx3, oo)
+  // prevSymbolOffsets = {offset1, offset2, offset3, ...}  // holds offsets to access previous symbols for context selection. 
+  //    Defaults to 1, 2, ..., order
   void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
-    const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+    const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams,
+    std::vector<unsigned int> prevSymbolOffsets = {})
   {
     auto order = ctxParams[0];
     // Check order
@@ -98,11 +101,24 @@ public:
     // Get writer
     binWriter func = getWriter(binId);
 
+    // Check prevSymbolOffsets
+    if(prevSymbolOffsets.empty()){
+      for (unsigned int i = 0; i < order; i++){
+        prevSymbolOffsets.push_back(i+1); // holds offsets 1, 2, 3, ...
+      }
+    } else { // check if length is equal to order
+      if(prevSymbolOffsets.size() != order){
+        throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have the same length as order");
+      }
+    }
+
+    int i_offset = 0;
     for (unsigned int i = 0; i < numSymbols; i++) {
       // Get context ids for each bin
       for (unsigned int o = 0; o < order; o++){
-        if (i > o) {
-          symbolsPrev[o] = symbols[i-o - 1];
+        i_offset = i - prevSymbolOffsets[o];    
+        if (i_offset >= 0) {  // Take only previous values
+          symbolsPrev[o] = symbols[i_offset];
         }
       }
       contextSelector::getContextIds(ctxIds, i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
