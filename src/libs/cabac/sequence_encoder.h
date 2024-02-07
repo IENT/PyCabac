@@ -110,6 +110,17 @@ public:
       if(prevSymbolOffsets.size() != order){
         throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have the same length as order");
       }
+      // Check if all values are greater than 0 and unique
+      for (unsigned int i = 0; i < order; i++){
+        if(prevSymbolOffsets[i] == 0){
+          throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have values greater than 0");
+        }
+        for (unsigned int j = i+1; j < order; j++){
+          if(prevSymbolOffsets[i] == prevSymbolOffsets[j]){
+            throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have unique values");
+          }
+        }
+      }
     }
 
     int i_offset = 0;
