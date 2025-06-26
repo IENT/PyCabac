@@ -28,7 +28,7 @@ class MainTest(unittest.TestCase):
         symbols = np.array(symbols)
 
         bin_params = [num_max_val]
-        ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset]
+        ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset, symbol_max]
 
         if fun == 'BIBAC':
             bin_id = cabac.BinarizationId.BI
@@ -47,7 +47,7 @@ class MainTest(unittest.TestCase):
             ctx_model_id = cabac.ContextModelId.SYMBOLPOSITION
 
             bin_params = [num_bi_bins]
-            ctx_params += [symbol_max, symbol_pos_mode]
+            ctx_params += [symbol_pos_mode]
 
         elif fun == 'TUBAC':
             bin_id = cabac.BinarizationId.TU
@@ -60,7 +60,7 @@ class MainTest(unittest.TestCase):
         elif fun == 'TUsymPosition':
             bin_id = cabac.BinarizationId.TU
             ctx_model_id = cabac.ContextModelId.SYMBOLPOSITION
-            ctx_params += [symbol_max, symbol_pos_mode]
+            ctx_params += [symbol_pos_mode]
 
         elif fun == 'EGkBAC':
             bin_id = cabac.BinarizationId.EGk
@@ -79,7 +79,7 @@ class MainTest(unittest.TestCase):
             ctx_model_id = cabac.ContextModelId.SYMBOLPOSITION
 
             bin_params = [num_max_val, k]
-            ctx_params += [symbol_max, symbol_pos_mode]
+            ctx_params += [symbol_pos_mode]
         else:
             raise ValueError('Unknown function: ' + fun)
 
@@ -150,7 +150,7 @@ class MainTest(unittest.TestCase):
         symbols = np.array(symbols)
 
         bin_params = [num_max_val]
-        ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset]
+        ctx_params = [ctx_order, ctx_rest_pos, ctx_id_offset, symbol_max]
         if fun == 'BIbinsOrderN':
             bin_id = cabac.BinarizationId.BI
             ctx_model_id = cabac.ContextModelId.BINSORDERN

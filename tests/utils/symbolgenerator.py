@@ -13,3 +13,11 @@ def random_uniform(num_values, max_val, min_val=0):
     return np.random.default_rng(seed=0).integers(
         min_val, max_val, num_values
     ).tolist()
+
+
+def load_block():
+    fn = "tests/data/loot_block166.npz"
+
+    data = np.load(fn)['data']
+
+    return data

@@ -68,13 +68,16 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // This is a general method for decoding a sequence of symbols for given binarization and context model
-    // parameter definition see encodeSymbols
     void decodeSymbols(uint64_t * symbols, const unsigned int numSymbols,
       binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
       const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams,
-      std::vector<unsigned int> prevSymbolOffsets = {})
+      std::vector<unsigned int> prevSymbolOffsets = {},
+      const bool * mask=nullptr, const unsigned int lenMask=0)
     {
+      /**
+       * Decode a sequence of symbols for given binarization type and context model.
+       * Parameter definition see encodeSymbols
+       */
       // Allocate memory
       auto order = ctxParams[0];
       std::vector<uint64_t> symbolsPrev(order, 0);
@@ -85,77 +88,87 @@ class cabacSimpleSequenceDecoder : public cabacSymbolDecoder{
       binReader func = getReader(binId);
 
       // Fill prevSymbolOffsets
-      if(prevSymbolOffsets.empty()){
-        for (unsigned int i = 0; i < order; i++){
-          prevSymbolOffsets.push_back(i+1); // holds offsets 1, 2, 3, ...
-        }
-      }
+      contextSelector::checkFillPrevSymbolOffsets(prevSymbolOffsets, order);
+      contextSelector::checkForSymbolMax(ctxParams);
 
-      int i_offset = 0;
+      auto symbolMax = 0;
+      if(lenMask > 0) {
+        auto symbolMax = ctxParams[3];
+      }
       for (unsigned int i = 0; i < numSymbols; i++) {
         // Get context ids for each bin
-        for (unsigned int o = 0; o < order; o++) {
-          i_offset = i - prevSymbolOffsets[o];    
-          if (i_offset >= 0) {  // Take only previous values
-            symbolsPrev[o] = symbols[i_offset];
-          }
-        }
+        contextSelector::fillPreviousSymbols2(symbolsPrev, symbols, i, order, prevSymbolOffsets, mask, lenMask, symbolMax);
         contextSelector::getContextIds(ctxIds, i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
 
         // Decode bins
-        symbols[i] = (*this.*func)(ctxIds, binParams);
+        if (lenMask == 0 || (mask[i] == true)) {
+          symbols[i] = (*this.*func)(ctxIds, binParams);
+        } else {
+          symbols[i] = 0;  // TODO: handle return value for masked symbols
+        }
       }
     }
 
     std::vector<uint64_t> decodeSymbols(const unsigned int numSymbols, 
       binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
-      const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
+      const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams, std::vector<unsigned int> prevSymbolOffsets={}, const bool * mask=nullptr, const unsigned int lenMask=0)
     {
       // Allocate memory
       std::vector<uint64_t> symbols(numSymbols, 0);
 
       // Fill symbols
-      decodeSymbols(symbols.data(), numSymbols, binId, ctxModelId, binParams, ctxParams);
+      decodeSymbols(symbols.data(), numSymbols, binId, ctxModelId, binParams, ctxParams, prevSymbolOffsets, mask, lenMask);
 
       // Return symbols
       return symbols;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // This is a general method for bypass decoding a sequence of symbols for given binarization
-    // parameter definition see encodeSymbols
     void decodeSymbolsBypass(uint64_t * symbols, const unsigned int numSymbols,
-      binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
+      binarization::BinarizationId binId, const std::vector<unsigned int> binParams,
+      const bool * mask, const unsigned int lenMask)
     {
+      /**
+       * Bypass decode a sequence of symbols for given binarization type.
+       * 
+       * Parameter definition see encodeSymbols
+       */
       // Get reader
       binBypassReader func = getBypassReader(binId);
 
       // Decode bins
       for (unsigned int i = 0; i < numSymbols; i++) {
-        symbols[i] = (*this.*func)(binParams);
+        if(lenMask==0 || (mask[i] == true)) {
+          symbols[i] = (*this.*func)(binParams);
+        } else {
+          symbols[i] = 0;  // TODO: handle return value for masked symbols
+        }
       }
     }
 
     std::vector<uint64_t> decodeSymbolsBypass(const unsigned int numSymbols, 
-      binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
+      binarization::BinarizationId binId, const std::vector<unsigned int> binParams,
+      const bool * mask=nullptr, const unsigned int lenMask=0)
     {
       // Allocate memory
       std::vector<uint64_t> symbols(numSymbols, 0);
 
       // Fill symbols
-      decodeSymbolsBypass(symbols.data(), numSymbols, binId, binParams);
+      decodeSymbolsBypass(symbols.data(), numSymbols, binId, binParams, mask, lenMask);
 
       // Return symbols
       return symbols;
     }
 
     // ---------------------------------------------------------------------------------------------------------------------
-    // This is a general method for decoding a symbol for given binarization and context model
-    // parameter definition see encodeSymbols
     uint64_t decodeSymbol(const unsigned int d, const uint64_t * symbolsPrev,
       binarization::BinarizationId binId, const contextSelector::ContextModelId ctxModelId,
       const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
     {
+      /**
+       * Decode a symbol for given binarization type and context model.
+       * Parameter definition see encodeSymbols
+       */
       // Get reader
       binReader func = getReader(binId);
 

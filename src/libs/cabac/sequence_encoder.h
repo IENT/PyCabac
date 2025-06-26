@@ -68,99 +68,104 @@ public:
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
-  // This is a general method for encoding a sequence of symbols for given binarization and context model
-  // binParams = {numMaxBins or numBins, [k, [riceParam, cuttoff, maxLog2TrDynamicRange]]}
-  // ctxParams = {order, restPos, offset, symbolMax, symbolPosMode, idx1, idx2, idx3}
-  //    If symbolPosMode=1: The ctxs ids get an offset corresponding to the following symbol position intervals 
-  //    [0, idx1), [idx1, idx2), [idx2, idx3), [idx3, oo)
-  // prevSymbolOffsets = {offset1, offset2, offset3, ...}  // holds offsets to access previous symbols for context selection. 
-  //    Defaults to 1, 2, ..., order
   void encodeSymbols(const uint64_t * symbols, unsigned int numSymbols, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams,
-    std::vector<unsigned int> prevSymbolOffsets = {})
+    std::vector<unsigned int> prevSymbolOffsets={},
+    const bool * mask=nullptr, unsigned int lenMask=0
+  )
   {
+    /**
+     * Encode a sequence of symbols for given binarization and context model.
+     * 
+     * @param symbols Array of symbols to encode.
+     * @param numSymbols Number of symbols to encode.
+     * @param binId Binarization ID.
+     * @param ctxModelId Context model ID.
+     * @param binParams Binarization parameters. The structure is:
+     *                  {numMaxBins or numBins, [k, [riceParam, cuttoff, maxLog2TrDynamicRange]]}
+     * @param ctxParams Context model parameters. The structure is:  
+     *                  {order, restPos, offset, symbolMax, symbolPosMode, idx1, idx2, idx3}
+     *                  If symbolPosMode=1, the context IDs get an offset corresponding to the following symbol position intervals:
+     *                  [0, idx1), [idx1, idx2), [idx2, idx3), [idx3, oo)
+     * @param prevSymbolOffsets Offsets to access previous symbols for context selection. The structure is:
+     *                          {offset1, offset2, offset3, ...}
+     *                          Defaults to 1, 2, ..., order.
+     * @param mask Optional mask of length lenMask to encode only certain symbols.
+     * @param lenMask Length of mask, if mask is given, 0 otherwise.
+     * 
+     */
+
+    // Check parameters
+    if (numSymbols == 0) {
+      throw std::runtime_error("encodeSymbols: numSymbols must be greater than 0");
+    }
+    if (binParams.size() < 1) {
+      throw std::runtime_error("encodeSymbols: binParams must contain at least one element (numMaxBins or numBins)");
+    }
+    if (ctxParams.size() < 3) {
+      throw std::runtime_error("encodeSymbols: ctxParams must contain at least three elements (order, restPos, offset)");
+    }
     auto order = ctxParams[0];
-    // Check order
-    if(order == 0) {
-      throw std::runtime_error("encodeSymbols: Order must be larger than 0"); // TODO: Add support for higher orders
-    }
-    if(
-        (
-          ctxModelId == contextSelector::ContextModelId::BINSORDERN || 
-          ctxModelId == contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION
-        ) && order > 8
-      ) {
-      throw std::runtime_error("encodeSymbols: Order must be smaller than 8 for BINSORDERN* context models");
-    }
+    contextSelector::checkOrder(order, binId, ctxModelId);
     
+    // Allocate memory
     std::vector<uint64_t> symbolsPrev(order, 0);
     const unsigned int numMaxBins = binParams[0];
     std::vector<unsigned int> ctxIds(numMaxBins, 0);
 
+    // Check and fill prevSymbolOffsets
+    contextSelector::checkFillPrevSymbolOffsets(prevSymbolOffsets, order);
+
     // Get writer
     binWriter func = getWriter(binId);
 
-    // Check prevSymbolOffsets
-    if(prevSymbolOffsets.empty()){
-      for (unsigned int i = 0; i < order; i++){
-        prevSymbolOffsets.push_back(i+1); // holds offsets 1, 2, 3, ...
-      }
-    } else { // check if length is equal to order
-      if(prevSymbolOffsets.size() != order){
-        throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have the same length as order");
-      }
-      // Check if all values are greater than 0 and unique
-      for (unsigned int i = 0; i < order; i++){
-        if(prevSymbolOffsets[i] == 0){
-          throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have values greater than 0");
-        }
-        for (unsigned int j = i+1; j < order; j++){
-          if(prevSymbolOffsets[i] == prevSymbolOffsets[j]){
-            throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have unique values");
-          }
-        }
-      }
+    auto symbolMax = 0;
+    if(lenMask > 0) {
+      contextSelector::checkForSymbolMax(ctxParams);
+      auto symbolMax = ctxParams[3];
     }
-
-    int i_offset = 0;
     for (unsigned int i = 0; i < numSymbols; i++) {
-      // Get context ids for each bin
-      for (unsigned int o = 0; o < order; o++){
-        i_offset = i - prevSymbolOffsets[o];    
-        if (i_offset >= 0) {  // Take only previous values
-          symbolsPrev[o] = symbols[i_offset];
-        }
-      }
+      
+      contextSelector::fillPreviousSymbols2(symbolsPrev, symbols, i, order, prevSymbolOffsets, mask, lenMask, symbolMax);
       contextSelector::getContextIds(ctxIds, i, symbolsPrev.data(), binId, ctxModelId, binParams, ctxParams);
 
-      // Encode symbol
-      (*this.*func)(symbols[i], ctxIds, binParams);
+      if (lenMask == 0 || (mask[i] == true)) { // Only encode if mask is true or no mask is given
+        // Encode symbol
+        (*this.*func)(symbols[i], ctxIds, binParams);
+      }
     }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
-  // This is a general method for bypass-encoding a sequence of symbols for given binarization
-  // parameter definition see encodeSymbols
   void encodeSymbolsBypass(const uint64_t * symbols, unsigned int numSymbols, 
-    binarization::BinarizationId binId, const std::vector<unsigned int> binParams)
+    binarization::BinarizationId binId, const std::vector<unsigned int> binParams,
+    const bool * mask=nullptr, const unsigned int lenMask=0)
   {
+    /**
+     * Bypass encode a sequence of symbols for given binarization type.
+     * Parameter definition see encodeSymbols
+     */
     // Get writer
     binBypassWriter func = getBypassWriter(binId);
 
     for (unsigned int i = 0; i < numSymbols; i++) {
-      // Encode symbol
-      (*this.*func)(symbols[i], binParams);
+      if (lenMask == 0 || (mask[i] == true)) { // Only encode if mask is true or no mask is given
+        // Encode symbol
+        (*this.*func)(symbols[i], binParams);
+      }
     }
   }
 
   // ---------------------------------------------------------------------------------------------------------------------
-  // This is a general method for encoding a symbol for given binarization and context model
-  // parameter definition see encodeSymbols
   void encodeSymbol(const uint64_t symbol, const unsigned int d, const uint64_t * symbolsPrev, 
     binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId, 
     const std::vector<unsigned int> binParams, const std::vector<unsigned int> ctxParams)
-  {   
+  {
+    /**
+     * Encode a symbol for given binarization type and context model.
+     * Parameter definition see encodeSymbols
+     */
     // Get writer
     binWriter func = getWriter(binId);
 

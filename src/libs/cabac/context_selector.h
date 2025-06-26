@@ -138,6 +138,23 @@ namespace contextSelector{
 
     contextSelector::ContextModelId getBaseContextModelId(const contextSelector::ContextModelId);
 
+    void checkOrder(unsigned int order,
+        binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId);
+
+    void checkFillPrevSymbolOffsets(std::vector<unsigned int> &prevSymbolOffsets, unsigned int order);
+    
+    void fillPreviousSymbols(std::vector<uint64_t> &symbolsPrev, const uint64_t * symbols,      
+        const unsigned int i,
+        const unsigned int order, const std::vector<unsigned int> prevSymbolOffsets
+    );
+
+    void fillPreviousSymbols2(std::vector<uint64_t> &symbolsPrev, const uint64_t * symbols,
+        const unsigned int i,
+        const unsigned int order, const std::vector<unsigned int> prevSymbolOffsets, 
+        const bool * mask, const unsigned int lenMask, const unsigned int symbolMax
+    );
+
+    void checkForSymbolMax(const std::vector<unsigned int> &ctxParams);
 };  // namespace contextSelector
 
 #endif  // RWTH_PYTHON_IF

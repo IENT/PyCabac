@@ -879,6 +879,8 @@ namespace contextSelector{
             } break;
             case contextSelector::ContextModelId::SYMBOLORDERN:
             case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: {
+                // check if symbolMax is given, otherwise throw error
+                checkForSymbolMax(ctxParams);
                 auto symbolMax = ctxParams[3];
                 contextId = getContextIdSymbolOrderNTU(order, n, symbolsPrevForTU, restPos, symbolMax);
             } break;
@@ -959,11 +961,13 @@ namespace contextSelector{
             } break;
             case contextSelector::ContextModelId::SYMBOLORDERN:
             case contextSelector::ContextModelId::SYMBOLORDERNSYMBOLPOSITION: {
+                checkForSymbolMax(ctxParams);
                 auto symbolMax = ctxParams[3];
                 getContextIdsSymbolOrderNTU(ctxIds, order, symbolsPrevForTU, restPos, symbolMax);
             } break;
             case contextSelector::ContextModelId::SUMORDERN:
             case contextSelector::ContextModelId::SUMORDERNSYMBOLPOSITION: {
+                checkForSymbolMax(ctxParams);
                 auto symbolMax = ctxParams[3];
                 getContextIdsSumOrderNTU(ctxIds, order, symbolsPrevForTU, restPos, symbolMax);
             }; break;
@@ -1025,10 +1029,12 @@ namespace contextSelector{
                 }
             } break;
             case contextSelector::ContextModelId::SYMBOLORDERN: {
+                checkForSymbolMax(ctxParams);
                 auto symbolMax = ctxParams[3];
                 numContexts = pow(symbolMax+1, order)*restPos + 1;
             } break;
             case contextSelector::ContextModelId::SUMORDERN : {
+                checkForSymbolMax(ctxParams);
                 auto symbolMax = ctxParams[3];
                 numContexts = (symbolMax+1)*restPos + 1;
             } break;
@@ -1162,6 +1168,86 @@ namespace contextSelector{
         return ctxModelId0;
     }
 
+    void fillPreviousSymbols(std::vector<uint64_t> &symbolsPrev, const uint64_t * symbols,      
+        const unsigned int i, 
+        const unsigned int order, const std::vector<unsigned int> prevSymbolOffsets
+    ) {
+        int i_offset = 0;
+        // Get context ids for each bin
+        for (unsigned int o = 0; o < order; o++) {
+          i_offset = i - prevSymbolOffsets[o];    
+          if (i_offset >= 0 && i > i_offset) {  // Take only previous values
+            symbolsPrev[o] = symbols[i_offset];
+          }
+        }
+    }
+
+    void fillPreviousSymbols2(std::vector<uint64_t> &symbolsPrev, const uint64_t * symbols,
+        const unsigned int i, 
+        const unsigned int order, const std::vector<unsigned int> prevSymbolOffsets,
+        const bool * mask=nullptr, const unsigned int lenMask=0, const unsigned int symbolMax=0
+    ) {
+        int i_offset = 0;
+        // Get context ids for each bin
+        for (unsigned int o = 0; o < order; o++){
+            i_offset = i - prevSymbolOffsets[o];    
+            if (i_offset >= 0 && i > i_offset) {  // Take only previous values
+                if (lenMask>0 && (mask[i_offset] == false)) {
+                    symbolsPrev[o] = symbolMax;  // TODO: handle return value for masked symbols
+                } else {
+                    symbolsPrev[o] = symbols[i_offset];
+                }
+                symbolsPrev[o] = symbols[i_offset];
+            }
+        }
+    }
+
+    void checkOrder(unsigned int order, 
+        binarization::BinarizationId binId, contextSelector::ContextModelId ctxModelId) {
+        // Check if order is greater than 0
+        if(order == 0) {
+            throw std::runtime_error("encodeSymbols: Order must be larger than 0"); // TODO: Add support for higher orders
+        }
+        if(
+            (
+            ctxModelId == contextSelector::ContextModelId::BINSORDERN || 
+            ctxModelId == contextSelector::ContextModelId::BINSORDERNSYMBOLPOSITION
+            ) && order > 8
+        ) {
+            throw std::runtime_error("encodeSymbols: Order must be smaller than 8 for BINSORDERN* context models");
+        }
+    }
+
+    void checkFillPrevSymbolOffsets(std::vector<unsigned int> &prevSymbolOffsets, unsigned int order) {
+        // Check if prevSymbolOffsets is empty and fill it with default values
+        if(prevSymbolOffsets.empty()){
+            for (unsigned int i = 0; i < order; i++){
+                prevSymbolOffsets.push_back(i+1); // holds offsets 1, 2, 3, ...
+            }
+        } else { // check if length is equal to order
+            if(prevSymbolOffsets.size() != order){
+                throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have the same length as order");
+            }
+            // Check if all values are greater than 0 and unique
+            for (unsigned int i = 0; i < order; i++){
+                if(prevSymbolOffsets[i] == 0){
+                    throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have values greater than 0");
+                }
+                for (unsigned int j = i+1; j < order; j++){
+                    if(prevSymbolOffsets[i] == prevSymbolOffsets[j]){
+                        throw std::runtime_error("encodeSymbols: prevSymbolOffsets must have unique values");
+                    }
+                }
+            }
+        }
+    }
+
+    void checkForSymbolMax(const std::vector<unsigned int> &ctxParams) {
+        // Check if symbolMax is given
+        if (ctxParams.size() < 4) {
+            throw std::runtime_error("getContextId: Symbol max value is not given in context parameters (order, restPos, offset, symbolMax)");
+        }
+    }
 }; // namespace contextSelector
 
 #endif  // RWTH_PYTHON_IF
