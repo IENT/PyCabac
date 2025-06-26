@@ -7,12 +7,14 @@ import tests.utils.symbolgenerator as symbolgenerator
 
 class MainTest(unittest.TestCase):
 
-    def _call_cabac_symbols_bac_binposition(self, fun='EGk'):
+    def _call_cabac_symbols_bac_bin_sym_position(self, fun='EGk'):
         import numpy as np
         ctx_order = 1  # not used here
         ctx_rest_pos = 24
         ctx_id_offset = 0
         num_max_val = 255
+        symbol_max = 16
+        symbol_pos_mode = 5
 
         num_values = 10000
         num_bi_bins = 8
@@ -40,6 +42,13 @@ class MainTest(unittest.TestCase):
 
             bin_params = [num_bi_bins]
 
+        elif fun == 'BIsymPosition':
+            bin_id = cabac.BinarizationId.BI
+            ctx_model_id = cabac.ContextModelId.SYMBOLPOSITION
+
+            bin_params = [num_bi_bins]
+            ctx_params += [symbol_max, symbol_pos_mode]
+
         elif fun == 'TUBAC':
             bin_id = cabac.BinarizationId.TU
             ctx_model_id = cabac.ContextModelId.BAC
@@ -47,6 +56,11 @@ class MainTest(unittest.TestCase):
         elif fun == 'TUbinPosition':
             bin_id = cabac.BinarizationId.TU
             ctx_model_id = cabac.ContextModelId.BINPOSITION
+
+        elif fun == 'TUsymPosition':
+            bin_id = cabac.BinarizationId.TU
+            ctx_model_id = cabac.ContextModelId.SYMBOLPOSITION
+            ctx_params += [symbol_max, symbol_pos_mode]
 
         elif fun == 'EGkBAC':
             bin_id = cabac.BinarizationId.EGk
@@ -59,6 +73,13 @@ class MainTest(unittest.TestCase):
             ctx_model_id = cabac.ContextModelId.BINPOSITION
 
             bin_params = [num_max_val, k]
+
+        elif fun == "EGksymPosition":
+            bin_id = cabac.BinarizationId.EGk
+            ctx_model_id = cabac.ContextModelId.SYMBOLPOSITION
+
+            bin_params = [num_max_val, k]
+            ctx_params += [symbol_max, symbol_pos_mode]
         else:
             raise ValueError('Unknown function: ' + fun)
 
@@ -97,17 +118,18 @@ class MainTest(unittest.TestCase):
 
         self.assertTrue((decodedSymbols == symbols).all())
 
-    def test_encode_symbols_bac_binposition(self):
+    def test_encode_symbols_bac_bin_sym_position(self):
         random.seed(0)
-        print('test_encode_symbols_bac_binposition')
+        print('test_encode_symbols_bac_bin_sym_position')
         funs = [
-            'BIBAC', 'BIbinPosition',
-            'TUBAC', 'TUbinPosition',
-            'EGkBAC', 'EGkbinPosition']
+            'BIBAC', 'BIbinPosition', 'BIsymPosition',
+            'TUBAC', 'TUbinPosition', 'TUsymPosition',
+            'EGkBAC', 'EGkbinPosition', 'EGksymPosition'
+        ]
 
         for fun in funs:
             print('Testing function: ' + fun)
-            self._call_cabac_symbols_bac_binposition(fun)
+            self._call_cabac_symbols_bac_bin_sym_position(fun)
 
     def _call_cabac_symbols_order_n(self, fun='BIbinsOrderN', ctx_order=1):
         import numpy as np
