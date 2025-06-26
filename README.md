@@ -91,6 +91,23 @@ make --jobs
 
 This will leave the tests executable under ``build/tests/tests``.
 
+## Citation
+
+If you use this software, please cite it as below.
+
+```
+@inproceedings{RoMeScVo23,
+  author = {Rohlfing, Christian and Meyer, Thibaut and Schneider, Jens and Voges, Jan},
+  title = {Python Wrapper for Context-based Adaptive Binary Arithmetic Coding},
+  booktitle = {Visual Communications and Image Processing {VCIP}~'23},
+  address = {Jeju, South Korea},
+  year = {2023},
+  month = dec,
+  doi = {10.1109/VCIP59821.2023.10402639},
+  publisher = {{IEEE}, Piscataway}
+}
+```
+
 ## Who do I talk to?
 
 Jan Voges <[voges@tnt.uni-hannover.de](mailto:voges@tnt.uni-hannover.de)>
