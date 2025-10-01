@@ -1197,7 +1197,7 @@ namespace contextSelector{
                 } else {
                     symbolsPrev[o] = symbols[i_offset];
                 }
-                symbolsPrev[o] = symbols[i_offset];
+                // symbolsPrev[o] = symbols[i_offset];
             }
         }
     }
