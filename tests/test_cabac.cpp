@@ -130,7 +130,7 @@ TEST_CASE("test_encodeSymbols")
     
     std::srand(unsigned(std::time(nullptr)));
     std::vector<int> symbols(numSymbols);
-    std::generate(symbols.begin(), symbols.end(), []() {
+    std::generate(symbols.begin(), symbols.end(), [maxVal]() {
         return rand() % maxVal;
     });
     
@@ -262,7 +262,7 @@ TEST_CASE("test_encodeSymbolsSymbolsOrder1_TU")
     //fillVectorRandomGeometric(&symbols);
     std::srand(unsigned(std::time(nullptr)));
     std::vector<uint64_t> symbols(numSymbols);
-    std::generate(symbols.begin(), symbols.end(), []() {
+    std::generate(symbols.begin(), symbols.end(), [maxVal]() {
         return rand() % maxVal;
     });
     
@@ -329,7 +329,7 @@ TEST_CASE("test_encodeSymbols_function_TU")
     //fillVectorRandomGeometric(&symbols);
     std::srand(unsigned(std::time(nullptr)));
     std::vector<uint64_t> symbols(numSymbols);
-    std::generate(symbols.begin(), symbols.end(), []() {
+    std::generate(symbols.begin(), symbols.end(), [maxVal]() {
         return rand() % maxVal;
     });
     
@@ -386,7 +386,7 @@ TEST_CASE("test_encodeSymbols_function_TU_orderN")
     
     std::srand(unsigned(std::time(nullptr)));
     std::vector<uint64_t> symbols(numSymbols);
-    std::generate(symbols.begin(), symbols.end(), []() {
+    std::generate(symbols.begin(), symbols.end(), [maxVal]() {
         return rand() % maxVal;
     });
     
@@ -435,7 +435,7 @@ TEST_CASE("test_encodeBinarySequence")
     
     std::srand(unsigned(std::time(nullptr)));
     std::vector<uint64_t> symbols(numSymbols);
-    std::generate(symbols.begin(), symbols.end(), []() {
+    std::generate(symbols.begin(), symbols.end(), [maxVal]() {
         return rand() % maxVal;
     });
     
@@ -490,7 +490,7 @@ TEST_CASE("test_encodeRemAbsEP")
     /*
     std::srand(unsigned(std::time(nullptr)));
     std::vector<uint64_t> symbols(numSymbols);
-    std::generate(symbols.begin(), symbols.end(), []() {
+    std::generate(symbols.begin(), symbols.end(), [maxVal]() {
         return rand() % maxVal;
     });
     */
